@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Preview - SFSRS</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='upload.css') }}" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="page-wrapper">
+
+    <div class="sidebar">
+        <div class="brand-row">
+            <div class="logo-box">◇</div>
+
+            <div>
+                <div class="portal-text">USER PORTAL</div>
+                <div class="brand-title">SFSRS</div>
+            </div>
+        </div>
+
+        <p class="system-name">
+            Secure File Sharing and Recovery System
+        </p>
+
+        <a href="/dashboard" class="nav-item" onclick="return handleExitPreviewProcess('/dashboard')">⌂ Dashboard</a>
+        <a href="/upload" class="nav-item active" onclick="return handleExitPreviewProcess('/upload')">↑ Upload File</a>
+        <a href="/files" class="nav-item" onclick="return handleExitPreviewProcess('/files')">▣ File Management</a>
+        <a href="/share" class="nav-item" onclick="return handleExitPreviewProcess('/share')">⌘ Share File</a>
+        <a href="/shared" class="nav-item" onclick="return handleExitPreviewProcess('/shared')">⌘ Shared Files</a>
+        <a href="/download" class="nav-item" onclick="return handleExitPreviewProcess('/download')">↺ Download & Access</a>
+        <a href="/recovery" class="nav-item" onclick="return handleExitPreviewProcess('/recovery')">⬢ Recovery</a>
+        <a href="/profile" class="nav-item" onclick="return handleExitPreviewProcess('/profile')">⊙ Profile</a>
+
+        <a href="/logout" class="nav-item logout" onclick="return handleExitPreviewProcess('/logout')">→ Logout</a>
+    </div>
+
+    <div class="main-area">
+
+        <div class="top-header">
+            <div>
+                <div class="header-small">WEB-BASED SYSTEM</div>
+                <h2>Secure File Sharing and Recovery System</h2>
+            </div>
+        </div>
+
+        <div class="content-area">
+
+            <div class="upload-panel">
+
+                <h1>File Preview</h1>
+
+                <p class="subtitle">
+                    Preview the uploaded file before encryption and processing.
+                </p>
+
+                <div class="status-box mt-4 preview-card">
+
+                    <div class="preview-placeholder" id="previewPlaceholder">
+                        ▣
+                    </div>
+
+                    <div class="preview-details">
+                        <h4 id="previewTitle">
+                            {{ previewData.fileName }}
+                        </h4>
+
+                        <p id="previewDescription">
+                            Uploaded file preview is ready for user confirmation.
+                        </p>
+
+                        <p id="previewFileType">
+                            <strong>Type:</strong>
+                            {{ previewData.fileType }}
+                        </p>
+
+                        <p id="previewFileSize">
+                            <strong>Size:</strong>
+                            {{ previewData.fileSize }}
+                        </p>
+
+                        <p id="previewAvailability">
+                            <strong>Preview:</strong>
+                            Local browser preview available
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="button-row">
+
+                    <button
+                        type="button"
+                        class="primary-btn"
+                        id="continueButton"
+                        onclick="continueToFragmentConfiguration()">
+                        Continue
+                    </button>
+
+                    <button
+                        type="button"
+                        class="outline-btn"
+                        id="replaceButton"
+                        onclick="replaceFile()">
+                        Replace File
+                    </button>
+
+                    <button
+                        type="button"
+                        class="danger-btn"
+                        id="deleteButton"
+                        onclick="deleteFile()">
+                        Delete File
+                    </button>
+
+                </div>
+
+                <p id="pageMessage" class="status-text mt-3"></p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    var currentTempFileID = {{ previewData.fileID }};
+    var fileDeleted = false;
+
+    function continueToFragmentConfiguration() {
+
+        if (fileDeleted === true) {
+            return;
+        }
+
+        currentTempFileID = null;
+        window.location.href = "/upload/fragments/{{ previewData.fileID }}";
+    }
+
+    function replaceFile() {
+        replaceTempFile({{ previewData.fileID }}, "/upload");
+    }
+
+    function deleteFile() {
+
+        if (fileDeleted === true) {
+            return;
+        }
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+
+            if (xhr.status === 200) {
+
+                fileDeleted = true;
+                currentTempFileID = null;
+
+                document.getElementById("previewTitle").innerText =
+                    "Deleted before encryption";
+
+                document.getElementById("previewDescription").innerText =
+                    "Awaiting upload completion.";
+
+                document.getElementById("previewFileType").innerText = "";
+                document.getElementById("previewFileSize").innerText = "";
+                document.getElementById("previewAvailability").innerText = "";
+
+                document.getElementById("previewPlaceholder").innerText = "▣";
+
+                document.getElementById("continueButton").disabled = true;
+
+                document.getElementById("pageMessage").innerText =
+                    "Selected upload removed before encryption.";
+
+            } else {
+
+                document.getElementById("pageMessage").innerText =
+                    "Unable to delete file.";
+            }
+        };
+
+        xhr.open("POST", "/upload/delete/{{ previewData.fileID }}", true);
+        xhr.send();
+    }
+
+    function handleExitPreviewProcess(targetURL) {
+
+        if (currentTempFileID !== null) {
+            cancelTempUpload(currentTempFileID, targetURL);
+            return false;
+        }
+
+        return true;
+    }
+
+    function cancelTempUpload(fileID, targetURL) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            currentTempFileID = null;
+
+            if (targetURL !== null) {
+                window.location.href = targetURL;
+            }
+        };
+
+        xhr.open("POST", "/upload/cancel/" + fileID, true);
+        xhr.send();
+    }
+
+    function replaceTempFile(fileID, targetURL) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            currentTempFileID = null;
+
+            if (targetURL !== null) {
+                window.location.href = targetURL;
+            }
+        };
+
+        xhr.open("POST", "/upload/replace/" + fileID, true);
+        xhr.send();
+    }
+</script>
+
+</body>
+</html>

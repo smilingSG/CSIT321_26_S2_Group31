@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fragment Configuration - SFSRS</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='upload.css') }}" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="page-wrapper">
+
+    <div class="sidebar">
+        <div class="brand-row">
+            <div class="logo-box">◇</div>
+
+            <div>
+                <div class="portal-text">USER PORTAL</div>
+                <div class="brand-title">SFSRS</div>
+            </div>
+        </div>
+
+        <p class="system-name">
+            Secure File Sharing and Recovery System
+        </p>
+
+        <a href="/dashboard" class="nav-item" onclick="return handleExitFragmentConfigProcess('/dashboard')">⌂ Dashboard</a>
+        <a href="/upload" class="nav-item active" onclick="return handleExitFragmentConfigProcess('/upload')">↑ Upload File</a>
+        <a href="/files" class="nav-item" onclick="return handleExitFragmentConfigProcess('/files')">▣ File Management</a>
+        <a href="/share" class="nav-item" onclick="return handleExitFragmentConfigProcess('/share')">⌘ Share File</a>
+        <a href="/shared" class="nav-item" onclick="return handleExitFragmentConfigProcess('/shared')">⌘ Shared Files</a>
+        <a href="/download" class="nav-item" onclick="return handleExitFragmentConfigProcess('/download')">↺ Download & Access</a>
+        <a href="/recovery" class="nav-item" onclick="return handleExitFragmentConfigProcess('/recovery')">⬢ Recovery</a>
+        <a href="/profile" class="nav-item" onclick="return handleExitFragmentConfigProcess('/profile')">⊙ Profile</a>
+
+        <a href="/logout" class="nav-item logout" onclick="return handleExitFragmentConfigProcess('/logout')">→ Logout</a>
+    </div>
+
+    <div class="main-area">
+
+        <div class="top-header">
+            <div>
+                <div class="header-small">WEB-BASED SYSTEM</div>
+                <h2>Secure File Sharing and Recovery System</h2>
+            </div>
+        </div>
+
+        <div class="content-area">
+
+            <div class="upload-panel fragment-config-panel">
+
+                <h1>Fragment Configuration</h1>
+
+                <p class="subtitle">
+                    Select how many fragments are created and how many are required for reconstruction.
+                </p>
+
+                {% if errorMessage %}
+                    <div class="alert alert-danger mt-4">
+                        {{ errorMessage }}
+                    </div>
+                {% endif %}
+
+                <div class="status-box mt-4">
+                    <p>
+                        <strong>Selected File:</strong>
+                        {{ previewData.fileName }}
+                    </p>
+
+                    <p>
+                        <strong>File Size:</strong>
+                        {{ previewData.fileSize }}
+                    </p>
+
+                    <p>
+                        <strong>File Type:</strong>
+                        {{ previewData.fileType }}
+                    </p>
+                </div>
+
+                <form method="POST" class="mt-4">
+
+                    <div class="fragment-option-box">
+
+                        <div class="row g-4">
+
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Total Fragments (n)
+                                </label>
+
+                                <input
+                                    type="number"
+                                    class="form-control custom-input"
+                                    name="total_fragments"
+                                    min="2"
+                                    max="10"
+                                    value="{{ previewData.totalFragments if previewData.totalFragments else 5 }}"
+                                    required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Required Fragments (k)
+                                </label>
+
+                                <input
+                                    type="number"
+                                    class="form-control custom-input"
+                                    name="required_fragments"
+                                    min="1"
+                                    max="10"
+                                    value="{{ previewData.requiredFragments if previewData.requiredFragments else 3 }}"
+                                    required>
+                            </div>
+
+                        </div>
+
+                        <p class="fragment-help-text mt-4">
+                            Example: A 3-of-5 configuration means 5 fragments are created, and any 3 fragments are enough to reconstruct the file.
+                        </p>
+
+                    </div>
+
+                    <div class="button-row mt-4">
+
+                        <button
+                            type="submit"
+                            class="primary-btn"
+                            onclick="allowFragmentSubmit()">
+                            Continue
+                        </button>
+
+                        <button
+                            type="button"
+                            class="outline-btn"
+                            onclick="goBackToPreview()">
+                            Back
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    var currentTempFileID = {{ previewData.fileID }};
+    var allowSubmit = false;
+
+    function allowFragmentSubmit() {
+        allowSubmit = true;
+        currentTempFileID = null;
+    }
+
+    function goBackToPreview() {
+        currentTempFileID = null;
+        window.location.href = "/upload/preview/{{ previewData.fileID }}";
+    }
+
+    function handleExitFragmentConfigProcess(targetURL) {
+
+        if (currentTempFileID !== null && allowSubmit === false) {
+            cancelTempUpload(currentTempFileID, targetURL);
+            return false;
+        }
+
+        return true;
+    }
+
+    function cancelTempUpload(fileID, targetURL) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            currentTempFileID = null;
+
+            if (targetURL !== null) {
+                window.location.href = targetURL;
+            }
+        };
+
+        xhr.open("POST", "/upload/cancel/" + fileID, true);
+        xhr.send();
+    }
+</script>
+
+</body>
+</html>

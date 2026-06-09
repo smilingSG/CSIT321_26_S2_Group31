@@ -30,8 +30,8 @@ CREATE TABLE files (
     stored_filename VARCHAR(255) NOT NULL,
     file_size BIGINT NOT NULL,
     file_type VARCHAR(100),
-    total_fragments INT NOT NULL,
-    required_fragments INT NOT NULL,
+    total_fragments INT NULL,
+    required_fragments INT NULL,
     file_status ENUM('pending_confirmation', 'pending_processing', 'processed', 'deleted') DEFAULT 'pending_confirmation',
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (owner_id) REFERENCES users(user_id)
