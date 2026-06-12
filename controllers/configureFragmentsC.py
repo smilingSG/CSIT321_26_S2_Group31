@@ -66,7 +66,12 @@ def configureFragments(file_id: int):
         int(required_fragments)
     )
 
-    return "Fragment configuration saved. Next page not implemented yet."
+    return redirect(
+        url_for(
+            "encrypt_file_bp.encryptFile",
+            file_id=file_id
+        )
+    )
 
 
 def validateFragmentConfig(

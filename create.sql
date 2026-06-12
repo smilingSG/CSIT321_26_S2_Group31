@@ -4,149 +4,134 @@ CREATE DATABASE lazarus_db;
 USE lazarus_db;
 
 CREATE TABLE users (
-user_id INT AUTO_INCREMENT PRIMARY KEY,
-username VARCHAR(50) NOT NULL UNIQUE,
-email VARCHAR(100) NOT NULL UNIQUE,
-password_hash VARCHAR(255) NOT NULL,
-role ENUM('user', 'user_admin', 'system_admin') DEFAULT 'user',
-account_status ENUM('active', 'suspended', 'deleted') DEFAULT 'active',
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('user', 'user_admin', 'system_admin') DEFAULT 'user',
+    account_status ENUM('active', 'suspended', 'deleted') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE storage_nodes (
-node_id INT AUTO_INCREMENT PRIMARY KEY,
-node_name VARCHAR(50) NOT NULL,
-node_path VARCHAR(255) NOT NULL,
-node_status ENUM('active', 'inactive') DEFAULT 'active'
+    node_id INT AUTO_INCREMENT PRIMARY KEY,
+    node_name VARCHAR(50) NOT NULL,
+    node_path VARCHAR(255) NOT NULL,
+    node_status ENUM('active', 'inactive') DEFAULT 'active'
 );
 
 CREATE TABLE files (
-file_id INT AUTO_INCREMENT PRIMARY KEY,
-owner_id INT NOT NULL,
+    file_id INT AUTO_INCREMENT PRIMARY KEY,
+    owner_id INT NOT NULL,
 
-```
-file_name VARCHAR(255) NOT NULL,
-stored_filename VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    stored_filename VARCHAR(255) NOT NULL,
 
-file_size BIGINT NOT NULL,
-file_type VARCHAR(100),
+    file_size BIGINT NOT NULL,
+    file_type VARCHAR(100),
 
-temp_upload_path VARCHAR(255) NULL,
-encrypted_temp_path VARCHAR(255) NULL,
+    temp_upload_path VARCHAR(255) NULL,
+    encrypted_temp_path VARCHAR(255) NULL,
 
-nonce VARBINARY(12) NULL,
-encrypted_file_key VARBINARY(512) NULL,
-encrypted_size BIGINT NULL,
+    nonce VARBINARY(12) NULL,
+    encrypted_file_key VARBINARY(512) NULL,
+    encrypted_size BIGINT NULL,
 
-total_fragments INT NULL,
-required_fragments INT NULL,
+    total_fragments INT NULL,
+    required_fragments INT NULL,
 
-file_status ENUM(
-    'pending_confirmation',
-    'pending_processing',
-    'encrypted',
-    'processed',
-    'cancelled',
-    'deleted',
-    'failed'
-) DEFAULT 'pending_confirmation',
+    file_status ENUM(
+        'pending_confirmation',
+        'pending_processing',
+        'encrypted',
+        'processed',
+        'cancelled',
+        'deleted',
+        'failed'
+    ) DEFAULT 'pending_confirmation',
 
-uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-FOREIGN KEY (owner_id) REFERENCES users(user_id)
-```
-
+    FOREIGN KEY (owner_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE upload_sessions (
-upload_id INT AUTO_INCREMENT PRIMARY KEY,
-user_id INT NOT NULL,
-file_id INT NULL,
+    upload_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    file_id INT NULL,
 
-```
-file_name VARCHAR(255) NOT NULL,
-temp_upload_path VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    temp_upload_path VARCHAR(255) NOT NULL,
 
-total_size BIGINT NOT NULL,
-bytes_uploaded BIGINT DEFAULT 0,
+    total_size BIGINT NOT NULL,
+    bytes_uploaded BIGINT DEFAULT 0,
 
-upload_status ENUM(
-    'paused',
-    'uploading',
-    'completed',
-    'cancelled',
-    'failed'
-) DEFAULT 'paused',
+    upload_status ENUM(
+        'paused',
+        'uploading',
+        'completed',
+        'cancelled',
+        'failed'
+    ) DEFAULT 'paused',
 
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-FOREIGN KEY (user_id) REFERENCES users(user_id),
-FOREIGN KEY (file_id) REFERENCES files(file_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (file_id) REFERENCES files(file_id),
 
-UNIQUE (file_id)
-```
-
+    UNIQUE (file_id)
 );
 
 CREATE TABLE fragments (
-fragment_id INT AUTO_INCREMENT PRIMARY KEY,
-file_id INT NOT NULL,
-node_id INT NOT NULL,
-fragment_number INT NOT NULL,
-fragment_path VARCHAR(255) NOT NULL,
-fragment_status ENUM('available', 'missing', 'deleted') DEFAULT 'available',
+    fragment_id INT AUTO_INCREMENT PRIMARY KEY,
+    file_id INT NOT NULL,
+    node_id INT NOT NULL,
+    fragment_number INT NOT NULL,
+    fragment_path VARCHAR(255) NOT NULL,
+    fragment_status ENUM('available', 'missing', 'deleted') DEFAULT 'available',
 
-```
-FOREIGN KEY (file_id) REFERENCES files(file_id),
-FOREIGN KEY (node_id) REFERENCES storage_nodes(node_id),
+    FOREIGN KEY (file_id) REFERENCES files(file_id),
+    FOREIGN KEY (node_id) REFERENCES storage_nodes(node_id),
 
-UNIQUE (file_id, fragment_number)
-```
-
+    UNIQUE (file_id, fragment_number)
 );
 
 CREATE TABLE share_links (
-share_id INT AUTO_INCREMENT PRIMARY KEY,
-file_id INT NOT NULL,
-created_by INT NOT NULL,
-recipient_id INT NOT NULL,
+    share_id INT AUTO_INCREMENT PRIMARY KEY,
+    file_id INT NOT NULL,
+    created_by INT NOT NULL,
+    recipient_id INT NOT NULL,
 
-```
-share_token VARCHAR(255) NOT NULL UNIQUE,
-is_one_time BOOLEAN DEFAULT FALSE,
-expiry_datetime DATETIME NULL,
-link_status ENUM('active', 'expired', 'revoked', 'used') DEFAULT 'active',
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    share_token VARCHAR(255) NOT NULL UNIQUE,
+    is_one_time BOOLEAN DEFAULT FALSE,
+    expiry_datetime DATETIME NULL,
+    link_status ENUM('active', 'expired', 'revoked', 'used') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-FOREIGN KEY (file_id) REFERENCES files(file_id),
-FOREIGN KEY (created_by) REFERENCES users(user_id),
-FOREIGN KEY (recipient_id) REFERENCES users(user_id)
-```
-
+    FOREIGN KEY (file_id) REFERENCES files(file_id),
+    FOREIGN KEY (created_by) REFERENCES users(user_id),
+    FOREIGN KEY (recipient_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE system_settings (
-setting_id INT AUTO_INCREMENT PRIMARY KEY,
-setting_name VARCHAR(100) NOT NULL UNIQUE,
-setting_value VARCHAR(255) NOT NULL,
-updated_by INT NOT NULL,
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    setting_id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_name VARCHAR(100) NOT NULL UNIQUE,
+    setting_value VARCHAR(255) NOT NULL,
+    updated_by INT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-```
-FOREIGN KEY (updated_by) REFERENCES users(user_id)
-```
-
+    FOREIGN KEY (updated_by) REFERENCES users(user_id)
 );
 
 INSERT INTO users
 (username, email, password_hash, role, account_status)
 VALUES
-('demo', '[demo@example.com](mailto:demo@example.com)', 'temporary_hash', 'user', 'active'),
-('johnsmith', '[john@example.com](mailto:john@example.com)', 'temporary_hash', 'user', 'active'),
-('admin', '[admin@example.com](mailto:admin@example.com)', 'temporary_hash', 'user_admin', 'active'),
-('sysadmin', '[sysadmin@example.com](mailto:sysadmin@example.com)', 'temporary_hash', 'system_admin', 'active');
+('demo', 'demo@example.com', 'temporary_hash', 'user', 'active'),
+('johnsmith', 'john@example.com', 'temporary_hash', 'user', 'active'),
+('admin', 'admin@example.com', 'temporary_hash', 'user_admin', 'active'),
+('sysadmin', 'sysadmin@example.com', 'temporary_hash', 'system_admin', 'active');
 
 INSERT INTO storage_nodes
 (node_name, node_path, node_status)

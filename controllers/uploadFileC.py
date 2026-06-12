@@ -1,6 +1,5 @@
 import os
 import uuid
-from typing import Optional
 
 from flask import Blueprint, render_template, request, jsonify
 from werkzeug.utils import secure_filename
@@ -51,10 +50,11 @@ def uploadTempFile():
 
         file_id: int = File.createTempFileRecord(
             owner_id=TEMP_USER_ID,
-            original_filename=original_filename,
+            file_name=original_filename,
             stored_filename=stored_filename,
             file_size=file_size,
-            file_type=file_type
+            file_type=file_type,
+            temp_upload_path=temp_file_path
         )
 
         return jsonify({
@@ -82,12 +82,7 @@ def cancelUpload(file_id: int):
             "message": "Temporary file record not found."
         }), 404
 
-    stored_filename: str = file_record["stored_filename"]
-
-    temp_file_path: str = os.path.join(
-        TEMP_UPLOAD_FOLDER,
-        stored_filename
-    )
+    temp_file_path: str = file_record["temp_upload_path"]
 
     if os.path.exists(temp_file_path):
         os.remove(temp_file_path)

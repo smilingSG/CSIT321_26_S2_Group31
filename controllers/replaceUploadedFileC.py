@@ -20,12 +20,7 @@ def replaceTempFile(file_id: int):
             "message": "Temporary file record not found."
         }), 404
 
-    stored_filename: str = file_record["stored_filename"]
-
-    temp_file_path: str = os.path.join(
-        TEMP_UPLOAD_FOLDER,
-        stored_filename
-    )
+    temp_file_path: str = file_record["temp_upload_path"]
 
     if os.path.exists(temp_file_path):
         os.remove(temp_file_path)

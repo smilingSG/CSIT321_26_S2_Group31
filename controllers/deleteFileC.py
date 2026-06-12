@@ -29,12 +29,7 @@ def deleteFile(file_id: int):
             "message": "File not found."
         }), 404
 
-    stored_filename = file_record["stored_filename"]
-
-    temp_file_path = os.path.join(
-        TEMP_UPLOAD_FOLDER,
-        stored_filename
-    )
+    temp_file_path = file_record["temp_upload_path"]
 
     if os.path.exists(temp_file_path):
         os.remove(temp_file_path)
