@@ -48,7 +48,7 @@ def uploadTempFile():
 
         file_type: str = uploaded_file.content_type or "Unknown"
 
-        file_id: int = File.createTempFileRecord(
+        file_id = File.createTempFileRecord(
             owner_id=TEMP_USER_ID,
             file_name=original_filename,
             stored_filename=stored_filename,
@@ -56,6 +56,15 @@ def uploadTempFile():
             file_type=file_type,
             temp_upload_path=temp_file_path
         )
+
+        if file_id is None:
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+
+            return jsonify({
+                "success": False,
+                "message": "File type is not allowed."
+            }), 400
 
         return jsonify({
             "success": True,
