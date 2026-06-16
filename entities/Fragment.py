@@ -1,8 +1,11 @@
 import os
+import json
 
 from typing import Dict
 from typing import Any
 from typing import List
+
+from zfec import easyfec
 
 TEMP_FRAGMENT_FOLDER: str = "temp_fragments"
 
@@ -51,28 +54,40 @@ class Fragment:
         with open(encrypted_temp_path, "rb") as encrypted_file:
             encrypted_data = encrypted_file.read()
 
-        encrypted_size = len(encrypted_data)
-        base_fragment_size = encrypted_size // total_fragments
-        remaining_bytes = encrypted_size % total_fragments
+        encoder = easyfec.Encoder(
+            required_fragments,
+            total_fragments
+        )
+
+        encoded_fragments = encoder.encode(
+            encrypted_data
+        )
+
+        if len(encoded_fragments) != total_fragments:
+            return []
+
+        metadata_path = os.path.join(
+            file_fragment_folder,
+            "fragment_metadata.json"
+        )
+
+        with open(metadata_path, "w") as metadata_file:
+            json.dump({
+                "file_id": file_id,
+                "required_fragments": required_fragments,
+                "total_fragments": total_fragments,
+                "encrypted_size": len(encrypted_data),
+                "erasure_algorithm": "zfec"
+            }, metadata_file)
 
         fragment_list = []
-        start_index = 0
 
-        for fragment_number in range(1, total_fragments + 1):
+        for fragment_index, fragment_data in enumerate(encoded_fragments):
 
-            current_fragment_size = base_fragment_size
-
-            if fragment_number <= remaining_bytes:
-                current_fragment_size += 1
-
-            end_index = start_index + current_fragment_size
-
-            fragment_data = encrypted_data[
-                start_index:end_index
-            ]
+            fragment_number = fragment_index + 1
 
             fragment_filename = (
-                "fragment_" + str(fragment_number) + ".part"
+                "fragment_" + str(fragment_number) + ".fec"
             )
 
             fragment_path = os.path.join(
@@ -87,9 +102,8 @@ class Fragment:
                 "file_id": file_id,
                 "fragment_number": fragment_number,
                 "fragment_path": fragment_path,
-                "fragment_size": len(fragment_data)
+                "fragment_size": len(fragment_data),
+                "share_number": fragment_index
             })
-
-            start_index = end_index
 
         return fragment_list
