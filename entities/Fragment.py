@@ -7,6 +7,8 @@ from typing import List
 
 from zfec import easyfec
 
+from db import get_db_connection
+
 TEMP_FRAGMENT_FOLDER: str = "temp_fragments"
 
 os.makedirs(TEMP_FRAGMENT_FOLDER, exist_ok=True)
@@ -106,4 +108,46 @@ class Fragment:
                 "share_number": fragment_index
             })
 
+        Fragment.replacePendingFragmentRecords(
+            file_id,
+            fragment_list
+        )
+
         return fragment_list
+
+    @staticmethod
+    def replacePendingFragmentRecords(file_id: int,
+                                      fragment_list: List[Dict[str, Any]]) -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            DELETE FROM fragments
+            WHERE file_id = %s
+            AND fragment_status = 'pending_storage'
+        """, (file_id,))
+
+        for fragment in fragment_list:
+            cursor.execute("""
+                INSERT INTO fragments
+                (
+                    file_id,
+                    node_id,
+                    fragment_number,
+                    fragment_path,
+                    fragment_status
+                )
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                fragment["file_id"],
+                None,
+                fragment["fragment_number"],
+                fragment["fragment_path"],
+                "pending_storage"
+            ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
