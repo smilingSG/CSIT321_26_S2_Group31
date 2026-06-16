@@ -52,8 +52,17 @@
                                 <div class="upload-icon">↑</div>
                                 <h4>Drag or select a file</h4>
                                 <p id="selectedFileName">No file selected</p>
+                                <p class="subtitle">
+                                    Accepted formats: PDF, Word, Excel, PowerPoint, TXT, CSV, JPG, PNG, ZIP.
+                                </p>
 
-                                <input type="file" name="file" id="fileInput" hidden required>
+                                <input
+                                    type="file"
+                                    name="file"
+                                    id="fileInput"
+                                    accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.csv,.ppt,.pptx,.jpg,.jpeg,.png,.zip"
+                                    hidden
+                                    required>
 
                                 <button type="button" class="choose-btn" id="chooseFileButton">Choose File</button>
                             </div>
