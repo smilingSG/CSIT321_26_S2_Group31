@@ -12,15 +12,16 @@ ENCRYPTED_TEMP_FOLDER: str = "encrypted_temp_upload"
 
 os.makedirs(ENCRYPTED_TEMP_FOLDER, exist_ok=True)
 
+
 class File:
 
     @staticmethod
     def createTempFileRecord(owner_id: int,
-                            file_name: str,
-                            stored_filename: str,
-                            file_size: int,
-                            file_type: str,
-                            temp_upload_path: str) -> int:
+                             file_name: str,
+                             stored_filename: str,
+                             file_size: int,
+                             file_type: str,
+                             temp_upload_path: str) -> int:
 
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -187,7 +188,7 @@ class File:
         connection.close()
 
         return count
-    
+
     @staticmethod
     def removeFile(file_id: int) -> None:
 
@@ -296,7 +297,52 @@ class File:
         connection.close()
 
         return True
-    
+
+    @staticmethod
+    def getEncryptedFileDetails(file_id: int) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                encrypted_temp_path,
+                total_fragments,
+                required_fragments,
+                file_status
+            FROM files
+            WHERE file_id = %s
+            AND file_status = 'encrypted'
+        """, (file_id,))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return file_record
+
+    @staticmethod
+    def updateFileStatus(file_id: int, file_status: str) -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE files
+            SET file_status = %s
+            WHERE file_id = %s
+        """, (
+            file_status,
+            file_id
+        ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
     @staticmethod
     def getProcessingSummary(file_id: int) -> Optional[Dict[str, Any]]:
 

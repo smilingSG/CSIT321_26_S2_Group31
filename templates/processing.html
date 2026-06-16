@@ -57,8 +57,20 @@
                         <h1>Encryption and File Splitting Process</h1>
 
                         <p class="subtitle">
-                            The uploaded file is encrypted and prepared for secure fragmentation.
+                            The uploaded file is encrypted and automatically prepared for secure fragmentation.
                         </p>
+
+                        {% if successMessage %}
+                            <div class="alert alert-success mt-4">
+                                {{ successMessage }}
+                            </div>
+                        {% endif %}
+
+                        {% if errorMessage %}
+                            <div class="alert alert-danger mt-4">
+                                {{ errorMessage }}
+                            </div>
+                        {% endif %}
 
                         <div class="status-box mt-4">
 
@@ -100,9 +112,20 @@
                             </div>
 
                             <div class="button-row mt-4">
-                                <a href="/files" class="primary-btn text-decoration-none">
-                                    Go to File Management
-                                </a>
+                                {% if processingData.fileStatus == "encrypted" %}
+                                    <form id="splitFileForm"
+                                          method="POST"
+                                          action="{{ url_for('split_file_bp.splitFile', file_id=processingData.fileID) }}">
+                                    </form>
+
+                                    <p class="subtitle mb-0">
+                                        Splitting encrypted file into fragments...
+                                    </p>
+                                {% else %}
+                                    <a href="/files" class="primary-btn text-decoration-none">
+                                        Go to File Management
+                                    </a>
+                                {% endif %}
                             </div>
 
                         </div>
@@ -132,13 +155,21 @@
                             </p>
 
                             <p>
-                                <strong>Encryption Status:</strong>
+                                <strong>File Status:</strong>
                                 {{ processingData.fileStatus }}
                             </p>
 
                             <p>
                                 <strong>Result:</strong>
-                                File encrypted and ready for secure file splitting.
+                                {% if processingData.fileStatus == "encrypted" %}
+                                    File encrypted and splitting will start automatically.
+                                {% elif processingData.fileStatus == "pending_processing" %}
+                                    File split successfully and ready for fragment storage.
+                                {% elif processingData.fileStatus == "failed" %}
+                                    File processing failed.
+                                {% else %}
+                                    File processing is in progress.
+                                {% endif %}
                             </p>
 
                         </div>
@@ -154,6 +185,14 @@
     </div>
 
 </div>
+
+{% if processingData.fileStatus == "encrypted" %}
+<script>
+    window.addEventListener("load", function () {
+        document.getElementById("splitFileForm").submit();
+    });
+</script>
+{% endif %}
 
 </body>
 </html>
