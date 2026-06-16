@@ -5,6 +5,7 @@ from flask import redirect
 from flask import url_for
 
 from entities.File import File
+from entities.StorageNode import StorageNode
 
 configure_fragments_bp = Blueprint(
     "configure_fragments_bp",
@@ -43,9 +44,12 @@ def configureFragments(file_id: int):
         "required_fragments"
     )
 
+    active_node_count = StorageNode.getActiveStorageNodeCount()
+
     validation_error = validateFragmentConfig(
         total_fragments,
-        required_fragments
+        required_fragments,
+        active_node_count
     )
 
     if validation_error is not None:
@@ -76,7 +80,8 @@ def configureFragments(file_id: int):
 
 def validateFragmentConfig(
     total_fragments,
-    required_fragments
+    required_fragments,
+    active_node_count
 ):
 
     if total_fragments is None:
@@ -113,6 +118,12 @@ def validateFragmentConfig(
         return (
             "Required fragments cannot be greater "
             "than total fragments."
+        )
+
+    if total_fragments > active_node_count:
+        return (
+            "Total fragments cannot be greater "
+            "than the number of active storage nodes."
         )
 
     return None
