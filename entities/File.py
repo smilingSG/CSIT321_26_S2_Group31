@@ -9,6 +9,21 @@ from typing import Any
 from db import get_db_connection
 
 ENCRYPTED_TEMP_FOLDER: str = "encrypted_temp_upload"
+ALLOWED_EXTENSIONS = {
+    "pdf",
+    "doc",
+    "docx",
+    "txt",
+    "xls",
+    "xlsx",
+    "csv",
+    "ppt",
+    "pptx",
+    "jpg",
+    "jpeg",
+    "png",
+    "zip"
+}
 
 os.makedirs(ENCRYPTED_TEMP_FOLDER, exist_ok=True)
 
@@ -16,12 +31,23 @@ os.makedirs(ENCRYPTED_TEMP_FOLDER, exist_ok=True)
 class File:
 
     @staticmethod
+    def isAllowedFileType(file_name: str) -> bool:
+
+        return (
+            "." in file_name
+            and file_name.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+        )
+
+    @staticmethod
     def createTempFileRecord(owner_id: int,
                              file_name: str,
                              stored_filename: str,
                              file_size: int,
                              file_type: str,
-                             temp_upload_path: str) -> int:
+                             temp_upload_path: str) -> Optional[int]:
+
+        if not File.isAllowedFileType(file_name):
+            return None
 
         connection = get_db_connection()
         cursor = connection.cursor()
