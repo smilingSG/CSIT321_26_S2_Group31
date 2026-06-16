@@ -87,10 +87,10 @@ CREATE TABLE upload_sessions (
 CREATE TABLE fragments (
     fragment_id INT AUTO_INCREMENT PRIMARY KEY,
     file_id INT NOT NULL,
-    node_id INT NOT NULL,
+    node_id INT NULL,
     fragment_number INT NOT NULL,
     fragment_path VARCHAR(255) NOT NULL,
-    fragment_status ENUM('available', 'missing', 'deleted') DEFAULT 'available',
+    fragment_status ENUM('pending_storage', 'available', 'missing', 'deleted') DEFAULT 'pending_storage',
 
     FOREIGN KEY (file_id) REFERENCES files(file_id),
     FOREIGN KEY (node_id) REFERENCES storage_nodes(node_id),
