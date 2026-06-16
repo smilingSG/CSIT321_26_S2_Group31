@@ -25,16 +25,16 @@
             Secure File Sharing and Recovery System
         </p>
 
-        <a href="/dashboard" class="nav-item">⌂ Dashboard</a>
-        <a href="/upload" class="nav-item active">↑ Upload File</a>
-        <a href="/files" class="nav-item">▣ File Management</a>
-        <a href="/share" class="nav-item">⌘ Share File</a>
-        <a href="/shared" class="nav-item">⌘ Shared Files</a>
-        <a href="/download" class="nav-item">↺ Download & Access</a>
-        <a href="/recovery" class="nav-item">⬢ Recovery</a>
-        <a href="/profile" class="nav-item">⊙ Profile</a>
+        <a href="/dashboard" class="nav-item" onclick="return handleExitProcessing('/dashboard')">⌂ Dashboard</a>
+        <a href="/upload" class="nav-item active" onclick="return handleExitProcessing('/upload')">↑ Upload File</a>
+        <a href="/files" class="nav-item" onclick="return handleExitProcessing('/files')">▣ File Management</a>
+        <a href="/share" class="nav-item" onclick="return handleExitProcessing('/share')">⌘ Share File</a>
+        <a href="/shared" class="nav-item" onclick="return handleExitProcessing('/shared')">⌘ Shared Files</a>
+        <a href="/download" class="nav-item" onclick="return handleExitProcessing('/download')">↺ Download & Access</a>
+        <a href="/recovery" class="nav-item" onclick="return handleExitProcessing('/recovery')">⬢ Recovery</a>
+        <a href="/profile" class="nav-item" onclick="return handleExitProcessing('/profile')">⊙ Profile</a>
 
-        <a href="/logout" class="nav-item logout">→ Logout</a>
+        <a href="/logout" class="nav-item logout" onclick="return handleExitProcessing('/logout')">→ Logout</a>
     </div>
 
     <div class="main-area">
@@ -122,7 +122,9 @@
                                         Splitting encrypted file into fragments...
                                     </p>
                                 {% else %}
-                                    <a href="/files" class="primary-btn text-decoration-none">
+                                    <a href="/files"
+                                       class="primary-btn text-decoration-none"
+                                       onclick="return handleExitProcessing('/files')">
                                         Go to File Management
                                     </a>
                                 {% endif %}
@@ -193,6 +195,37 @@
     });
 </script>
 {% endif %}
+
+<script>
+    var processingFileID = {{ processingData.fileID }};
+    var processingStatus = "{{ processingData.fileStatus }}";
+
+    function handleExitProcessing(targetURL) {
+        if (processingStatus === "encrypted" ||
+                processingStatus === "pending_processing" ||
+                processingStatus === "failed") {
+            cancelProcessingFile(processingFileID, targetURL);
+            return false;
+        }
+
+        return true;
+    }
+
+    function cancelProcessingFile(fileID, targetURL) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            window.location.href = targetURL;
+        };
+
+        xhr.onerror = function () {
+            window.location.href = targetURL;
+        };
+
+        xhr.open("POST", "/upload/process/cancel/" + fileID, true);
+        xhr.send();
+    }
+</script>
 
 </body>
 </html>
