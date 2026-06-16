@@ -350,6 +350,29 @@ class File:
         return file_record
 
     @staticmethod
+    def getProcessingFileDetails(file_id: int) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                encrypted_temp_path,
+                file_status
+            FROM files
+            WHERE file_id = %s
+            AND file_status IN ('encrypted', 'pending_processing', 'failed')
+        """, (file_id,))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return file_record
+
+    @staticmethod
     def updateFileStatus(file_id: int, file_status: str) -> None:
 
         connection = get_db_connection()
@@ -363,6 +386,23 @@ class File:
             file_status,
             file_id
         ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+    @staticmethod
+    def deleteProcessingFileRecord(file_id: int) -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            DELETE FROM files
+            WHERE file_id = %s
+            AND file_status IN ('encrypted', 'pending_processing', 'failed')
+        """, (file_id,))
 
         connection.commit()
 

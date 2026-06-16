@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 
 from typing import Dict
 from typing import Any
@@ -146,6 +147,31 @@ class Fragment:
                 fragment["fragment_path"],
                 "pending_storage"
             ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+    @staticmethod
+    def deletePendingFragments(file_id: int) -> None:
+
+        file_fragment_folder = os.path.join(
+            TEMP_FRAGMENT_FOLDER,
+            "file_" + str(file_id)
+        )
+
+        if os.path.exists(file_fragment_folder):
+            shutil.rmtree(file_fragment_folder)
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            DELETE FROM fragments
+            WHERE file_id = %s
+            AND fragment_status = 'pending_storage'
+        """, (file_id,))
 
         connection.commit()
 
