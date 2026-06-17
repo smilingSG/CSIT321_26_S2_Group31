@@ -62,10 +62,10 @@ def suspendUser(user_id: int):
 
     if not user_suspended:
         flash("User not found or already suspended.", "error")
-        return redirect(url_for("user_management_bp.userManagement"))
+        return redirect(url_for("admin_search_bp.searchUser"))
 
     flash("User account suspended successfully.", "success")
-    return redirect(url_for("user_management_bp.userManagement"))
+    return redirect(url_for("admin_search_bp.searchUser"))
 
 
 @admin_suspend_bp.route("/user-management/unsuspend/<int:user_id>", methods=["POST"])
@@ -81,7 +81,7 @@ def unsuspendUser(user_id: int):
 
     if not user_unsuspended:
         flash("User not found or already active.", "error")
-        return redirect(url_for("user_management_bp.userManagement"))
+        return redirect(url_for("admin_search_bp.searchUser"))
 
     flash("User account unsuspended successfully.", "success")
-    return redirect(url_for("user_management_bp.userManagement"))
+    return redirect(url_for("admin_search_bp.searchUser"))
