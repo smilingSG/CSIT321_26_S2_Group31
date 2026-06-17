@@ -2,6 +2,7 @@ from flask import Blueprint
 from flask import render_template
 from flask import request
 from flask import redirect
+from flask import session
 from flask import url_for
 
 from entities.File import File
@@ -19,7 +20,15 @@ configure_fragments_bp = Blueprint(
 )
 def fragmentConfigurationPage(file_id: int):
 
-    preview_data = File.getFilePreviewDetails(file_id)
+    owner_id = session.get("user_id")
+
+    if owner_id is None:
+        return redirect(url_for("login_bp.login"))
+
+    preview_data = File.getFilePreviewDetails(
+        file_id,
+        owner_id
+    )
 
     if preview_data is None:
         return "File record could not be found.", 404
@@ -35,6 +44,11 @@ def fragmentConfigurationPage(file_id: int):
     methods=["POST"]
 )
 def configureFragments(file_id: int):
+
+    owner_id = session.get("user_id")
+
+    if owner_id is None:
+        return redirect(url_for("login_bp.login"))
 
     total_fragments = request.form.get(
         "total_fragments"
@@ -55,7 +69,8 @@ def configureFragments(file_id: int):
     if validation_error is not None:
 
         preview_data = File.getFilePreviewDetails(
-            file_id
+            file_id,
+            owner_id
         )
 
         return render_template(
@@ -66,6 +81,7 @@ def configureFragments(file_id: int):
 
     File.updateFragmentConfiguration(
         file_id,
+        owner_id,
         int(total_fragments),
         int(required_fragments)
     )
