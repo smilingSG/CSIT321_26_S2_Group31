@@ -78,4 +78,4 @@ def createUser():
         return redirect(url_for("admin_bp.createUser"))
 
     flash("User account created successfully.", "success")
-    return redirect(url_for("user_management_bp.userManagement"))
+    return redirect(url_for("admin_search_bp.searchUser"))
