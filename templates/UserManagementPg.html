@@ -111,9 +111,13 @@
                                                 <button type="submit" class="table-button danger">Delete</button>
                                             </form>
                                             {% if user.isSuspended %}
-                                                <a href="#" class="table-button">Unsuspend</a>
+                                                <form method="POST" action="{{ url_for('admin_suspend_bp.unsuspendUser', user_id=user.userID) }}" class="inline-action-form">
+                                                    <button type="submit" class="table-button">Unsuspend</button>
+                                                </form>
                                             {% else %}
-                                                <a href="#" class="table-button">Suspend</a>
+                                                <form method="POST" action="{{ url_for('admin_suspend_bp.suspendUser', user_id=user.userID) }}" class="inline-action-form">
+                                                    <button type="submit" class="table-button">Suspend</button>
+                                                </form>
                                             {% endif %}
                                         </div>
                                     </td>

@@ -267,3 +267,46 @@ class UserAccount:
 
         cursor.close()
         connection.close()
+
+    @staticmethod
+    def getStatus(user_id: int) -> Optional[str]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT account_status
+            FROM users
+            WHERE user_id = %s
+        """, (user_id,))
+
+        status_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if status_record is None:
+            return None
+
+        return status_record[0]
+
+    @staticmethod
+    def setStatus(user_id: int,
+                  account_status: str) -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE users
+            SET account_status = %s
+            WHERE user_id = %s
+        """, (
+            account_status,
+            user_id
+        ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
