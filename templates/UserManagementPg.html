@@ -24,7 +24,7 @@
                 <span>⌂</span>
                 Admin Dashboard
             </a>
-            <a href="{{ url_for('user_management_bp.userManagement') }}" class="nav-link active">
+            <a href="{{ url_for('admin_search_bp.searchUser') }}" class="nav-link active">
                 <span>▦</span>
                 User Management
             </a>
@@ -56,7 +56,7 @@
                         </div>
 
                         <div class="management-actions">
-                            <form method="GET" action="{{ url_for('user_management_bp.userManagement') }}" class="search-box">
+                            <form method="GET" action="{{ url_for('admin_search_bp.searchUser') }}" class="search-box">
                                 <span>⌕</span>
                                 <input
                                     type="text"
