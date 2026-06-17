@@ -74,8 +74,13 @@ body {
     margin-top: 16px;
 }
 
+.inline-action-form {
+    display: inline;
+}
+
 .primary-action,
-.secondary-action {
+.secondary-action,
+.danger-action {
     display: inline-block;
     border-radius: 8px;
     font-size: 21px;
@@ -95,10 +100,26 @@ body {
     color: #d3d8e4;
 }
 
+.danger-action {
+    background: rgba(127, 31, 22, 0.7);
+    border: 1px solid #8b3328;
+    color: #ffb2a8;
+}
+
+button.danger-action {
+    cursor: pointer;
+}
+
 .primary-action:hover,
 .secondary-action:hover {
     background: #4368ef;
     border-color: #4368ef;
+    color: white;
+}
+
+.danger-action:hover {
+    background: #a13a2f;
+    border-color: #a13a2f;
     color: white;
 }
 

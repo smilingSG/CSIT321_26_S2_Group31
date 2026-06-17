@@ -87,7 +87,9 @@
                                         <div class="action-buttons">
                                             <a href="{{ url_for('admin_view_bp.viewUser', user_id=user.userID) }}" class="table-button">View</a>
                                             <a href="{{ url_for('admin_update_bp.updateUser', user_id=user.userID) }}" class="table-button">Update</a>
-                                            <a href="#" class="table-button danger">Delete</a>
+                                            <form method="POST" action="{{ url_for('admin_delete_bp.deleteUser', user_id=user.userID) }}" class="inline-action-form">
+                                                <button type="submit" class="table-button danger">Delete</button>
+                                            </form>
                                             {% if user.isSuspended %}
                                                 <a href="#" class="table-button">Unsuspend</a>
                                             {% else %}

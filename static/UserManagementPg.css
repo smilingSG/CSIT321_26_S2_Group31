@@ -245,6 +245,10 @@ body {
     gap: 10px;
 }
 
+.inline-action-form {
+    display: inline;
+}
+
 .table-button {
     background: transparent;
     color: #d3d8e4;
@@ -252,6 +256,11 @@ body {
     border-radius: 8px;
     padding: 12px 18px;
     text-decoration: none;
+}
+
+button.table-button {
+    cursor: pointer;
+    font: inherit;
 }
 
 .table-button:hover {

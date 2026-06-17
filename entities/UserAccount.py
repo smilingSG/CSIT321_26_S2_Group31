@@ -216,3 +216,19 @@ class UserAccount:
 
         cursor.close()
         connection.close()
+
+    @staticmethod
+    def deleteAccount(user_id: int) -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            DELETE FROM users
+            WHERE user_id = %s
+        """, (user_id,))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
