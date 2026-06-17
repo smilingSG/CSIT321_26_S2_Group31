@@ -26,8 +26,8 @@ Users will be able to upload files, configure reconstruction settings, securely 
 
 ### Security Technologies
 
-* AES-256-GCM (Planned)
-* Reed-Solomon Erasure Coding (Planned)
+* AES-256-GCM
+* zfec erasure coding
 
 ## System Architecture
 
@@ -68,7 +68,7 @@ Note: Authentication functionality is currently under development. These account
 2. Install required dependencies:
 
 ```bash
-pip install flask mysql-connector-python werkzeug cryptography bcrypt
+pip install -r requirements.txt
 ```
 
 3. Start the application:

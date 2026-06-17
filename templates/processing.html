@@ -25,16 +25,16 @@
             Secure File Sharing and Recovery System
         </p>
 
-        <a href="/dashboard" class="nav-item">⌂ Dashboard</a>
-        <a href="/upload" class="nav-item active">↑ Upload File</a>
-        <a href="/files" class="nav-item">▣ File Management</a>
-        <a href="/share" class="nav-item">⌘ Share File</a>
-        <a href="/shared" class="nav-item">⌘ Shared Files</a>
-        <a href="/download" class="nav-item">↺ Download & Access</a>
-        <a href="/recovery" class="nav-item">⬢ Recovery</a>
-        <a href="/profile" class="nav-item">⊙ Profile</a>
+        <a href="/dashboard" class="nav-item" onclick="return handleExitProcessing('/dashboard')">⌂ Dashboard</a>
+        <a href="/upload" class="nav-item active" onclick="return handleExitProcessing('/upload')">↑ Upload File</a>
+        <a href="/files" class="nav-item" onclick="return handleExitProcessing('/files')">▣ File Management</a>
+        <a href="/share" class="nav-item" onclick="return handleExitProcessing('/share')">⌘ Share File</a>
+        <a href="/shared" class="nav-item" onclick="return handleExitProcessing('/shared')">⌘ Shared Files</a>
+        <a href="/download" class="nav-item" onclick="return handleExitProcessing('/download')">↺ Download & Access</a>
+        <a href="/recovery" class="nav-item" onclick="return handleExitProcessing('/recovery')">⬢ Recovery</a>
+        <a href="/profile" class="nav-item" onclick="return handleExitProcessing('/profile')">⊙ Profile</a>
 
-        <a href="/logout" class="nav-item logout">→ Logout</a>
+        <a href="/logout" class="nav-item logout" onclick="return handleExitProcessing('/logout')">→ Logout</a>
     </div>
 
     <div class="main-area">
@@ -57,8 +57,20 @@
                         <h1>Encryption and File Splitting Process</h1>
 
                         <p class="subtitle">
-                            The uploaded file is encrypted and prepared for secure fragmentation.
+                            The uploaded file is encrypted and automatically prepared for secure fragmentation.
                         </p>
+
+                        {% if successMessage %}
+                            <div class="alert alert-success mt-4">
+                                {{ successMessage }}
+                            </div>
+                        {% endif %}
+
+                        {% if errorMessage %}
+                            <div class="alert alert-danger mt-4">
+                                {{ errorMessage }}
+                            </div>
+                        {% endif %}
 
                         <div class="status-box mt-4">
 
@@ -100,9 +112,22 @@
                             </div>
 
                             <div class="button-row mt-4">
-                                <a href="/files" class="primary-btn text-decoration-none">
-                                    Go to File Management
-                                </a>
+                                {% if processingData.fileStatus == "encrypted" %}
+                                    <form id="splitFileForm"
+                                          method="POST"
+                                          action="{{ url_for('split_file_bp.splitFile', file_id=processingData.fileID) }}">
+                                    </form>
+
+                                    <p class="subtitle mb-0">
+                                        Splitting encrypted file into fragments...
+                                    </p>
+                                {% else %}
+                                    <a href="/files"
+                                       class="primary-btn text-decoration-none"
+                                       onclick="return handleExitProcessing('/files')">
+                                        Go to File Management
+                                    </a>
+                                {% endif %}
                             </div>
 
                         </div>
@@ -132,13 +157,21 @@
                             </p>
 
                             <p>
-                                <strong>Encryption Status:</strong>
+                                <strong>File Status:</strong>
                                 {{ processingData.fileStatus }}
                             </p>
 
                             <p>
                                 <strong>Result:</strong>
-                                File encrypted and ready for secure file splitting.
+                                {% if processingData.fileStatus == "encrypted" %}
+                                    File encrypted and splitting will start automatically.
+                                {% elif processingData.fileStatus == "pending_processing" %}
+                                    File split successfully and ready for fragment storage.
+                                {% elif processingData.fileStatus == "failed" %}
+                                    File processing failed.
+                                {% else %}
+                                    File processing is in progress.
+                                {% endif %}
                             </p>
 
                         </div>
@@ -154,6 +187,45 @@
     </div>
 
 </div>
+
+{% if processingData.fileStatus == "encrypted" %}
+<script>
+    window.addEventListener("load", function () {
+        document.getElementById("splitFileForm").submit();
+    });
+</script>
+{% endif %}
+
+<script>
+    var processingFileID = {{ processingData.fileID }};
+    var processingStatus = "{{ processingData.fileStatus }}";
+
+    function handleExitProcessing(targetURL) {
+        if (processingStatus === "encrypted" ||
+                processingStatus === "pending_processing" ||
+                processingStatus === "failed") {
+            cancelProcessingFile(processingFileID, targetURL);
+            return false;
+        }
+
+        return true;
+    }
+
+    function cancelProcessingFile(fileID, targetURL) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            window.location.href = targetURL;
+        };
+
+        xhr.onerror = function () {
+            window.location.href = targetURL;
+        };
+
+        xhr.open("POST", "/upload/process/cancel/" + fileID, true);
+        xhr.send();
+    }
+</script>
 
 </body>
 </html>
