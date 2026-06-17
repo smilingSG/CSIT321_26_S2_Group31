@@ -11,7 +11,6 @@ from flask import session
 from flask import url_for
 
 from controllers.LoginC import getPostLoginRedirect
-from controllers.UserManagementC import UserManagementC
 from entities.UserAccount import UserAccount
 
 admin_update_bp = Blueprint("admin_update_bp", __name__)
@@ -32,7 +31,7 @@ class AdminUpdateC:
             "username": user_account["username"],
             "email": user_account["email"],
             "role": user_account["role"],
-            "roleLabel": UserManagementC.formatRole(user_account["role"])
+            "roleLabel": AdminUpdateC.formatRole(user_account["role"])
         }
 
     @staticmethod
@@ -53,6 +52,17 @@ class AdminUpdateC:
 
         return True
 
+    @staticmethod
+    def formatRole(role: str) -> str:
+
+        role_labels = {
+            "user": "User",
+            "user_admin": "User Admin",
+            "system_admin": "System Admin"
+        }
+
+        return role_labels.get(role, role)
+
 
 @admin_update_bp.route("/user-management/update/<int:user_id>", methods=["GET", "POST"])
 def updateUser(user_id: int):
@@ -68,7 +78,7 @@ def updateUser(user_id: int):
 
         if user_account is None:
             flash("User not found.", "error")
-            return redirect(url_for("user_management_bp.userManagement"))
+            return redirect(url_for("admin_search_bp.searchUser"))
 
         return render_template(
             "AdminUpdatePg.html",
@@ -99,7 +109,7 @@ def updateUser(user_id: int):
 
     if not user_updated:
         flash("User not found.", "error")
-        return redirect(url_for("user_management_bp.userManagement"))
+        return redirect(url_for("admin_search_bp.searchUser"))
 
     flash("User account updated successfully.", "success")
-    return redirect(url_for("user_management_bp.userManagement"))
+    return redirect(url_for("admin_search_bp.searchUser"))
