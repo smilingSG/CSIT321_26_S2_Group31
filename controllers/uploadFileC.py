@@ -1,7 +1,7 @@
 import os
 import uuid
 
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for
 from werkzeug.utils import secure_filename
 
 from entities.File import File
@@ -9,18 +9,29 @@ from entities.File import File
 upload_bp = Blueprint("upload_bp", __name__)
 
 TEMP_UPLOAD_FOLDER: str = "temp_uploads"
-TEMP_USER_ID: int = 1
 
 os.makedirs(TEMP_UPLOAD_FOLDER, exist_ok=True)
 
 
 @upload_bp.route("/upload", methods=["GET"])
 def uploadPage():
+
+    if session.get("user_id") is None:
+        return redirect(url_for("login_bp.login"))
+
     return render_template("upload.html")
 
 
 @upload_bp.route("/upload/temp", methods=["POST"])
 def uploadTempFile():
+
+    owner_id = session.get("user_id")
+
+    if owner_id is None:
+        return jsonify({
+            "success": False,
+            "message": "Please log in before uploading a file."
+        }), 401
 
     uploaded_file = request.files.get("file")
 
@@ -49,7 +60,7 @@ def uploadTempFile():
         file_type: str = uploaded_file.content_type or "Unknown"
 
         file_id = File.createTempFileRecord(
-            owner_id=TEMP_USER_ID,
+            owner_id=owner_id,
             file_name=original_filename,
             stored_filename=stored_filename,
             file_size=file_size,
@@ -83,7 +94,18 @@ def uploadTempFile():
 @upload_bp.route("/upload/cancel/<int:file_id>", methods=["POST"])
 def cancelUpload(file_id: int):
 
-    file_record = File.getTempFileById(file_id)
+    owner_id = session.get("user_id")
+
+    if owner_id is None:
+        return jsonify({
+            "success": False,
+            "message": "Please log in before cancelling an upload."
+        }), 401
+
+    file_record = File.getTempFileById(
+        file_id,
+        owner_id
+    )
 
     if file_record is None:
         return jsonify({
@@ -96,7 +118,10 @@ def cancelUpload(file_id: int):
     if os.path.exists(temp_file_path):
         os.remove(temp_file_path)
 
-    File.deleteTempFileRecord(file_id)
+    File.deleteTempFileRecord(
+        file_id,
+        owner_id
+    )
 
     return jsonify({
         "success": True,

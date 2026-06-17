@@ -84,7 +84,8 @@ class File:
         return file_id
 
     @staticmethod
-    def getFilePreviewDetails(file_id: int) -> Optional[Dict[str, Any]]:
+    def getFilePreviewDetails(file_id: int,
+                              owner_id: int) -> Optional[Dict[str, Any]]:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -101,8 +102,12 @@ class File:
                 uploaded_at
             FROM files
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status = 'pending_confirmation'
-        """, (file_id,))
+        """, (
+            file_id,
+            owner_id
+        ))
 
         file_record = cursor.fetchone()
 
@@ -129,7 +134,8 @@ class File:
         }
 
     @staticmethod
-    def getTempFileById(file_id: int) -> Optional[Dict[str, Any]]:
+    def getTempFileById(file_id: int,
+                        owner_id: int) -> Optional[Dict[str, Any]]:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -142,8 +148,12 @@ class File:
                 file_status
             FROM files
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status = 'pending_confirmation'
-        """, (file_id,))
+        """, (
+            file_id,
+            owner_id
+        ))
 
         file_record = cursor.fetchone()
 
@@ -154,6 +164,7 @@ class File:
 
     @staticmethod
     def updateFragmentConfiguration(file_id: int,
+                                    owner_id: int,
                                     total_fragments: int,
                                     required_fragments: int) -> None:
 
@@ -166,11 +177,13 @@ class File:
                 total_fragments = %s,
                 required_fragments = %s
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status = 'pending_confirmation'
         """, (
             total_fragments,
             required_fragments,
-            file_id
+            file_id,
+            owner_id
         ))
 
         connection.commit()
@@ -179,7 +192,8 @@ class File:
         connection.close()
 
     @staticmethod
-    def deleteTempFileRecord(file_id: int) -> None:
+    def deleteTempFileRecord(file_id: int,
+                             owner_id: int) -> None:
 
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -187,8 +201,12 @@ class File:
         cursor.execute("""
             DELETE FROM files
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status = 'pending_confirmation'
-        """, (file_id,))
+        """, (
+            file_id,
+            owner_id
+        ))
 
         connection.commit()
 
@@ -216,7 +234,8 @@ class File:
         return count
 
     @staticmethod
-    def removeFile(file_id: int) -> None:
+    def removeFile(file_id: int,
+                   owner_id: int) -> None:
 
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -224,8 +243,12 @@ class File:
         cursor.execute("""
             DELETE FROM files
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status = 'pending_confirmation'
-        """, (file_id,))
+        """, (
+            file_id,
+            owner_id
+        ))
 
         connection.commit()
 
@@ -233,7 +256,8 @@ class File:
         connection.close()
 
     @staticmethod
-    def encryptFile(file_id: int) -> bool:
+    def encryptFile(file_id: int,
+                    owner_id: int) -> bool:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -246,8 +270,12 @@ class File:
                 file_status
             FROM files
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status = 'pending_confirmation'
-        """, (file_id,))
+        """, (
+            file_id,
+            owner_id
+        ))
 
         file_record = cursor.fetchone()
 
@@ -305,13 +333,15 @@ class File:
                 temp_upload_path = NULL,
                 file_status = 'encrypted'
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status = 'pending_confirmation'
         """, (
             encrypted_temp_path,
             nonce,
             file_key,
             encrypted_size,
-            file_id
+            file_id,
+            owner_id
         ))
 
         connection.commit()
@@ -325,7 +355,8 @@ class File:
         return True
 
     @staticmethod
-    def getEncryptedFileDetails(file_id: int) -> Optional[Dict[str, Any]]:
+    def getEncryptedFileDetails(file_id: int,
+                                owner_id: int) -> Optional[Dict[str, Any]]:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -339,8 +370,12 @@ class File:
                 file_status
             FROM files
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status = 'encrypted'
-        """, (file_id,))
+        """, (
+            file_id,
+            owner_id
+        ))
 
         file_record = cursor.fetchone()
 
@@ -350,7 +385,8 @@ class File:
         return file_record
 
     @staticmethod
-    def getProcessingFileDetails(file_id: int) -> Optional[Dict[str, Any]]:
+    def getProcessingFileDetails(file_id: int,
+                                 owner_id: int) -> Optional[Dict[str, Any]]:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -362,8 +398,12 @@ class File:
                 file_status
             FROM files
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status IN ('encrypted', 'pending_processing', 'failed')
-        """, (file_id,))
+        """, (
+            file_id,
+            owner_id
+        ))
 
         file_record = cursor.fetchone()
 
@@ -373,7 +413,9 @@ class File:
         return file_record
 
     @staticmethod
-    def updateFileStatus(file_id: int, file_status: str) -> None:
+    def updateFileStatus(file_id: int,
+                         owner_id: int,
+                         file_status: str) -> None:
 
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -382,9 +424,11 @@ class File:
             UPDATE files
             SET file_status = %s
             WHERE file_id = %s
+            AND owner_id = %s
         """, (
             file_status,
-            file_id
+            file_id,
+            owner_id
         ))
 
         connection.commit()
@@ -393,7 +437,8 @@ class File:
         connection.close()
 
     @staticmethod
-    def deleteProcessingFileRecord(file_id: int) -> None:
+    def deleteProcessingFileRecord(file_id: int,
+                                   owner_id: int) -> None:
 
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -401,8 +446,12 @@ class File:
         cursor.execute("""
             DELETE FROM files
             WHERE file_id = %s
+            AND owner_id = %s
             AND file_status IN ('encrypted', 'pending_processing', 'failed')
-        """, (file_id,))
+        """, (
+            file_id,
+            owner_id
+        ))
 
         connection.commit()
 
@@ -410,7 +459,8 @@ class File:
         connection.close()
 
     @staticmethod
-    def getProcessingSummary(file_id: int) -> Optional[Dict[str, Any]]:
+    def getProcessingSummary(file_id: int,
+                             owner_id: int) -> Optional[Dict[str, Any]]:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -426,7 +476,11 @@ class File:
                 encrypted_size
             FROM files
             WHERE file_id = %s
-        """, (file_id,))
+            AND owner_id = %s
+        """, (
+            file_id,
+            owner_id
+        ))
 
         file_record = cursor.fetchone()
 
