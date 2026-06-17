@@ -1,9 +1,11 @@
 from flask import Blueprint
 from flask import redirect
 from flask import render_template
+from flask import request
 from flask import session
 from flask import url_for
 
+from controllers.AdminSearchC import AdminSearchC
 from controllers.LoginC import getPostLoginRedirect
 from entities.UserAccount import UserAccount
 
@@ -79,7 +81,9 @@ def userManagement():
     if session.get("role") != "user_admin":
         return redirect(getPostLoginRedirect(session.get("role")))
 
-    user_management_data = UserManagementC.getUserManagementData()
+    search_query: str = request.args.get("query", "").strip()
+
+    user_management_data = AdminSearchC.searchUser(search_query)
 
     return render_template(
         "UserManagementPg.html",

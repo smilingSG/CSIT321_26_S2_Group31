@@ -186,6 +186,18 @@ body {
     color: #8f99ad;
 }
 
+.search-box button {
+    background: transparent;
+    border: 0;
+    color: #a9c3ff;
+    font-size: 16px;
+    padding: 0;
+}
+
+.search-box button:hover {
+    color: white;
+}
+
 .create-button {
     min-width: 136px;
     background: #3459db;
@@ -204,6 +216,28 @@ body {
 .create-button:hover {
     background: #4368ef;
     color: white;
+}
+
+.page-messages {
+    margin-bottom: 22px;
+}
+
+.page-message {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+}
+
+.page-message.success {
+    background: rgba(38, 126, 76, 0.28);
+    border: 1px solid rgba(93, 204, 137, 0.45);
+    color: #bff0ce;
+}
+
+.page-message.error {
+    background: rgba(127, 31, 22, 0.7);
+    border: 1px solid #8b3328;
+    color: #ffb2a8;
 }
 
 .user-table {

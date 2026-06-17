@@ -56,15 +56,35 @@
                         </div>
 
                         <div class="management-actions">
-                            <div class="search-box">
+                            <form method="GET" action="{{ url_for('user_management_bp.userManagement') }}" class="search-box">
                                 <span>⌕</span>
-                                <input type="text" placeholder="Search user accounts">
-                            </div>
+                                <input
+                                    type="text"
+                                    name="query"
+                                    value="{{ data.query }}"
+                                    placeholder="Search user accounts"
+                                >
+                                <button type="submit">Search</button>
+                            </form>
                             <a href="{{ url_for('admin_bp.createUser') }}" class="create-button">
                                 Create<br>User
                             </a>
                         </div>
                     </div>
+
+                    {% if data.hasSearch and not data.hasResults %}
+                        <div class="page-message error">No results found.</div>
+                    {% endif %}
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="page-messages">
+                                {% for category, message in messages %}
+                                    <div class="page-message {{ category }}">{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
 
                     <table class="user-table">
                         <thead>
@@ -100,7 +120,13 @@
                                 </tr>
                             {% else %}
                                 <tr>
-                                    <td colspan="5" class="empty-table">No user accounts found.</td>
+                                    <td colspan="5" class="empty-table">
+                                        {% if data.hasSearch %}
+                                            No results found.
+                                        {% else %}
+                                            No user accounts found.
+                                        {% endif %}
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>

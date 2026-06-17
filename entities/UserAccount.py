@@ -80,6 +80,41 @@ class UserAccount:
         return user_records
 
     @staticmethod
+    def findUser(query: str):
+
+        search_query = "%" + query + "%"
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                user_id,
+                username,
+                email,
+                role,
+                account_status
+            FROM users
+            WHERE username LIKE %s
+            OR email LIKE %s
+            OR role LIKE %s
+            OR account_status LIKE %s
+            ORDER BY user_id
+        """, (
+            search_query,
+            search_query,
+            search_query,
+            search_query
+        ))
+
+        resultsList = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return resultsList
+
+    @staticmethod
     def checkUserExists(username: str,
                         email: str) -> bool:
 
