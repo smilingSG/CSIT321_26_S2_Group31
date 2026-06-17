@@ -78,3 +78,68 @@ class UserAccount:
         connection.close()
 
         return user_records
+
+    @staticmethod
+    def checkUserExists(username: str,
+                        email: str) -> bool:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM users
+            WHERE username = %s
+            OR email = %s
+        """, (
+            username,
+            email
+        ))
+
+        user_count = cursor.fetchone()[0]
+
+        cursor.close()
+        connection.close()
+
+        return user_count > 0
+
+    @staticmethod
+    def createAccount(username: str,
+                      email: str,
+                      password: str,
+                      role: str) -> int:
+
+        password_hash = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            INSERT INTO users
+            (
+                username,
+                email,
+                password_hash,
+                role,
+                account_status
+            )
+            VALUES (%s, %s, %s, %s, %s)
+        """, (
+            username,
+            email,
+            password_hash,
+            role,
+            "active"
+        ))
+
+        connection.commit()
+
+        user_id = cursor.lastrowid
+
+        cursor.close()
+        connection.close()
+
+        return user_id
