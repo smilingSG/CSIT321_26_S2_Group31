@@ -9,7 +9,7 @@ CREATE TABLE users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('user', 'user_admin', 'system_admin') DEFAULT 'user',
-    account_status ENUM('active', 'suspended', 'deleted') DEFAULT 'active',
+    account_status ENUM('active', 'suspended') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -128,10 +128,10 @@ CREATE TABLE system_settings (
 INSERT INTO users
 (username, email, password_hash, role, account_status)
 VALUES
-('demo', 'demo@example.com', 'temporary_hash', 'user', 'active'),
-('johnsmith', 'john@example.com', 'temporary_hash', 'user', 'active'),
-('admin', 'admin@example.com', 'temporary_hash', 'user_admin', 'active'),
-('sysadmin', 'sysadmin@example.com', 'temporary_hash', 'system_admin', 'active');
+('demo', 'demo@example.com', '$2b$12$ZFeqa5B8FuHVB5Wo99C02.mFM/8hyzw1hrfhROIEqblmabaBa.1YO', 'user', 'active'),
+('johnsmith', 'john@example.com', '$2b$12$EoLb7QWOQR7twQCzrn169OJ8NUD0EtGJQSHnrPzwm3yunTQyJqTu.', 'user', 'active'),
+('admin', 'admin@example.com', '$2b$12$1Ym3H5BvXoShLot3hZXVqO/8hp0TRgRAobg6EaxPQxNDtO3saXuZG', 'user_admin', 'active'),
+('sysadmin', 'sysadmin@example.com', '$2b$12$VEzC2cj0lEhxwvSsY7m2zOFgk82biMWPgh85ERA8s.xcvzSNAGYu6', 'system_admin', 'active');
 
 INSERT INTO storage_nodes
 (node_name, node_path, node_status)
