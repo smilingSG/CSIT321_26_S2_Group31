@@ -1,6 +1,7 @@
 from flask import Flask, redirect, session, url_for
 
 from controllers.LoginC import login_bp
+from controllers.UserManagementC import user_management_bp
 from controllers.dashboardC import dashboard_bp
 from controllers.uploadFileC import upload_bp
 from controllers.previewUploadedFileC import preview_bp
@@ -21,6 +22,7 @@ def logout():
 
 
 app.register_blueprint(login_bp)
+app.register_blueprint(user_management_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(upload_bp)
 app.register_blueprint(preview_bp)

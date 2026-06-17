@@ -1,0 +1,267 @@
+body {
+    margin: 0;
+    background:
+        linear-gradient(rgba(143, 180, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(143, 180, 255, 0.05) 1px, transparent 1px),
+        radial-gradient(circle at 86% 18%, rgba(36, 88, 230, 0.16), transparent 34%),
+        #050b18;
+    background-size: 48px 48px, 48px 48px, auto, auto;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.admin-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.admin-sidebar {
+    width: 360px;
+    background: rgba(16, 27, 45, 0.86);
+    border-right: 1px solid #26344d;
+    padding: 30px 24px;
+}
+
+.brand-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+.brand-mark {
+    width: 64px;
+    height: 64px;
+    background: #3459db;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.portal-text {
+    color: #a9c3ff;
+    font-size: 14px;
+    letter-spacing: 8px;
+    margin: 0 0 6px;
+}
+
+.brand-row h2 {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.system-name {
+    color: #9ba8bd;
+    font-size: 18px;
+    line-height: 1.45;
+    margin-bottom: 36px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: #c9d3e3;
+    padding: 18px 24px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background: #3459db;
+    color: white;
+}
+
+.logout {
+    margin-top: 70px;
+}
+
+.admin-main {
+    flex: 1;
+}
+
+.topbar {
+    min-height: 104px;
+    border-bottom: 1px solid #26344d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 44px;
+    background: rgba(5, 11, 24, 0.72);
+}
+
+.top-label {
+    color: #a9c3ff;
+    letter-spacing: 9px;
+    font-size: 15px;
+    margin: 0 0 10px;
+}
+
+.topbar h1 {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.admin-pill {
+    color: #d3d8e4;
+    background: rgba(16, 27, 45, 0.9);
+    border: 1px solid #26344d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    font-size: 18px;
+}
+
+.page-content {
+    padding: 46px 44px;
+}
+
+.management-card {
+    background: rgba(16, 27, 45, 0.68);
+    border: 1px solid #26344d;
+    border-radius: 8px;
+    padding: 36px;
+}
+
+.management-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 28px;
+    margin-bottom: 34px;
+}
+
+.management-header h2 {
+    font-size: 42px;
+    font-weight: bold;
+    margin-bottom: 14px;
+}
+
+.subtitle {
+    color: #9ba8bd;
+    font-size: 18px;
+    line-height: 1.45;
+    margin: 0;
+    max-width: 620px;
+}
+
+.management-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 18px;
+}
+
+.search-box {
+    min-width: 360px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(5, 11, 24, 0.84);
+    border: 1px solid #42506a;
+    border-radius: 8px;
+    padding: 0 22px;
+}
+
+.search-box span {
+    color: #8f99ad;
+}
+
+.search-box input {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    color: white;
+    font-size: 18px;
+    outline: 0;
+}
+
+.search-box input::placeholder {
+    color: #8f99ad;
+}
+
+.create-button {
+    min-width: 136px;
+    background: #3459db;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    line-height: 1.35;
+    padding: 18px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.create-button:hover {
+    background: #4368ef;
+    color: white;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(5, 11, 24, 0.58);
+}
+
+.user-table th,
+.user-table td {
+    color: #d3d8e4;
+    font-size: 19px;
+    padding: 24px 22px;
+    vertical-align: middle;
+    border-bottom: 1px solid #26344d;
+}
+
+.user-table th {
+    color: #9ba8bd;
+    font-weight: bold;
+}
+
+.empty-table {
+    color: #9ba8bd;
+    text-align: center;
+}
+
+.status-badge {
+    display: inline-block;
+    background: rgba(52, 89, 219, 0.42);
+    color: #a9c3ff;
+    border-radius: 8px;
+    padding: 6px 16px;
+}
+
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.table-button {
+    background: transparent;
+    color: #d3d8e4;
+    border: 1px solid #42506a;
+    border-radius: 8px;
+    padding: 12px 18px;
+    text-decoration: none;
+}
+
+.table-button:hover {
+    background: #3459db;
+    border-color: #3459db;
+    color: white;
+}
+
+.table-button.danger {
+    background: rgba(127, 31, 22, 0.7);
+    border-color: #8b3328;
+    color: #ffb2a8;
+}

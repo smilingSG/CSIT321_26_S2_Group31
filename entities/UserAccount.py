@@ -54,3 +54,27 @@ class UserAccount:
             "email": user_record["email"],
             "role": user_record["role"]
         }
+
+    @staticmethod
+    def getAllUserAccounts():
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                user_id,
+                username,
+                email,
+                role,
+                account_status
+            FROM users
+            ORDER BY user_id
+        """)
+
+        user_records = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return user_records

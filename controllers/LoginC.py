@@ -16,6 +16,9 @@ login_bp = Blueprint("login_bp", __name__)
 
 def getPostLoginRedirect(role: str) -> str:
 
+    if role == "user_admin":
+        return url_for("user_management_bp.userAdminDashboard")
+
     return url_for("dashboard_bp.dashboard")
 
 
