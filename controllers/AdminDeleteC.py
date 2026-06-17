@@ -36,7 +36,7 @@ def deleteUser(user_id: int):
 
     if not user_deleted:
         flash("User not found.", "error")
-        return redirect(url_for("user_management_bp.userManagement"))
+        return redirect(url_for("admin_search_bp.searchUser"))
 
     flash("User account deleted successfully.", "success")
-    return redirect(url_for("user_management_bp.userManagement"))
+    return redirect(url_for("admin_search_bp.searchUser"))
