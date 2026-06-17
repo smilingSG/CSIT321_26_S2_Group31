@@ -1,6 +1,7 @@
 from flask import Flask, redirect, session, url_for
 
 from controllers.AdminC import admin_bp
+from controllers.AdminUpdateC import admin_update_bp
 from controllers.LoginC import login_bp
 from controllers.UserManagementC import user_management_bp
 from controllers.dashboardC import dashboard_bp
@@ -32,6 +33,7 @@ app.register_blueprint(configure_fragments_bp)
 app.register_blueprint(delete_bp)
 app.register_blueprint(encrypt_file_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(admin_update_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)

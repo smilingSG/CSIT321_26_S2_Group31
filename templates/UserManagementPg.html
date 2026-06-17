@@ -86,7 +86,7 @@
                                     <td>
                                         <div class="action-buttons">
                                             <a href="#" class="table-button">View</a>
-                                            <a href="#" class="table-button">Update</a>
+                                            <a href="{{ url_for('admin_update_bp.updateUser', user_id=user.userID) }}" class="table-button">Update</a>
                                             <a href="#" class="table-button danger">Delete</a>
                                             {% if user.isSuspended %}
                                                 <a href="#" class="table-button">Unsuspend</a>

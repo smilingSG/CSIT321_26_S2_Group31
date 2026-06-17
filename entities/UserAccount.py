@@ -143,3 +143,76 @@ class UserAccount:
         connection.close()
 
         return user_id
+
+    @staticmethod
+    def getUserDetails(user_id: int) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                user_id,
+                username,
+                email,
+                role,
+                account_status,
+                created_at,
+                updated_at
+            FROM users
+            WHERE user_id = %s
+        """, (user_id,))
+
+        user_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return user_record
+
+    @staticmethod
+    def checkUserExistsById(user_id: int) -> bool:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM users
+            WHERE user_id = %s
+        """, (user_id,))
+
+        user_count = cursor.fetchone()[0]
+
+        cursor.close()
+        connection.close()
+
+        return user_count > 0
+
+    @staticmethod
+    def updateAccount(user_id: int,
+                      username: str,
+                      email: str,
+                      role: str) -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE users
+            SET
+                username = %s,
+                email = %s,
+                role = %s
+            WHERE user_id = %s
+        """, (
+            username,
+            email,
+            role,
+            user_id
+        ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
