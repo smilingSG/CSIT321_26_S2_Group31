@@ -1,5 +1,6 @@
-from flask import Flask
+from flask import Flask, redirect, session, url_for
 
+from controllers.LoginC import login_bp
 from controllers.dashboardC import dashboard_bp
 from controllers.uploadFileC import upload_bp
 from controllers.previewUploadedFileC import preview_bp
@@ -11,6 +12,15 @@ from controllers.encryptFileC import encrypt_file_bp
 app = Flask(__name__)
 app.secret_key = "temporary_secret_key"
 
+
+@app.route("/logout")
+def logout():
+    session.clear()
+
+    return redirect(url_for("login_bp.login"))
+
+
+app.register_blueprint(login_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(upload_bp)
 app.register_blueprint(preview_bp)

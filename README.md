@@ -68,7 +68,7 @@ Note: Authentication functionality is currently under development. These account
 2. Install required dependencies:
 
 ```bash
-pip install flask mysql-connector-python werkzeug
+pip install flask mysql-connector-python werkzeug cryptography bcrypt
 ```
 
 3. Start the application:

@@ -1,0 +1,130 @@
+body {
+    background:
+        linear-gradient(rgba(143, 180, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(143, 180, 255, 0.05) 1px, transparent 1px),
+        radial-gradient(circle at top left, rgba(36, 88, 230, 0.24), transparent 34%),
+        #050b18;
+    background-size: 48px 48px, 48px 48px, auto, auto;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+}
+
+.login-panel {
+    width: 100%;
+    max-width: 760px;
+    background: rgba(16, 27, 45, 0.82);
+    border: 1px solid #26344d;
+    border-radius: 8px;
+    padding: 42px;
+}
+
+.page-tag {
+    display: inline-block;
+    color: #a9c3ff;
+    background: rgba(36, 88, 230, 0.28);
+    border-radius: 8px;
+    padding: 8px 18px;
+    margin-bottom: 24px;
+}
+
+.login-panel h1 {
+    font-size: 42px;
+    font-weight: bold;
+    margin-bottom: 36px;
+}
+
+.form-label {
+    color: #c9d3e3;
+    font-size: 18px;
+}
+
+.form-control {
+    background: rgba(5, 11, 24, 0.88);
+    border: 1px solid #42506a;
+    color: white;
+    border-radius: 8px;
+    padding: 18px 22px;
+    font-size: 18px;
+}
+
+.form-control::placeholder {
+    color: #919aad;
+}
+
+.form-control:focus {
+    background: rgba(5, 11, 24, 0.94);
+    border-color: #8fb4ff;
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(36, 88, 230, 0.25);
+}
+
+.policy-note {
+    background: rgba(5, 11, 24, 0.78);
+    border: 1px solid #26344d;
+    border-radius: 8px;
+    color: #d3d8e4;
+    font-size: 18px;
+    line-height: 1.5;
+    padding: 22px;
+    margin-bottom: 24px;
+}
+
+.role-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.role-button {
+    background: transparent;
+    border: 1px solid #42506a;
+    border-radius: 8px;
+    color: #d3d8e4;
+    font-size: 18px;
+    padding: 18px 16px;
+}
+
+.role-button:hover {
+    background: #3459db;
+    border-color: #3459db;
+    color: white;
+}
+
+.support-links {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.support-links a {
+    color: #a9c3ff;
+    font-size: 18px;
+    text-decoration: none;
+}
+
+.support-links a:hover {
+    color: white;
+}
+
+@media (max-width: 720px) {
+    .login-panel {
+        padding: 28px;
+    }
+
+    .login-panel h1 {
+        font-size: 32px;
+    }
+
+    .role-actions {
+        grid-template-columns: 1fr;
+    }
+}
