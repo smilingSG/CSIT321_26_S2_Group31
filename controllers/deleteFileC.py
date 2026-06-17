@@ -2,6 +2,7 @@ import os
 
 from flask import Blueprint
 from flask import jsonify
+from flask import session
 
 from entities.File import File
 
@@ -19,8 +20,17 @@ TEMP_UPLOAD_FOLDER = "temp_uploads"
 )
 def deleteFile(file_id: int):
 
+    owner_id = session.get("user_id")
+
+    if owner_id is None:
+        return jsonify({
+            "success": False,
+            "message": "Please log in before deleting a file."
+        }), 401
+
     file_record = File.getTempFileById(
-        file_id
+        file_id,
+        owner_id
     )
 
     if file_record is None:
@@ -34,7 +44,10 @@ def deleteFile(file_id: int):
     if os.path.exists(temp_file_path):
         os.remove(temp_file_path)
 
-    File.removeFile(file_id)
+    File.removeFile(
+        file_id,
+        owner_id
+    )
 
     return jsonify({
         "success": True,
