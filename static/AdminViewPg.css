@@ -1,0 +1,139 @@
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at 88% 18%, rgba(36, 88, 230, 0.25), transparent 18%),
+        radial-gradient(circle at 86% 42%, rgba(146, 48, 48, 0.16), transparent 12%),
+        radial-gradient(circle at 86% 76%, rgba(146, 48, 48, 0.16), transparent 12%),
+        #050b18;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.view-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 56px;
+}
+
+.view-panel {
+    width: 100%;
+    max-width: 980px;
+    background: #101827;
+    border: 1px solid #26344d;
+    border-radius: 8px;
+    padding: 42px;
+}
+
+.view-panel h1 {
+    font-size: 34px;
+    font-weight: bold;
+    margin-bottom: 22px;
+}
+
+.panel-subtitle {
+    color: #9ba8bd;
+    font-size: 21px;
+    margin-bottom: 38px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.detail-group {
+    margin-bottom: 28px;
+}
+
+.detail-label {
+    color: #d3d8e4;
+    font-size: 22px;
+    margin-bottom: 14px;
+}
+
+.detail-value {
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    background: rgba(5, 11, 24, 0.84);
+    border: 1px solid #42506a;
+    border-radius: 8px;
+    color: white;
+    font-size: 22px;
+    padding: 18px 24px;
+}
+
+.page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.inline-action-form {
+    display: inline;
+}
+
+.primary-action,
+.secondary-action,
+.danger-action {
+    display: inline-block;
+    border-radius: 8px;
+    font-size: 21px;
+    padding: 18px 28px;
+    text-decoration: none;
+}
+
+.primary-action {
+    background: #3459db;
+    border: 1px solid #3459db;
+    color: white;
+}
+
+.secondary-action {
+    background: transparent;
+    border: 1px solid #42506a;
+    color: #d3d8e4;
+}
+
+.danger-action {
+    background: rgba(127, 31, 22, 0.7);
+    border: 1px solid #8b3328;
+    color: #ffb2a8;
+}
+
+button.danger-action {
+    cursor: pointer;
+}
+
+.primary-action:hover,
+.secondary-action:hover {
+    background: #4368ef;
+    border-color: #4368ef;
+    color: white;
+}
+
+.danger-action:hover {
+    background: #a13a2f;
+    border-color: #a13a2f;
+    color: white;
+}
+
+@media (max-width: 760px) {
+    .view-page {
+        padding: 28px;
+    }
+
+    .view-panel {
+        padding: 28px;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
