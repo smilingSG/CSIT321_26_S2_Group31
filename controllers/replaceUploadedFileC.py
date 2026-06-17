@@ -1,6 +1,6 @@
 import os
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, session
 
 from entities.File import File
 
@@ -12,7 +12,18 @@ TEMP_UPLOAD_FOLDER: str = "temp_uploads"
 @replace_bp.route("/upload/replace/<int:file_id>", methods=["POST"])
 def replaceTempFile(file_id: int):
 
-    file_record = File.getTempFileById(file_id)
+    owner_id = session.get("user_id")
+
+    if owner_id is None:
+        return jsonify({
+            "success": False,
+            "message": "Please log in before replacing a file."
+        }), 401
+
+    file_record = File.getTempFileById(
+        file_id,
+        owner_id
+    )
 
     if file_record is None:
         return jsonify({
@@ -25,7 +36,10 @@ def replaceTempFile(file_id: int):
     if os.path.exists(temp_file_path):
         os.remove(temp_file_path)
 
-    File.deleteTempFileRecord(file_id)
+    File.deleteTempFileRecord(
+        file_id,
+        owner_id
+    )
 
     return jsonify({
         "success": True,
