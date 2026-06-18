@@ -2,6 +2,7 @@ import os
 
 from flask import Blueprint
 from flask import jsonify
+from flask import session
 
 from entities.File import File
 from entities.Fragment import Fragment
@@ -19,7 +20,18 @@ cancel_processing_bp = Blueprint(
 )
 def cancelProcessing(file_id: int):
 
-    file_record = File.getProcessingFileDetails(file_id)
+    owner_id = session.get("user_id")
+
+    if owner_id is None:
+        return jsonify({
+            "success": False,
+            "message": "Please log in before cancelling processing."
+        }), 401
+
+    file_record = File.getProcessingFileDetails(
+        file_id,
+        owner_id
+    )
 
     if file_record is None:
         return jsonify({
@@ -34,7 +46,10 @@ def cancelProcessing(file_id: int):
     if encrypted_temp_path is not None and os.path.exists(encrypted_temp_path):
         os.remove(encrypted_temp_path)
 
-    File.deleteProcessingFileRecord(file_id)
+    File.deleteProcessingFileRecord(
+        file_id,
+        owner_id
+    )
 
     return jsonify({
         "success": True,

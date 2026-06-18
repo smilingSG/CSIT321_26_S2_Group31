@@ -16,6 +16,7 @@ from controllers.configureFragmentsC import configure_fragments_bp
 from controllers.deleteFileC import delete_bp
 from controllers.encryptFileC import encrypt_file_bp
 from controllers.splitFileC import split_file_bp
+from controllers.storeFragmentC import store_fragment_bp
 from controllers.cancelProcessingC import cancel_processing_bp
 
 app = Flask(__name__)
@@ -39,6 +40,7 @@ app.register_blueprint(configure_fragments_bp)
 app.register_blueprint(delete_bp)
 app.register_blueprint(encrypt_file_bp)
 app.register_blueprint(split_file_bp)
+app.register_blueprint(store_fragment_bp)
 app.register_blueprint(cancel_processing_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(admin_search_bp)
