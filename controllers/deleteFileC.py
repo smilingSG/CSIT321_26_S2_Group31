@@ -1,12 +1,9 @@
-# Import operating system utilities for checking and deleting temporary files.
-import os
-
 # Import Flask components used for routing, JSON responses, and sessions.
 from flask import Blueprint
 from flask import jsonify
 from flask import session
 
-# Import the File entity used to retrieve and delete file records.
+# Import the File entity used to retrieve and delete files.
 from entities.File import File
 
 
@@ -15,9 +12,6 @@ delete_bp = Blueprint(
     "delete_bp",
     __name__
 )
-
-# Define the folder used for temporary file uploads. NOT CURRENTLY IN USE MAY REMOVE LATER
-TEMP_UPLOAD_FOLDER = "temp_uploads"
 
 
 # Process a request to delete a temporary uploaded file.
@@ -37,33 +31,30 @@ def deleteFile(file_id: int):
             "message": "Please log in before deleting a file."
         }), 401
 
-    # Retrieve the temporary file record belonging to the logged-in user.
+    # Confirm that the file belongs to the logged-in user.
     file_record = File.getTempFileById(
         file_id,
         owner_id
     )
 
-    # Return an error if the file does not exist or belongs to another user.
     if file_record is None:
         return jsonify({
             "success": False,
             "message": "File not found."
         }), 404
 
-    # Retrieve the temporary file's local storage path.
-    temp_file_path = file_record["temp_upload_path"]
-
-    # Delete the physical temporary file if it still exists.
-    if os.path.exists(temp_file_path):
-        os.remove(temp_file_path)
-
-    # Delete the corresponding file record from the database.
-    File.removeFile(
+    # Ask the entity to remove both the physical file and its metadata.
+    file_deleted = File.removeFile(
         file_id,
         owner_id
     )
 
-    # Return a successful JSON response to the boundary.
+    if not file_deleted:
+        return jsonify({
+            "success": False,
+            "message": "File could not be deleted."
+        }), 500
+
     return jsonify({
         "success": True,
         "message": "File deleted."
