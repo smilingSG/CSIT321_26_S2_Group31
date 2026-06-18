@@ -154,7 +154,108 @@ class Fragment:
         connection.close()
 
     @staticmethod
-    def deletePendingFragments(file_id: int) -> None:
+    def getFragmentList(file_id: int) -> List[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                fragment_id,
+                file_id,
+                fragment_number,
+                fragment_path
+            FROM fragments
+            WHERE file_id = %s
+            AND fragment_status = 'pending_storage'
+            ORDER BY fragment_number
+        """, (file_id,))
+
+        fragment_records = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        fragment_list = []
+
+        for fragment_record in fragment_records:
+            fragment_path = fragment_record["fragment_path"]
+
+            if not os.path.exists(fragment_path):
+                return []
+
+            with open(fragment_path, "rb") as fragment_file:
+                fragment_bytes = fragment_file.read()
+
+            fragment_list.append({
+                "fragment_id": fragment_record["fragment_id"],
+                "file_id": fragment_record["file_id"],
+                "fragment_number": fragment_record["fragment_number"],
+                "fragment_path": fragment_path,
+                "fragment_bytes": fragment_bytes
+            })
+
+        return fragment_list
+
+    @staticmethod
+    def updateFragmentStorage(fragment_id: int,
+                              node_id: int,
+                              fragment_path: str) -> bool:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE fragments
+            SET
+                node_id = %s,
+                fragment_path = %s,
+                fragment_status = 'available'
+            WHERE fragment_id = %s
+            AND fragment_status = 'pending_storage'
+        """, (
+            node_id,
+            fragment_path,
+            fragment_id
+        ))
+
+        updated = cursor.rowcount == 1
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return updated
+
+    @staticmethod
+    def restorePendingFragmentStorage(
+        fragment_list: List[Dict[str, Any]]
+    ) -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        for fragment in fragment_list:
+            cursor.execute("""
+                UPDATE fragments
+                SET
+                    node_id = NULL,
+                    fragment_path = %s,
+                    fragment_status = 'pending_storage'
+                WHERE fragment_id = %s
+            """, (
+                fragment["fragment_path"],
+                fragment["fragment_id"]
+            ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+    @staticmethod
+    def deleteTemporaryFragmentFiles(file_id: int) -> None:
 
         file_fragment_folder = os.path.join(
             TEMP_FRAGMENT_FOLDER,
@@ -163,6 +264,11 @@ class Fragment:
 
         if os.path.exists(file_fragment_folder):
             shutil.rmtree(file_fragment_folder)
+
+    @staticmethod
+    def deletePendingFragments(file_id: int) -> None:
+
+        Fragment.deleteTemporaryFragmentFiles(file_id)
 
         connection = get_db_connection()
         cursor = connection.cursor()

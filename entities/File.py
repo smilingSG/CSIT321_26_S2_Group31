@@ -459,6 +459,62 @@ class File:
         connection.close()
 
     @staticmethod
+    def deleteEncryptedTemporaryFile(file_id: int,
+                                     owner_id: int) -> bool:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT encrypted_temp_path
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'pending_processing'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        if file_record is None:
+            cursor.close()
+            connection.close()
+            return False
+
+        encrypted_temp_path = file_record["encrypted_temp_path"]
+
+        if (
+            encrypted_temp_path is not None
+            and os.path.exists(encrypted_temp_path)
+        ):
+            try:
+                os.remove(encrypted_temp_path)
+            except OSError:
+                cursor.close()
+                connection.close()
+                return False
+
+        cursor.execute("""
+            UPDATE files
+            SET encrypted_temp_path = NULL
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'pending_processing'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return True
+
+    @staticmethod
     def getProcessingSummary(file_id: int,
                              owner_id: int) -> Optional[Dict[str, Any]]:
 

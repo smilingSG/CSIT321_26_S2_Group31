@@ -121,6 +121,15 @@
                                     <p class="subtitle mb-0">
                                         Splitting encrypted file into fragments...
                                     </p>
+                                {% elif processingData.fileStatus == "pending_processing" %}
+                                    <form id="storeFragmentForm"
+                                          method="POST"
+                                          action="{{ url_for('store_fragment_bp.storeFragments', file_id=processingData.fileID) }}">
+                                    </form>
+
+                                    <p class="subtitle mb-0">
+                                        Storing fragments across separate nodes...
+                                    </p>
                                 {% else %}
                                     <a href="/files"
                                        class="primary-btn text-decoration-none"
@@ -166,7 +175,9 @@
                                 {% if processingData.fileStatus == "encrypted" %}
                                     File encrypted and splitting will start automatically.
                                 {% elif processingData.fileStatus == "pending_processing" %}
-                                    File split successfully and ready for fragment storage.
+                                    File split successfully and storage will start automatically.
+                                {% elif processingData.fileStatus == "processed" %}
+                                    Fragments stored successfully across separate nodes.
                                 {% elif processingData.fileStatus == "failed" %}
                                     File processing failed.
                                 {% else %}
@@ -188,13 +199,15 @@
 
 </div>
 
-{% if processingData.fileStatus == "encrypted" %}
 <script>
     window.addEventListener("load", function () {
-        document.getElementById("splitFileForm").submit();
+        {% if processingData.fileStatus == "encrypted" %}
+            document.getElementById("splitFileForm").submit();
+        {% elif processingData.fileStatus == "pending_processing" %}
+            document.getElementById("storeFragmentForm").submit();
+        {% endif %}
     });
 </script>
-{% endif %}
 
 <script>
     var processingFileID = {{ processingData.fileID }};
