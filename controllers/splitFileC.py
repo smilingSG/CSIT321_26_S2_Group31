@@ -68,4 +68,34 @@ def splitFile(file_id: int):
             "failed"
         )
 
-        # Retrieve
+        # Retrieve updated information for redisplaying the processing page.
+        processing_data = File.getProcessingSummary(
+            file_id,
+            owner_id
+        )
+
+        return render_template(
+            "processing.html",
+            processingData=processing_data,
+            errorMessage="File splitting failed."
+        ), 400
+
+    # Keep the file pending until its fragments are moved into storage nodes.
+    File.updateFileStatus(
+        file_id,
+        owner_id,
+        "pending_processing"
+    )
+
+    # Retrieve updated information for the processing page.
+    processing_data = File.getProcessingSummary(
+        file_id,
+        owner_id
+    )
+
+    # Redisplay the processing page and report successful splitting.
+    return render_template(
+        "processing.html",
+        processingData=processing_data,
+        successMessage="File split successfully."
+    )
