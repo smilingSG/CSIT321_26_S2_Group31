@@ -1,8 +1,10 @@
-# Import filesystem utilities used to manage temporary files.
+# Import filesystem utilities and UUID generation for temporary files.
 import os
+import uuid
 
 # Import the trusted AES-GCM implementation used for file encryption.
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from werkzeug.utils import secure_filename
 
 # Import type hints used by the entity methods.
 from typing import Optional
@@ -12,7 +14,8 @@ from typing import Any
 # Import the application's MySQL connection function.
 from db import get_db_connection
 
-# Define the temporary encrypted-file folder and permitted upload extensions.
+# Define temporary storage folders and permitted upload extensions.
+TEMP_UPLOAD_FOLDER: str = "temp_uploads"
 ENCRYPTED_TEMP_FOLDER: str = "encrypted_temp_upload"
 ALLOWED_EXTENSIONS = {
     "pdf",
@@ -30,7 +33,8 @@ ALLOWED_EXTENSIONS = {
     "zip"
 }
 
-# Create the encrypted temporary-file folder if it does not already exist.
+# Create both temporary storage folders if they do not already exist.
+os.makedirs(TEMP_UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(ENCRYPTED_TEMP_FOLDER, exist_ok=True)
 
 
@@ -46,52 +50,73 @@ class File:
             and file_name.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
         )
 
-    # Validate an upload and create its temporary database record.
+    # Validate and save an upload before creating its temporary database record.
     @staticmethod
     def createTempFileRecord(owner_id: int,
-                             file_name: str,
-                             stored_filename: str,
-                             file_size: int,
-                             file_type: str,
-                             temp_upload_path: str) -> Optional[int]:
+                             uploaded_file) -> Optional[int]:
 
-        # Reject unsupported file types before inserting a database record.
-        if not File.isAllowedFileType(file_name):
+        # Sanitise the supplied filename and reject unsupported extensions.
+        original_filename: str = secure_filename(uploaded_file.filename)
+
+        if not File.isAllowedFileType(original_filename):
             return None
 
-        connection = get_db_connection()
-        cursor = connection.cursor()
+        # Generate a unique local filename while preserving the extension.
+        file_extension: str = os.path.splitext(original_filename)[1]
+        stored_filename: str = str(uuid.uuid4()) + file_extension
+        temp_upload_path: str = os.path.join(
+            TEMP_UPLOAD_FOLDER,
+            stored_filename
+        )
 
-        cursor.execute("""
-            INSERT INTO files
-            (
+        # Save the physical upload and collect the metadata stored in MySQL.
+        uploaded_file.save(temp_upload_path)
+        file_size: int = os.path.getsize(temp_upload_path)
+        file_type: str = uploaded_file.content_type or "Unknown"
+
+        connection = None
+        cursor = None
+
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                INSERT INTO files
+                (
+                    owner_id,
+                    file_name,
+                    stored_filename,
+                    file_size,
+                    file_type,
+                    temp_upload_path,
+                    file_status
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
                 owner_id,
-                file_name,
+                original_filename,
                 stored_filename,
                 file_size,
                 file_type,
                 temp_upload_path,
-                file_status
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (
-            owner_id,
-            file_name,
-            stored_filename,
-            file_size,
-            file_type,
-            temp_upload_path,
-            "pending_confirmation"
-        ))
+                "pending_confirmation"
+            ))
 
-        connection.commit()
+            connection.commit()
+            return cursor.lastrowid
 
-        file_id = cursor.lastrowid
+        # Remove the physical upload if its metadata cannot be recorded.
+        except Exception:
+            if os.path.exists(temp_upload_path):
+                os.remove(temp_upload_path)
+            raise
 
-        cursor.close()
-        connection.close()
-
-        return file_id
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if connection is not None:
+                connection.close()
 
     # Retrieve and format file information for the preview boundary.
     @staticmethod
@@ -175,12 +200,45 @@ class File:
 
         return file_record
 
-    # Save the selected k-of-n fragment configuration for a file.
+    # Validate and save the selected k-of-n fragment configuration.
     @staticmethod
     def updateFragmentConfiguration(file_id: int,
                                     owner_id: int,
-                                    total_fragments: int,
-                                    required_fragments: int) -> None:
+                                    total_fragments,
+                                    required_fragments,
+                                    active_node_count: int) -> Optional[str]:
+
+        # Ensure both form values were supplied and contain integers.
+        if total_fragments is None:
+            return "Please enter total fragments."
+
+        if required_fragments is None:
+            return "Please enter required fragments."
+
+        try:
+            total_fragments = int(total_fragments)
+            required_fragments = int(required_fragments)
+        except ValueError:
+            return "Fragment values must be numbers."
+
+        # Apply the k-of-n rules before updating the database.
+        if total_fragments < 2:
+            return "Total fragments must be at least 2."
+
+        if required_fragments < 1:
+            return "Required fragments must be at least 1."
+
+        if required_fragments > total_fragments:
+            return (
+                "Required fragments cannot be greater "
+                "than total fragments."
+            )
+
+        if total_fragments > active_node_count:
+            return (
+                "Total fragments cannot be greater "
+                "than the number of active storage nodes."
+            )
 
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -200,18 +258,53 @@ class File:
             owner_id
         ))
 
+        updated = cursor.rowcount == 1
         connection.commit()
 
         cursor.close()
         connection.close()
 
-    # Delete an unconfirmed temporary file record from the database.
+        if not updated:
+            return "File record could not be updated."
+
+        return None
+
+    # Delete an unconfirmed physical file and its database record.
     @staticmethod
     def deleteTempFileRecord(file_id: int,
-                             owner_id: int) -> None:
+                             owner_id: int) -> bool:
 
         connection = get_db_connection()
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT temp_upload_path
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'pending_confirmation'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        if file_record is None:
+            cursor.close()
+            connection.close()
+            return False
+
+        # Remove the physical temporary upload before deleting its metadata.
+        temp_upload_path = file_record["temp_upload_path"]
+
+        if temp_upload_path is not None and os.path.exists(temp_upload_path):
+            try:
+                os.remove(temp_upload_path)
+            except OSError:
+                cursor.close()
+                connection.close()
+                return False
 
         cursor.execute("""
             DELETE FROM files
@@ -223,10 +316,13 @@ class File:
             owner_id
         ))
 
+        deleted = cursor.rowcount == 1
         connection.commit()
 
         cursor.close()
         connection.close()
+
+        return deleted
 
     # Count the successfully processed files belonging to a user.
     @staticmethod
@@ -249,28 +345,15 @@ class File:
 
         return count
 
-    # Remove an unconfirmed file record belonging to a user.
+    # Remove an unconfirmed physical file and its database record.
     @staticmethod
     def removeFile(file_id: int,
-                   owner_id: int) -> None:
+                   owner_id: int) -> bool:
 
-        connection = get_db_connection()
-        cursor = connection.cursor()
-
-        cursor.execute("""
-            DELETE FROM files
-            WHERE file_id = %s
-            AND owner_id = %s
-            AND file_status = 'pending_confirmation'
-        """, (
+        return File.deleteTempFileRecord(
             file_id,
             owner_id
-        ))
-
-        connection.commit()
-
-        cursor.close()
-        connection.close()
+        )
 
     # Encrypt a confirmed temporary file using AES-256-GCM.
     @staticmethod
@@ -465,13 +548,45 @@ class File:
         cursor.close()
         connection.close()
 
-    # Delete an incomplete or failed processing record.
+    # Delete incomplete processing data and its encrypted temporary file.
     @staticmethod
     def deleteProcessingFileRecord(file_id: int,
-                                   owner_id: int) -> None:
+                                   owner_id: int) -> bool:
 
         connection = get_db_connection()
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT encrypted_temp_path
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status IN ('encrypted', 'pending_processing', 'failed')
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        if file_record is None:
+            cursor.close()
+            connection.close()
+            return False
+
+        # Remove the temporary ciphertext before deleting its metadata.
+        encrypted_temp_path = file_record["encrypted_temp_path"]
+
+        if (
+            encrypted_temp_path is not None
+            and os.path.exists(encrypted_temp_path)
+        ):
+            try:
+                os.remove(encrypted_temp_path)
+            except OSError:
+                cursor.close()
+                connection.close()
+                return False
 
         cursor.execute("""
             DELETE FROM files
@@ -483,10 +598,13 @@ class File:
             owner_id
         ))
 
+        deleted = cursor.rowcount == 1
         connection.commit()
 
         cursor.close()
         connection.close()
+
+        return deleted
 
     # Delete temporary ciphertext after permanent fragment storage succeeds.
     @staticmethod
