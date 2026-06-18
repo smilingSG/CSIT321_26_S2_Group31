@@ -1,13 +1,18 @@
+# Import filesystem utilities used to manage temporary files.
 import os
 
+# Import the trusted AES-GCM implementation used for file encryption.
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+# Import type hints used by the entity methods.
 from typing import Optional
 from typing import Dict
 from typing import Any
 
+# Import the application's MySQL connection function.
 from db import get_db_connection
 
+# Define the temporary encrypted-file folder and permitted upload extensions.
 ENCRYPTED_TEMP_FOLDER: str = "encrypted_temp_upload"
 ALLOWED_EXTENSIONS = {
     "pdf",
@@ -25,11 +30,14 @@ ALLOWED_EXTENSIONS = {
     "zip"
 }
 
+# Create the encrypted temporary-file folder if it does not already exist.
 os.makedirs(ENCRYPTED_TEMP_FOLDER, exist_ok=True)
 
 
+# Represent file records and perform file-related database and storage operations.
 class File:
 
+    # Check whether the uploaded filename has an allowed extension.
     @staticmethod
     def isAllowedFileType(file_name: str) -> bool:
 
@@ -38,6 +46,7 @@ class File:
             and file_name.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
         )
 
+    # Validate an upload and create its temporary database record.
     @staticmethod
     def createTempFileRecord(owner_id: int,
                              file_name: str,
@@ -46,6 +55,7 @@ class File:
                              file_type: str,
                              temp_upload_path: str) -> Optional[int]:
 
+        # Reject unsupported file types before inserting a database record.
         if not File.isAllowedFileType(file_name):
             return None
 
@@ -83,6 +93,7 @@ class File:
 
         return file_id
 
+    # Retrieve and format file information for the preview boundary.
     @staticmethod
     def getFilePreviewDetails(file_id: int,
                               owner_id: int) -> Optional[Dict[str, Any]]:
@@ -117,6 +128,7 @@ class File:
         if file_record is None:
             return None
 
+        # Convert the stored byte count into a readable kilobyte value.
         file_size_kb = round(
             file_record["file_size"] / 1024,
             2
@@ -133,6 +145,7 @@ class File:
             "uploadedAt": str(file_record["uploaded_at"])
         }
 
+    # Retrieve an unconfirmed temporary file belonging to a user.
     @staticmethod
     def getTempFileById(file_id: int,
                         owner_id: int) -> Optional[Dict[str, Any]]:
@@ -162,6 +175,7 @@ class File:
 
         return file_record
 
+    # Save the selected k-of-n fragment configuration for a file.
     @staticmethod
     def updateFragmentConfiguration(file_id: int,
                                     owner_id: int,
@@ -191,6 +205,7 @@ class File:
         cursor.close()
         connection.close()
 
+    # Delete an unconfirmed temporary file record from the database.
     @staticmethod
     def deleteTempFileRecord(file_id: int,
                              owner_id: int) -> None:
@@ -213,6 +228,7 @@ class File:
         cursor.close()
         connection.close()
 
+    # Count the successfully processed files belonging to a user.
     @staticmethod
     def countProcessedFilesByOwner(owner_id: int) -> int:
 
@@ -233,6 +249,7 @@ class File:
 
         return count
 
+    # Remove an unconfirmed file record belonging to a user.
     @staticmethod
     def removeFile(file_id: int,
                    owner_id: int) -> None:
@@ -255,6 +272,7 @@ class File:
         cursor.close()
         connection.close()
 
+    # Encrypt a confirmed temporary file using AES-256-GCM.
     @staticmethod
     def encryptFile(file_id: int,
                     owner_id: int) -> bool:
@@ -304,25 +322,32 @@ class File:
             encrypted_filename
         )
 
+        # Generate a new 256-bit AES key for this file.
         file_key = AESGCM.generate_key(bit_length=256)
         aesgcm = AESGCM(file_key)
 
+        # Generate the recommended 12-byte nonce for AES-GCM.
         nonce = os.urandom(12)
 
+        # Read the original temporary file as binary data.
         with open(temp_upload_path, "rb") as input_file:
             file_data = input_file.read()
 
+        # Encrypt the data and append the GCM authentication tag.
         encrypted_data = aesgcm.encrypt(
             nonce,
             file_data,
             None
         )
 
+        # Write the authenticated ciphertext to temporary encrypted storage.
         with open(encrypted_temp_path, "wb") as output_file:
             output_file.write(encrypted_data)
 
         encrypted_size = os.path.getsize(encrypted_temp_path)
 
+        # Store the encryption metadata and advance the file status.
+        # The prototype currently stores the raw file key in MySQL.
         cursor.execute("""
             UPDATE files
             SET
@@ -346,6 +371,7 @@ class File:
 
         connection.commit()
 
+        # Remove the original readable file after encryption succeeds.
         if os.path.exists(temp_upload_path):
             os.remove(temp_upload_path)
 
@@ -354,6 +380,7 @@ class File:
 
         return True
 
+    # Retrieve the encrypted-file path and k-of-n values for fragmentation.
     @staticmethod
     def getEncryptedFileDetails(file_id: int,
                                 owner_id: int) -> Optional[Dict[str, Any]]:
@@ -384,6 +411,7 @@ class File:
 
         return file_record
 
+    # Retrieve a file that is currently in the processing workflow.
     @staticmethod
     def getProcessingFileDetails(file_id: int,
                                  owner_id: int) -> Optional[Dict[str, Any]]:
@@ -412,6 +440,7 @@ class File:
 
         return file_record
 
+    # Update the current processing status of a file.
     @staticmethod
     def updateFileStatus(file_id: int,
                          owner_id: int,
@@ -436,6 +465,7 @@ class File:
         cursor.close()
         connection.close()
 
+    # Delete an incomplete or failed processing record.
     @staticmethod
     def deleteProcessingFileRecord(file_id: int,
                                    owner_id: int) -> None:
@@ -458,6 +488,7 @@ class File:
         cursor.close()
         connection.close()
 
+    # Delete temporary ciphertext after permanent fragment storage succeeds.
     @staticmethod
     def deleteEncryptedTemporaryFile(file_id: int,
                                      owner_id: int) -> bool:
@@ -485,6 +516,7 @@ class File:
 
         encrypted_temp_path = file_record["encrypted_temp_path"]
 
+        # Remove the temporary encrypted file when a valid path exists.
         if (
             encrypted_temp_path is not None
             and os.path.exists(encrypted_temp_path)
@@ -514,6 +546,7 @@ class File:
 
         return True
 
+    # Retrieve and format file information for the processing boundary.
     @staticmethod
     def getProcessingSummary(file_id: int,
                              owner_id: int) -> Optional[Dict[str, Any]]:
