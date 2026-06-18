@@ -31,10 +31,10 @@ def storeFragments(file_id: int):
         owner_id
     )
 
-    if (
-        file_record is None
-        or file_record["file_status"] != "pending_processing"
-    ):
+    if file_record is None:
+        return "Processing file record not found.", 404
+
+    if file_record["file_status"] != "pending_processing":
         return renderStorageFailure(
             file_id,
             owner_id,
@@ -151,6 +151,9 @@ def renderStorageFailure(file_id: int,
         file_id,
         owner_id
     )
+
+    if processing_data is None:
+        return error_message, 404
 
     return render_template(
         "processing.html",
