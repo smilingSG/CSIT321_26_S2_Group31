@@ -4,10 +4,17 @@ from flask import redirect
 from flask import session
 from flask import url_for
 
-from controllers.LoginC import getPostLoginRedirect
 from entities.UserAccount import UserAccount
 
 admin_delete_bp = Blueprint("admin_delete_bp", __name__)
+
+
+def getPostLoginRedirect(role: str) -> str:
+
+    if role == "user_admin":
+        return url_for("user_management_bp.userAdminDashboard")
+
+    return url_for("dashboard_bp.dashboard")
 
 
 class AdminDeleteC:
@@ -36,7 +43,7 @@ def deleteUser(user_id: int):
 
     if not user_deleted:
         flash("User not found.", "error")
-        return redirect(url_for("user_management_bp.userManagement"))
+        return redirect(url_for("admin_search_bp.userManagement"))
 
     flash("User account deleted successfully.", "success")
-    return redirect(url_for("user_management_bp.userManagement"))
+    return redirect(url_for("admin_search_bp.userManagement"))

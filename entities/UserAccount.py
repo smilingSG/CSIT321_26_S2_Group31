@@ -26,7 +26,6 @@ class UserAccount:
                 account_status
             FROM users
             WHERE (username = %s OR email = %s)
-            AND account_status = 'active'
         """, (
             login_credential,
             login_credential
@@ -52,7 +51,8 @@ class UserAccount:
             "userID": user_record["user_id"],
             "username": user_record["username"],
             "email": user_record["email"],
-            "role": user_record["role"]
+            "role": user_record["role"],
+            "accountStatus": user_record["account_status"]
         }
 
     @staticmethod

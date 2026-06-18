@@ -6,10 +6,17 @@ from flask import request
 from flask import session
 from flask import url_for
 
-from controllers.LoginC import getPostLoginRedirect
 from entities.UserAccount import UserAccount
 
 admin_bp = Blueprint("admin_bp", __name__)
+
+
+def getPostLoginRedirect(role: str) -> str:
+
+    if role == "user_admin":
+        return url_for("user_management_bp.userAdminDashboard")
+
+    return url_for("dashboard_bp.dashboard")
 
 
 class AdminC:
@@ -78,4 +85,4 @@ def createUser():
         return redirect(url_for("admin_bp.createUser"))
 
     flash("User account created successfully.", "success")
-    return redirect(url_for("user_management_bp.userManagement"))
+    return redirect(url_for("admin_search_bp.userManagement"))

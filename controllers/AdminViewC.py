@@ -9,11 +9,17 @@ from flask import render_template
 from flask import session
 from flask import url_for
 
-from controllers.LoginC import getPostLoginRedirect
-from controllers.UserManagementC import UserManagementC
 from entities.UserAccount import UserAccount
 
 admin_view_bp = Blueprint("admin_view_bp", __name__)
+
+
+def getPostLoginRedirect(role: str) -> str:
+
+    if role == "user_admin":
+        return url_for("user_management_bp.userAdminDashboard")
+
+    return url_for("dashboard_bp.dashboard")
 
 
 class AdminViewC:
@@ -30,13 +36,34 @@ class AdminViewC:
             "userID": user_account["user_id"],
             "username": user_account["username"],
             "email": user_account["email"],
-            "role": UserManagementC.formatRole(user_account["role"]),
-            "accountStatus": UserManagementC.formatStatus(
+            "role": AdminViewC.formatRole(user_account["role"]),
+            "accountStatus": AdminViewC.formatStatus(
                 user_account["account_status"]
             ),
             "createdAt": str(user_account["created_at"]),
             "updatedAt": str(user_account["updated_at"])
         }
+
+    @staticmethod
+    def formatRole(role: str) -> str:
+
+        role_labels = {
+            "user": "User",
+            "user_admin": "User Admin",
+            "system_admin": "System Admin"
+        }
+
+        return role_labels.get(role, role)
+
+    @staticmethod
+    def formatStatus(account_status: str) -> str:
+
+        status_labels = {
+            "active": "Active",
+            "suspended": "Suspended"
+        }
+
+        return status_labels.get(account_status, account_status)
 
 
 @admin_view_bp.route("/user-management/view/<int:user_id>")
@@ -52,7 +79,7 @@ def viewUser(user_id: int):
 
     if user_account is None:
         flash("User not found.", "error")
-        return redirect(url_for("user_management_bp.userManagement"))
+        return redirect(url_for("admin_search_bp.userManagement"))
 
     return render_template(
         "AdminViewPg.html",

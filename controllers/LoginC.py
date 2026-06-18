@@ -37,6 +37,9 @@ class LoginC:
         if user_account is None:
             return None
 
+        if user_account["accountStatus"] == "suspended":
+            return user_account
+
         if user_account["role"] != selected_role:
             return None
 
@@ -91,6 +94,14 @@ def login():
             login_credential=login_credential,
             selected_role=selected_role
         ), 401
+
+    if user_account.get("accountStatus") == "suspended":
+        return render_template(
+            "login.html",
+            error="This account is suspended.",
+            login_credential=login_credential,
+            selected_role=selected_role
+        ), 403
 
     session.clear()
     session["user_id"] = user_account["userID"]
