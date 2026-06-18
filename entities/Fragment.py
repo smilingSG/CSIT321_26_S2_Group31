@@ -1,28 +1,39 @@
+# Import utilities for temporary fragment files and directories.
 import os
+# Import JSON support for writing reconstruction metadata.
 import json
+# Import directory cleanup utilities.
 import shutil
 
+# Import type hints used by fragment records.
 from typing import Dict
 from typing import Any
 from typing import List
 
+# Import zfec's erasure-coding interface.
 from zfec import easyfec
 
+# Import the application's MySQL connection function.
 from db import get_db_connection
 
+# Define the folder used while fragments are awaiting node storage.
 TEMP_FRAGMENT_FOLDER: str = "temp_fragments"
 
+# Create the temporary fragment folder if it does not already exist.
 os.makedirs(TEMP_FRAGMENT_FOLDER, exist_ok=True)
 
 
+# Represent fragment records and perform erasure-coding and cleanup operations.
 class Fragment:
 
+    # Split encrypted data into n fragments recoverable from any k fragments.
     @staticmethod
     def splitIntoFragments(file_id: int,
                            encrypted_temp_path: str,
                            total_fragments: int,
                            required_fragments: int) -> List[Dict[str, Any]]:
 
+        # Reject missing files and invalid k-of-n configurations.
         if encrypted_temp_path is None:
             return []
 
@@ -38,6 +49,7 @@ class Fragment:
         if required_fragments > total_fragments:
             return []
 
+        # Create a separate temporary fragment folder for this file.
         file_fragment_folder = os.path.join(
             TEMP_FRAGMENT_FOLDER,
             "file_" + str(file_id)
@@ -45,6 +57,7 @@ class Fragment:
 
         os.makedirs(file_fragment_folder, exist_ok=True)
 
+        # Remove fragments left by an earlier processing attempt.
         for existing_filename in os.listdir(file_fragment_folder):
             existing_path = os.path.join(
                 file_fragment_folder,
@@ -54,14 +67,17 @@ class Fragment:
             if os.path.isfile(existing_path):
                 os.remove(existing_path)
 
+        # Read the complete authenticated ciphertext before encoding.
         with open(encrypted_temp_path, "rb") as encrypted_file:
             encrypted_data = encrypted_file.read()
 
+        # Configure zfec using the required k value and total n value.
         encoder = easyfec.Encoder(
             required_fragments,
             total_fragments
         )
 
+        # Generate the erasure-coded fragment bytes.
         encoded_fragments = encoder.encode(
             encrypted_data
         )
@@ -69,6 +85,7 @@ class Fragment:
         if len(encoded_fragments) != total_fragments:
             return []
 
+        # Record the information needed for future reconstruction.
         metadata_path = os.path.join(
             file_fragment_folder,
             "fragment_metadata.json"
@@ -85,6 +102,7 @@ class Fragment:
 
         fragment_list = []
 
+        # Write each generated fragment to its own temporary .fec file.
         for fragment_index, fragment_data in enumerate(encoded_fragments):
 
             fragment_number = fragment_index + 1
@@ -109,6 +127,7 @@ class Fragment:
                 "share_number": fragment_index
             })
 
+        # Synchronise the generated temporary fragments with MySQL metadata.
         Fragment.replacePendingFragmentRecords(
             file_id,
             fragment_list
@@ -116,6 +135,7 @@ class Fragment:
 
         return fragment_list
 
+    # Replace pending database records with the latest generated fragments.
     @staticmethod
     def replacePendingFragmentRecords(file_id: int,
                                       fragment_list: List[Dict[str, Any]]) -> None:
@@ -153,6 +173,7 @@ class Fragment:
         cursor.close()
         connection.close()
 
+    # Load pending fragment records and their bytes for node storage.
     @staticmethod
     def getFragmentList(file_id: int) -> List[Dict[str, Any]]:
 
@@ -181,6 +202,7 @@ class Fragment:
         for fragment_record in fragment_records:
             fragment_path = fragment_record["fragment_path"]
 
+            # Fail the complete operation if any expected fragment is missing.
             if not os.path.exists(fragment_path):
                 return []
 
@@ -197,6 +219,7 @@ class Fragment:
 
         return fragment_list
 
+    # Assign a stored fragment to its node and mark it as available.
     @staticmethod
     def updateFragmentStorage(fragment_id: int,
                               node_id: int,
@@ -228,6 +251,7 @@ class Fragment:
 
         return updated
 
+    # Restore fragment metadata after a partial node-storage failure.
     @staticmethod
     def restorePendingFragmentStorage(
         fragment_list: List[Dict[str, Any]]
@@ -254,6 +278,7 @@ class Fragment:
         cursor.close()
         connection.close()
 
+    # Delete the temporary directory containing a file's fragments.
     @staticmethod
     def deleteTemporaryFragmentFiles(file_id: int) -> None:
 
@@ -265,6 +290,7 @@ class Fragment:
         if os.path.exists(file_fragment_folder):
             shutil.rmtree(file_fragment_folder)
 
+    # Remove pending fragment files and their database records.
     @staticmethod
     def deletePendingFragments(file_id: int) -> None:
 
