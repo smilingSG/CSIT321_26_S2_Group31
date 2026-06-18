@@ -53,7 +53,7 @@
             </div>
 
             <div class="page-actions">
-                <a href="{{ url_for('user_management_bp.userManagement') }}" class="primary-action">Back to User Management</a>
+                <a href="{{ url_for('admin_search_bp.userManagement') }}" class="primary-action">Back to User Management</a>
                 <a href="{{ url_for('admin_update_bp.updateUser', user_id=user.userID) }}" class="secondary-action">Update</a>
                 <form method="POST" action="{{ url_for('admin_delete_bp.deleteUser', user_id=user.userID) }}" class="inline-action-form">
                     <button type="submit" class="danger-action">Delete</button>

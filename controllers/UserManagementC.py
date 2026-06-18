@@ -1,15 +1,20 @@
 from flask import Blueprint
 from flask import redirect
 from flask import render_template
-from flask import request
 from flask import session
 from flask import url_for
 
-from controllers.AdminSearchC import AdminSearchC
-from controllers.LoginC import getPostLoginRedirect
 from entities.UserAccount import UserAccount
 
 user_management_bp = Blueprint("user_management_bp", __name__)
+
+
+def getPostLoginRedirect(role: str) -> str:
+
+    if role == "user_admin":
+        return url_for("user_management_bp.userAdminDashboard")
+
+    return url_for("dashboard_bp.dashboard")
 
 
 class UserManagementC:
@@ -67,26 +72,6 @@ def userAdminDashboard():
         return redirect(getPostLoginRedirect(session.get("role")))
 
     return render_template(
-        "AdminSearchPg.html",
-        username=session.get("username")
-    )
-
-
-@user_management_bp.route("/user-management")
-def userManagement():
-
-    if session.get("user_id") is None:
-        return redirect(url_for("login_bp.login"))
-
-    if session.get("role") != "user_admin":
-        return redirect(getPostLoginRedirect(session.get("role")))
-
-    search_query: str = request.args.get("query", "").strip()
-
-    user_management_data = AdminSearchC.searchUser(search_query)
-
-    return render_template(
-        "UserManagementPg.html",
-        data=user_management_data,
+        "AdminDashboard.html",
         username=session.get("username")
     )

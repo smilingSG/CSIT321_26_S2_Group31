@@ -2,6 +2,7 @@ from flask import Flask, redirect, session, url_for
 
 from controllers.AdminC import admin_bp
 from controllers.AdminDeleteC import admin_delete_bp
+from controllers.AdminSearchC import admin_search_bp
 from controllers.AdminSuspendC import admin_suspend_bp
 from controllers.AdminUpdateC import admin_update_bp
 from controllers.AdminViewC import admin_view_bp
@@ -42,6 +43,7 @@ app.register_blueprint(split_file_bp)
 app.register_blueprint(store_fragment_bp)
 app.register_blueprint(cancel_processing_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(admin_search_bp)
 app.register_blueprint(admin_update_bp)
 app.register_blueprint(admin_view_bp)
 app.register_blueprint(admin_delete_bp)

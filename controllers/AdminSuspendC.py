@@ -4,10 +4,17 @@ from flask import redirect
 from flask import session
 from flask import url_for
 
-from controllers.LoginC import getPostLoginRedirect
 from entities.UserAccount import UserAccount
 
 admin_suspend_bp = Blueprint("admin_suspend_bp", __name__)
+
+
+def getPostLoginRedirect(role: str) -> str:
+
+    if role == "user_admin":
+        return url_for("user_management_bp.userAdminDashboard")
+
+    return url_for("dashboard_bp.dashboard")
 
 
 class AdminSuspendC:
@@ -62,10 +69,10 @@ def suspendUser(user_id: int):
 
     if not user_suspended:
         flash("User not found or already suspended.", "error")
-        return redirect(url_for("user_management_bp.userManagement"))
+        return redirect(url_for("admin_search_bp.userManagement"))
 
     flash("User account suspended successfully.", "success")
-    return redirect(url_for("user_management_bp.userManagement"))
+    return redirect(url_for("admin_search_bp.userManagement"))
 
 
 @admin_suspend_bp.route("/user-management/unsuspend/<int:user_id>", methods=["POST"])
@@ -81,7 +88,7 @@ def unsuspendUser(user_id: int):
 
     if not user_unsuspended:
         flash("User not found or already active.", "error")
-        return redirect(url_for("user_management_bp.userManagement"))
+        return redirect(url_for("admin_search_bp.userManagement"))
 
     flash("User account unsuspended successfully.", "success")
-    return redirect(url_for("user_management_bp.userManagement"))
+    return redirect(url_for("admin_search_bp.userManagement"))
