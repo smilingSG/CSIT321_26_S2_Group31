@@ -192,7 +192,7 @@
         }
 
         .preview-page .preview-placeholder {
-            min-height: 176px;
+            height: 176px;
             border-radius: 18px;
             border: 1px solid #cddaf2;
             background: #ffffff;
@@ -200,46 +200,14 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
         }
 
-        .preview-page .preview-placeholder-inner {
-            position: relative;
-            min-height: 136px;
-        }
-
-        .preview-page .document-preview {
-            padding: 18px 16px 12px;
-        }
-
-        .preview-page .document-preview-line {
-            height: 5px;
-            margin-bottom: 7px;
-            border-radius: 999px;
-            background: #6f7f96;
-            opacity: 0.72;
-        }
-
-        .preview-page .document-preview-line.short {
-            width: 58%;
-        }
-
-        .preview-page .document-preview-line.medium {
-            width: 76%;
-        }
-
-        .preview-page .document-preview-line.long {
+        .preview-page .real-file-preview {
             width: 100%;
-        }
-
-        .preview-page .preview-scrollbar {
-            position: absolute;
-            right: 12px;
-            top: 22px;
-            width: 7px;
-            height: 50px;
-            border-radius: 999px;
-            background: #8f98a5;
+            height: 151px;
+            border: 0;
+            display: block;
+            background: #ffffff;
         }
 
         .preview-page .preview-controls {
@@ -254,7 +222,7 @@
         }
 
         .preview-page .preview-deleted-state {
-            min-height: 176px;
+            height: 176px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -300,19 +268,23 @@
 
         .preview-page .preview-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 22px;
+            align-items: center;
+            gap: 12px;
+            margin-top: 26px;
         }
 
         .preview-page .preview-actions button {
-            height: 42px;
-            min-height: 42px;
-            padding: 0;
-            border-radius: 13px;
-            font-size: 13px;
+            all: unset;
+            box-sizing: border-box;
+            height: 44px;
+            border-radius: 14px;
+            font-size: 14px;
             font-weight: 800;
-            border: 1px solid transparent;
-            box-shadow: none;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
 
         .preview-page #continueButton {
@@ -320,29 +292,29 @@
         }
 
         .preview-page #replaceButton {
-            width: 104px;
+            width: 108px;
         }
 
         .preview-page #deleteButton {
-            width: 96px;
+            width: 100px;
         }
 
         .preview-page .primary-btn {
             color: #07172f;
-            background: linear-gradient(135deg, #26bed2 0%, #2f6df6 100%);
-            border-color: transparent;
+            background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%);
+            box-shadow: 0 13px 22px rgba(47, 109, 246, 0.2);
         }
 
         .preview-page .outline-btn {
             color: #43536b;
-            background: rgba(255, 255, 255, 0.8);
-            border-color: #c9d8f4;
+            background: rgba(255, 255, 255, 0.84);
+            border: 1px solid #c7d6ef;
         }
 
         .preview-page .danger-btn {
             color: #ff5757;
-            background: rgba(255, 255, 255, 0.82);
-            border-color: rgba(255, 87, 87, 0.36);
+            background: rgba(255, 255, 255, 0.84);
+            border: 1px solid rgba(255, 87, 87, 0.36);
         }
 
         .preview-page .status-text {
@@ -395,22 +367,11 @@
 
                 <div class="file-preview-card">
                     <div class="preview-placeholder" id="previewPlaceholder">
-                        <div class="preview-placeholder-inner">
-                            <div class="document-preview">
-                                <div class="document-preview-line long"></div>
-                                <div class="document-preview-line medium"></div>
-                                <div class="document-preview-line long"></div>
-                                <div class="document-preview-line short"></div>
-                                <div class="document-preview-line medium"></div>
-                                <div class="document-preview-line long"></div>
-                                <div class="document-preview-line medium"></div>
-                                <div class="document-preview-line short"></div>
-                                <div class="document-preview-line long"></div>
-                                <div class="document-preview-line medium"></div>
-                                <div class="document-preview-line long"></div>
-                            </div>
-                            <span class="preview-scrollbar"></span>
-                        </div>
+                        <iframe
+                            class="real-file-preview"
+                            src="{{ url_for('preview_bp.previewUploadedFile', file_id=previewData.fileID) }}"
+                            title="Uploaded file preview">
+                        </iframe>
                         <div class="preview-controls">
                             <span>&lt;</span>
                             <span>1</span>
