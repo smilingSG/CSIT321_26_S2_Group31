@@ -11,7 +11,6 @@
     <main class="create-page">
         <section class="create-panel">
             <h1>Create User Account</h1>
-            <p class="panel-subtitle">Create the new user by filling name, email, password, and role in one form.</p>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -29,7 +28,7 @@
                     type="text"
                     id="create_username"
                     name="username"
-                    placeholder="Enter full name"
+                    placeholder="Enter username"
                     required
                 >
 

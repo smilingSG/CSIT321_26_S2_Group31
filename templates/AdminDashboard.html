@@ -11,52 +11,76 @@
     <div class="admin-shell">
         <aside class="admin-sidebar">
             <div class="brand-row">
-                <div class="brand-mark">◇</div>
+                <img
+                    src="{{ url_for('static', filename='lazarus-logo.png') }}"
+                    alt="SFSRS logo"
+                    class="brand-mark"
+                >
                 <div>
                     <p class="portal-text">USER ADMIN</p>
                     <h2>Lazarus</h2>
                 </div>
             </div>
 
-            <p class="system-name">Secure File Sharing and Recovery System</p>
-
-            <a href="{{ url_for('user_management_bp.userAdminDashboard') }}" class="nav-link active">
-                <span>⌂</span>
-                Admin Dashboard
-            </a>
-            <a href="{{ url_for('admin_search_bp.userManagement') }}" class="nav-link">
-                <span>▦</span>
-                User Management
-            </a>
+            <nav class="nav-stack">
+                <a href="{{ url_for('user_management_bp.userAdminDashboard') }}" class="nav-link active">
+                    Admin Dashboard
+                </a>
+                <a href="{{ url_for('admin_search_bp.userManagement') }}" class="nav-link">
+                    User Management
+                </a>
+            </nav>
 
             <a href="{{ url_for('logout') }}" class="nav-link logout">
-                <span>→</span>
                 Logout
             </a>
         </aside>
 
         <main class="admin-main">
-            <header class="topbar">
-                <div>
-                    <p class="top-label">WEB-BASED SYSTEM</p>
-                    <h1>Secure File Sharing and Recovery System</h1>
-                </div>
-
-                <div class="admin-pill">User administration</div>
-            </header>
-
             <section class="page-content">
                 <h2>User Admin Dashboard</h2>
                 <p class="subtitle">
                     Access user management features for creating, updating, suspending, and deleting accounts.
                 </p>
 
-                <div class="admin-card">
-                    <div class="notice-box">
-                        Select User Management to continue to account administration.
+                <div class="dashboard-grid">
+                    <div class="admin-actions">
+                        <a href="{{ url_for('admin_bp.createUser') }}" class="action-card action-create">
+                            <p>Create Account</p>
+                        </a>
+
+                        <a href="{{ url_for('admin_search_bp.userManagement') }}" class="action-card action-manage">
+                            <p>User Management</p>
+                        </a>
                     </div>
 
-                    <a href="{{ url_for('admin_search_bp.userManagement') }}" class="primary-action">Open User Management</a>
+                    <div class="user-summary-card">
+                        <div class="summary-copy">
+                            <p class="summary-label">Users</p>
+                            <h3>{{ userSummary.totalUsers }}</h3>
+                            <span>Total accounts</span>
+                        </div>
+
+                        <div class="summary-visual">
+                            <div
+                                class="status-donut"
+                                aria-label="User account status breakdown"
+                                style="--active-percent: {{ userSummary.activePercent }}"
+                            >
+                            </div>
+
+                            <div class="summary-legend">
+                                <div>
+                                    <span class="legend-dot active-dot"></span>
+                                    {{ userSummary.activePercent }}% Active
+                                </div>
+                                <div>
+                                    <span class="legend-dot suspended-dot"></span>
+                                    {{ userSummary.suspendedPercent }}% Suspended
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>

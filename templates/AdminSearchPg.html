@@ -11,40 +11,32 @@
     <div class="admin-shell">
         <aside class="admin-sidebar">
             <div class="brand-row">
-                <div class="brand-mark">◇</div>
+                <img
+                    src="{{ url_for('static', filename='lazarus-logo.png') }}"
+                    alt="Lazarus logo"
+                    class="brand-mark"
+                >
                 <div>
                     <p class="portal-text">USER ADMIN</p>
                     <h2>Lazarus</h2>
                 </div>
             </div>
 
-            <p class="system-name">Secure File Sharing and Recovery System</p>
-
-            <a href="{{ url_for('user_management_bp.userAdminDashboard') }}" class="nav-link">
-                <span>⌂</span>
-                Admin Dashboard
-            </a>
-            <a href="{{ url_for('admin_search_bp.userManagement') }}" class="nav-link active">
-                <span>▦</span>
-                User Management
-            </a>
+            <nav class="nav-stack">
+                <a href="{{ url_for('user_management_bp.userAdminDashboard') }}" class="nav-link">
+                    Admin Dashboard
+                </a>
+                <a href="{{ url_for('admin_search_bp.userManagement') }}" class="nav-link active">
+                    User Management
+                </a>
+            </nav>
 
             <a href="{{ url_for('logout') }}" class="nav-link logout">
-                <span>→</span>
                 Logout
             </a>
         </aside>
 
         <main class="admin-main">
-            <header class="topbar">
-                <div>
-                    <p class="top-label">WEB-BASED SYSTEM</p>
-                    <h1>Secure File Sharing and Recovery System</h1>
-                </div>
-
-                <div class="admin-pill">User administration and account control</div>
-            </header>
-
             <section class="page-content">
                 <div class="management-card">
                     <div class="management-header">
@@ -57,14 +49,14 @@
 
                         <div class="management-actions">
                             <form method="GET" action="{{ url_for('admin_search_bp.userManagement') }}" class="search-box">
-                                <span>⌕</span>
+                                <span class="search-icon">&#9906;</span>
                                 <input
                                     type="text"
                                     name="query"
                                     value="{{ data.query }}"
                                     placeholder="Search user accounts"
                                 >
-                                <button type="submit">Search</button>
+                                <button type="submit" aria-label="Search user accounts">Search</button>
                             </form>
                             <a href="{{ url_for('admin_bp.createUser') }}" class="create-button">
                                 Create<br>User
@@ -86,55 +78,68 @@
                         {% endif %}
                     {% endwith %}
 
-                    <table class="user-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in data.users %}
+                    <div class="table-wrap">
+                        <table class="user-table">
+                            <colgroup>
+                                <col class="name-col">
+                                <col class="email-col">
+                                <col class="role-col">
+                                <col class="status-col">
+                                <col class="actions-col">
+                            </colgroup>
+                            <thead>
                                 <tr>
-                                    <td>{{ user.username }}</td>
-                                    <td>{{ user.email }}</td>
-                                    <td>{{ user.role }}</td>
-                                    <td><span class="status-badge">{{ user.accountStatus }}</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <a href="{{ url_for('admin_view_bp.viewUser', user_id=user.userID) }}" class="table-button">View</a>
-                                            <a href="{{ url_for('admin_update_bp.updateUser', user_id=user.userID) }}" class="table-button">Update</a>
-                                            <form method="POST" action="{{ url_for('admin_delete_bp.deleteUser', user_id=user.userID) }}" class="inline-action-form">
-                                                <button type="submit" class="table-button danger">Delete</button>
-                                            </form>
-                                            {% if user.isSuspended %}
-                                                <form method="POST" action="{{ url_for('admin_suspend_bp.unsuspendUser', user_id=user.userID) }}" class="inline-action-form">
-                                                    <button type="submit" class="table-button">Unsuspend</button>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in data.users %}
+                                    <tr>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.role }}</td>
+                                        <td>
+                                            <span class="status-badge {% if user.isSuspended %}suspended{% else %}active{% endif %}">
+                                                {{ user.accountStatus }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <a href="{{ url_for('admin_view_bp.viewUser', user_id=user.userID) }}" class="table-button">View</a>
+                                                <a href="{{ url_for('admin_update_bp.updateUser', user_id=user.userID) }}" class="table-button">Update</a>
+                                                <form method="POST" action="{{ url_for('admin_delete_bp.deleteUser', user_id=user.userID) }}" class="inline-action-form">
+                                                    <button type="submit" class="table-button danger">Delete</button>
                                                 </form>
+                                                {% if user.isSuspended %}
+                                                    <form method="POST" action="{{ url_for('admin_suspend_bp.unsuspendUser', user_id=user.userID) }}" class="inline-action-form">
+                                                        <button type="submit" class="table-button">Unsuspend</button>
+                                                    </form>
+                                                {% else %}
+                                                    <form method="POST" action="{{ url_for('admin_suspend_bp.suspendUser', user_id=user.userID) }}" class="inline-action-form">
+                                                        <button type="submit" class="table-button">Suspend</button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="empty-table">
+                                            {% if data.hasSearch %}
+                                                No results found.
                                             {% else %}
-                                                <form method="POST" action="{{ url_for('admin_suspend_bp.suspendUser', user_id=user.userID) }}" class="inline-action-form">
-                                                    <button type="submit" class="table-button">Suspend</button>
-                                                </form>
+                                                No user accounts found.
                                             {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% else %}
-                                <tr>
-                                    <td colspan="5" class="empty-table">
-                                        {% if data.hasSearch %}
-                                            No results found.
-                                        {% else %}
-                                            No user accounts found.
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </main>

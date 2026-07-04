@@ -41,6 +41,37 @@ class UserManagementC:
         }
 
     @staticmethod
+    def getUserSummary():
+
+        user_accounts = UserAccount.getAllUserAccounts()
+        total_users = len(user_accounts)
+        active_users = sum(
+            1
+            for user_account in user_accounts
+            if user_account["account_status"] == "active"
+        )
+        suspended_users = sum(
+            1
+            for user_account in user_accounts
+            if user_account["account_status"] == "suspended"
+        )
+
+        if total_users == 0:
+            active_percent = 0
+            suspended_percent = 0
+        else:
+            active_percent = round((active_users / total_users) * 100)
+            suspended_percent = 100 - active_percent
+
+        return {
+            "totalUsers": total_users,
+            "activeUsers": active_users,
+            "suspendedUsers": suspended_users,
+            "activePercent": active_percent,
+            "suspendedPercent": suspended_percent
+        }
+
+    @staticmethod
     def formatRole(role: str) -> str:
 
         role_labels = {
@@ -73,5 +104,6 @@ def userAdminDashboard():
 
     return render_template(
         "AdminDashboard.html",
-        username=session.get("username")
+        username=session.get("username"),
+        userSummary=UserManagementC.getUserSummary()
     )
