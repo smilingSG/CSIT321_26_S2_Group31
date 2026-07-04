@@ -220,9 +220,16 @@
             color: #91a0ba;
         }
 
-        .file-management-page .search-icon {
+        .file-management-page .search-submit {
+            width: 18px;
+            height: 18px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #91a0ba;
             font-size: 16px;
             line-height: 1;
+            cursor: pointer;
         }
 
         .file-management-page .search-box input {
@@ -384,15 +391,18 @@
                         </p>
                     </div>
 
-                    <div class="search-box">
-                        <span class="search-icon">&#9906;</span>
+                    <form
+                        class="search-box"
+                        method="GET"
+                        action="{{ url_for('search_file_bp.searchFile') }}">
+                        <button class="search-submit" type="submit" aria-label="Search files">&#9906;</button>
                         <input
                             type="search"
-                            id="fileSearchInput"
+                            name="query"
+                            value="{{ searchQuery or '' }}"
                             placeholder="Search files"
-                            aria-label="Search files"
-                            oninput="filterFiles()">
-                    </div>
+                            aria-label="Search files">
+                    </form>
                 </div>
 
                 <table class="file-table">
@@ -408,7 +418,7 @@
                     <tbody id="fileTableBody">
                         {% if managedFiles %}
                             {% for file in managedFiles %}
-                                <tr data-file-name="{{ file.fileName | lower }}">
+                                <tr>
                                     <td id="fileName-{{ file.fileID }}">{{ file.fileName }}</td>
                                     <td><span class="status-pill">{{ file.fileStatus }}</span></td>
                                     <td>{{ file.fileSize }}</td>
@@ -431,7 +441,11 @@
                         {% else %}
                             <tr>
                                 <td colspan="5" class="empty-row">
-                                    No processed files available.
+                                    {% if searchQuery %}
+                                        No files found for "{{ searchQuery }}".
+                                    {% else %}
+                                        No processed files available.
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endif %}
@@ -484,19 +498,6 @@
 
         xhr.open("POST", "/files/rename/" + fileID, true);
         xhr.send(formData);
-    }
-
-    function filterFiles() {
-        var searchValue = document.getElementById("fileSearchInput").value.toLowerCase();
-        var rows = document.querySelectorAll("#fileTableBody tr[data-file-name]");
-
-        rows.forEach(function (row) {
-            if (row.dataset.fileName.indexOf(searchValue) !== -1) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-            }
-        });
     }
 </script>
 
