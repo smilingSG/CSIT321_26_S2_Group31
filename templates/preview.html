@@ -203,6 +203,11 @@
             justify-content: space-between;
         }
 
+        .preview-page .preview-placeholder-inner {
+            position: relative;
+            min-height: 136px;
+        }
+
         .preview-page .document-preview {
             padding: 18px 16px 12px;
         }
@@ -237,11 +242,6 @@
             background: #8f98a5;
         }
 
-        .preview-page .preview-placeholder-inner {
-            position: relative;
-            min-height: 136px;
-        }
-
         .preview-page .preview-controls {
             height: 25px;
             border-top: 1px solid #d7e1f3;
@@ -251,6 +251,29 @@
             padding: 0 12px;
             color: #a6b2c4;
             font-size: 12px;
+        }
+
+        .preview-page .preview-deleted-state {
+            min-height: 176px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-page .deleted-preview-icon {
+            width: 19px;
+            height: 19px;
+            border: 3px solid #2f6df6;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .preview-page .deleted-preview-icon::after {
+            content: "";
+            position: absolute;
+            inset: 3px;
+            border: 2px solid #2f6df6;
+            border-radius: 1px;
         }
 
         .preview-page .preview-details {
@@ -483,12 +506,12 @@
                 document.getElementById("previewFileSize").innerText = "";
                 document.getElementById("previewAvailability").innerText = "";
 
-                document.getElementById("previewPlaceholder").innerText = "";
+                document.getElementById("previewPlaceholder").innerHTML =
+                    '<div class="preview-deleted-state">' +
+                    '<span class="deleted-preview-icon"></span>' +
+                    '</div>';
 
-                document.getElementById("continueButton").disabled = true;
-
-                document.getElementById("pageMessage").innerText =
-                    "Selected upload removed before encryption.";
+                document.getElementById("pageMessage").innerText = "";
 
             } else {
 
