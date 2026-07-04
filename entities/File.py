@@ -243,6 +243,56 @@ class File:
 
         return managed_files
 
+    # Search processed files belonging to a user by file name.
+    @staticmethod
+    def searchManagedFilesByName(owner_id: int,
+                                 search_query: str) -> List[Dict[str, Any]]:
+
+        search_query = search_query.strip()
+
+        if search_query == "":
+            return File.getManagedFilesByOwner(owner_id)
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                file_name,
+                file_size,
+                file_status,
+                uploaded_at
+            FROM files
+            WHERE owner_id = %s
+            AND file_status = 'processed'
+            AND file_name LIKE %s
+            ORDER BY uploaded_at DESC
+        """, (
+            owner_id,
+            "%" + search_query + "%"
+        ))
+
+        file_records = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        managed_files = []
+
+        for file_record in file_records:
+            file_size_mb = file_record["file_size"] / (1024 * 1024)
+
+            managed_files.append({
+                "fileID": file_record["file_id"],
+                "fileName": file_record["file_name"],
+                "fileSize": str(round(file_size_mb, 1)) + " MB",
+                "fileStatus": file_record["file_status"].replace("_", " ").title(),
+                "uploadedAt": file_record["uploaded_at"].strftime("%Y-%m-%d")
+            })
+
+        return managed_files
+
     # Check whether another managed file already uses the requested name.
     @staticmethod
     def checkNameExists(owner_id: int,
