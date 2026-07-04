@@ -453,6 +453,28 @@
         replaceTempFile({{ previewData.fileID }}, "/upload");
     }
 
+    function replaceTempFile(fileID, targetURL) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                currentTempFileID = null;
+                window.location.href = targetURL;
+            } else {
+                document.getElementById("pageMessage").innerText =
+                    "Unable to replace file.";
+            }
+        };
+
+        xhr.onerror = function () {
+            document.getElementById("pageMessage").innerText =
+                "Unable to replace file.";
+        };
+
+        xhr.open("POST", "/upload/replace/" + fileID, true);
+        xhr.send();
+    }
+
     function deleteFile() {
 
         if (fileDeleted === true) {
