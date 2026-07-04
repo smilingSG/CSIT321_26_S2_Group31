@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Management - Lazarus</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='upload.css') }}" rel="stylesheet">
+
+    <style>
+        body.file-management-page {
+            min-width: 1180px;
+            min-height: 100vh;
+            margin: 0;
+            color: #07172f;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                linear-gradient(rgba(93, 130, 188, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(93, 130, 188, 0.08) 1px, transparent 1px),
+                radial-gradient(circle at 24% 8%, rgba(47, 109, 246, 0.18), transparent 28rem),
+                radial-gradient(circle at 82% 14%, rgba(35, 199, 189, 0.18), transparent 24rem),
+                linear-gradient(135deg, #eef5ff 0%, #f8fbff 48%, #f3f7fb 100%);
+            background-size: 66px 66px, 66px 66px, auto, auto, auto;
+        }
+
+        .file-management-page .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+            background: transparent;
+        }
+
+        .file-management-page .sidebar {
+            width: 310px;
+            min-height: 100vh;
+            padding: 30px 22px;
+            color: #07172f;
+            display: flex;
+            flex-direction: column;
+            background:
+                radial-gradient(circle at 20% 8%, rgba(35, 199, 189, 0.2), transparent 14rem),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 250, 255, 0.94) 100%);
+            box-shadow: 18px 0 44px rgba(15, 23, 42, 0.08);
+            border-right: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .file-management-page .brand-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 34px;
+        }
+
+        .file-management-page .logo-box {
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: linear-gradient(135deg, #23c7bd, #2f6df6);
+            box-shadow: 0 18px 35px rgba(47, 109, 246, 0.34);
+            text-decoration: none;
+        }
+
+        .file-management-page .logo-box img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        .file-management-page .brand-title {
+            color: #07172f;
+            font-size: 31px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .file-management-page .nav-stack {
+            display: grid;
+            gap: 22px;
+            margin-top: 38px;
+        }
+
+        .file-management-page .nav-item {
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            padding: 0 36px;
+            border-radius: 12px;
+            color: #43536b;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            position: relative;
+            transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .file-management-page .nav-item:hover {
+            color: #07172f;
+            background: rgba(47, 109, 246, 0.08);
+        }
+
+        .file-management-page .nav-item.active {
+            color: #07172f;
+            background: rgba(255, 255, 255, 0.88);
+            box-shadow: 0 16px 34px rgba(88, 115, 166, 0.12);
+        }
+
+        .file-management-page .nav-item.active::before {
+            content: "";
+            position: absolute;
+            left: 20px;
+            top: 13px;
+            width: 5px;
+            height: 26px;
+            border-radius: 999px;
+            background: #25bed1;
+        }
+
+        .file-management-page .logout {
+            margin-top: auto;
+            padding-top: 28px;
+            border-top: 1px solid rgba(148, 163, 184, 0.28);
+        }
+
+        .file-management-page .profile-fab {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #23c7bd, #2f6df6);
+            box-shadow: 0 18px 34px rgba(7, 39, 95, 0.24);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            z-index: 20;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .file-management-page .profile-fab:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 22px 40px rgba(7, 39, 95, 0.3);
+        }
+
+        .file-management-page .profile-fab-head {
+            position: absolute;
+            top: 12px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .file-management-page .profile-fab-body {
+            position: absolute;
+            left: 14px;
+            bottom: 12px;
+            width: 26px;
+            height: 16px;
+            border-radius: 16px 16px 6px 6px;
+            background: white;
+        }
+
+        .file-management-page .main-area {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-management-page .content-area {
+            padding: 38px 42px;
+        }
+
+        .file-management-page .management-panel {
+            width: 1020px;
+            padding: 34px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(201, 216, 244, 0.92);
+            box-shadow: 0 24px 54px rgba(88, 115, 166, 0.16);
+        }
+
+        .file-management-page .panel-header {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .file-management-page h1 {
+            margin: 0 0 8px;
+            color: #061027;
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+        }
+
+        .file-management-page .page-subtitle {
+            margin: 0;
+            color: #8393b2;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .file-management-page .search-box {
+            width: 326px;
+            height: 48px;
+            margin-top: 18px;
+            border-radius: 16px;
+            border: 1px solid #c7d6ef;
+            background: rgba(255, 255, 255, 0.88);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 16px;
+            color: #91a0ba;
+        }
+
+        .file-management-page .search-icon {
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .file-management-page .search-box input {
+            width: 100%;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: #43536b;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .file-management-page .search-box input::placeholder {
+            color: #9aa8bf;
+        }
+
+        .file-management-page .file-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #43536b;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .file-management-page .file-table thead th {
+            padding: 16px 16px;
+            color: #8393b2;
+            font-size: 13px;
+            font-weight: 900;
+            background: rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid rgba(201, 216, 244, 0.55);
+            white-space: nowrap;
+        }
+
+        .file-management-page .file-table tbody td {
+            padding: 18px 16px;
+            border-bottom: 1px solid #d9e3f5;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .file-management-page .status-pill {
+            min-width: 98px;
+            height: 24px;
+            padding: 0 16px;
+            border-radius: 999px;
+            color: #5d7cdd;
+            background: #e1e8ff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .file-management-page .actions-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-management-page .table-action {
+            appearance: none;
+            -webkit-appearance: none;
+            height: 38px;
+            padding: 0 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .file-management-page .rename-button,
+        .file-management-page .download-button {
+            color: #43536b;
+            border: 1px solid #b8cef5;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .file-management-page .share-button {
+            color: #07172f;
+            border: 1px solid transparent;
+            background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%);
+        }
+
+        .file-management-page .delete-button {
+            color: #ff4d4d;
+            border: 1px solid #ffaaaa;
+            background: rgba(255, 255, 255, 0.9);
+        }
+    </style>
+</head>
+
+<body class="file-management-page">
+
+<div class="page-wrapper">
+    <aside class="sidebar">
+        <div class="brand-row">
+            <a href="/dashboard" class="logo-box" aria-label="Lazarus dashboard">
+                <img src="{{ url_for('static', filename='lazarus-logo.png') }}" alt="Lazarus logo">
+            </a>
+
+            <div>
+                <div class="brand-title">Lazarus</div>
+            </div>
+        </div>
+
+        <nav class="nav-stack">
+            <a href="/dashboard" class="nav-item">Dashboard</a>
+            <a href="/upload" class="nav-item">Upload File</a>
+            <a href="/files" class="nav-item active">File Management</a>
+            <a href="/shared" class="nav-item">Shared Files</a>
+            <a href="/download" class="nav-item">Download</a>
+        </nav>
+
+        <a href="/logout" class="nav-item logout">Logout</a>
+    </aside>
+
+    <a href="/profile" class="profile-fab" aria-label="Profile">
+        <span class="profile-fab-head"></span>
+        <span class="profile-fab-body"></span>
+    </a>
+
+    <main class="main-area">
+        <div class="content-area">
+            <section class="management-panel">
+                <div class="panel-header">
+                    <div>
+                        <h1>File Management Page</h1>
+                        <p class="page-subtitle">
+                            Search, rename, delete, share, or download your uploaded files.
+                        </p>
+                    </div>
+
+                    <div class="search-box">
+                        <span class="search-icon">&#9906;</span>
+                        <input type="search" placeholder="Search files" aria-label="Search files">
+                    </div>
+                </div>
+
+                <table class="file-table">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Status</th>
+                            <th>Size</th>
+                            <th>Uploaded</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Replacement-Document.pdf</td>
+                            <td><span class="status-pill">Encrypted</span></td>
+                            <td>8.6 MB</td>
+                            <td>2026-05-24</td>
+                            <td>
+                                <div class="actions-cell">
+                                    <button type="button" class="table-action rename-button">Rename</button>
+                                    <button type="button" class="table-action download-button">Download</button>
+                                    <button type="button" class="table-action share-button">Share</button>
+                                    <button type="button" class="table-action delete-button">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Q1-Finance-Report.pdf</td>
+                            <td><span class="status-pill">Encrypted</span></td>
+                            <td>12.5 MB</td>
+                            <td>2026-05-20</td>
+                            <td>
+                                <div class="actions-cell">
+                                    <button type="button" class="table-action rename-button">Rename</button>
+                                    <button type="button" class="table-action download-button">Download</button>
+                                    <button type="button" class="table-action share-button">Share</button>
+                                    <button type="button" class="table-action delete-button">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Vendor-Agreement.docx</td>
+                            <td><span class="status-pill">Fragmented</span></td>
+                            <td>3.8 MB</td>
+                            <td>2026-05-21</td>
+                            <td>
+                                <div class="actions-cell">
+                                    <button type="button" class="table-action rename-button">Rename</button>
+                                    <button type="button" class="table-action download-button">Download</button>
+                                    <button type="button" class="table-action share-button">Share</button>
+                                    <button type="button" class="table-action delete-button">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>System-Backup.zip</td>
+                            <td><span class="status-pill">Encrypted</span></td>
+                            <td>42.1 MB</td>
+                            <td>2026-05-22</td>
+                            <td>
+                                <div class="actions-cell">
+                                    <button type="button" class="table-action rename-button">Rename</button>
+                                    <button type="button" class="table-action download-button">Download</button>
+                                    <button type="button" class="table-action share-button">Share</button>
+                                    <button type="button" class="table-action delete-button">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
