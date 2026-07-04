@@ -9,18 +9,24 @@ import shutil
 from typing import Dict
 from typing import Any
 from typing import List
+from typing import Optional
 
 # Import zfec's erasure-coding interface.
 from zfec import easyfec
 
 # Import the application's MySQL connection function.
 from db import get_db_connection
+# Import storage-node operations used to retrieve stored fragment bytes.
+from entities.StorageNode import StorageNode
 
 # Define the folder used while fragments are awaiting node storage.
 TEMP_FRAGMENT_FOLDER: str = "temp_fragments"
+# Define the folder used for reconstructed encrypted files.
+RECONSTRUCTED_TEMP_FOLDER: str = "reconstructed_temp"
 
-# Create the temporary fragment folder if it does not already exist.
+# Create temporary folders if they do not already exist.
 os.makedirs(TEMP_FRAGMENT_FOLDER, exist_ok=True)
+os.makedirs(RECONSTRUCTED_TEMP_FOLDER, exist_ok=True)
 
 
 # Represent fragment records and perform erasure-coding and cleanup operations.
@@ -218,6 +224,119 @@ class Fragment:
             })
 
         return fragment_list
+
+    # Retrieve available fragments from active storage nodes for reconstruction.
+    @staticmethod
+    def getAvailableFragments(file_id: int) -> List[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                fragments.fragment_id,
+                fragments.file_id,
+                fragments.fragment_number,
+                fragments.fragment_path,
+                fragments.node_id
+            FROM fragments
+            INNER JOIN storage_nodes
+                ON storage_nodes.node_id = fragments.node_id
+            WHERE fragments.file_id = %s
+            AND fragments.fragment_status = 'available'
+            AND storage_nodes.node_status = 'active'
+            ORDER BY fragments.fragment_number
+        """, (file_id,))
+
+        fragment_records = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        available_fragments = []
+
+        for fragment_record in fragment_records:
+            fragment_bytes = StorageNode.retrieveFragment(
+                fragment_record["fragment_path"]
+            )
+
+            # Missing or unreadable fragment files are skipped as unavailable.
+            if fragment_bytes is None:
+                continue
+
+            available_fragments.append({
+                "fragment_id": fragment_record["fragment_id"],
+                "file_id": fragment_record["file_id"],
+                "fragment_number": fragment_record["fragment_number"],
+                "fragment_path": fragment_record["fragment_path"],
+                "node_id": fragment_record["node_id"],
+                "share_number": fragment_record["fragment_number"] - 1,
+                "fragment_bytes": fragment_bytes
+            })
+
+        return available_fragments
+
+    # Reconstruct the encrypted file from at least k available fragments.
+    @staticmethod
+    def reconstructFragments(file_id: int,
+                             available_fragments: List[Dict[str, Any]],
+                             required_fragments: int,
+                             total_fragments: int,
+                             encrypted_size: int) -> Optional[str]:
+
+        if len(available_fragments) < required_fragments:
+            return None
+
+        selected_fragments = available_fragments[:required_fragments]
+
+        fragment_bytes = [
+            fragment["fragment_bytes"]
+            for fragment in selected_fragments
+        ]
+
+        share_numbers = [
+            fragment["share_number"]
+            for fragment in selected_fragments
+        ]
+
+        try:
+            decoder = easyfec.Decoder(
+                required_fragments,
+                total_fragments
+            )
+
+            padding_size = (
+                required_fragments - (encrypted_size % required_fragments)
+            ) % required_fragments
+
+            try:
+                reconstructed_data = decoder.decode(
+                    fragment_bytes,
+                    share_numbers,
+                    padding_size
+                )
+            except TypeError:
+                reconstructed_data = decoder.decode(
+                    fragment_bytes,
+                    share_numbers
+                )
+
+            # Trim any erasure-coding padding back to the original encrypted size.
+            reconstructed_data = reconstructed_data[:encrypted_size]
+
+            reconstructed_path = os.path.join(
+                RECONSTRUCTED_TEMP_FOLDER,
+                "file_" + str(file_id) + "_reconstructed.enc"
+            )
+
+            with open(reconstructed_path, "wb") as reconstructed_file:
+                reconstructed_file.write(reconstructed_data)
+
+            return reconstructed_path
+
+        # Failed decoding means the selected fragments could not reconstruct data.
+        except Exception:
+            return None
 
     # Assign a stored fragment to its node and mark it as available.
     @staticmethod
