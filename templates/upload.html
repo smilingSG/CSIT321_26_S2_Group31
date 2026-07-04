@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>Upload File - Lazarus</title>
@@ -61,57 +61,57 @@
                             </div>
 
                             <div class="button-row">
-                                <button type="button" class="outline-btn" disabled>Pause Upload</button>
-                                <button type="button" class="outline-btn" disabled>Resume Upload</button>
+                                <button type="button" class="outline-btn" id="pauseUploadBtn" onclick="pauseUploadProcess()" disabled>Pause Upload</button>
+                                <button type="button" class="outline-btn" id="resumeUploadBtn" onclick="resumeUploadProcess()" disabled>Resume Upload</button>
                                 <button type="button" class="danger-btn" onclick="cancelUploadProcess()">Cancel Upload</button>
                             </div>
 
                             <div class="status-panel upload-right-card">
-                            <div class="progress mt-3 upload-progress">
-                                <div id="uploadProgressBar"
-                                     class="progress-bar"
-                                     role="progressbar"
-                                     style="width: 0%;">
-                                    0%
+                                <div class="progress mt-3 upload-progress">
+                                    <div id="uploadProgressBar"
+                                         class="progress-bar"
+                                         role="progressbar"
+                                         style="width: 0%;">
+                                        0%
+                                    </div>
+                                </div>
+
+                                <p id="uploadStatusText" class="mt-3 status-text">
+                                    0% uploaded.
+                                </p>
+
+                                <div class="status-box mt-4">
+                                    <p>
+                                        <strong>Current State:</strong>
+                                        <span id="currentState">Idle</span>
+                                    </p>
+
+                                    <p>
+                                        <strong>Name:</strong>
+                                        <span id="statusFileName">-</span>
+                                    </p>
+
+                                    <p>
+                                        <strong>Type:</strong>
+                                        <span id="statusFileType">-</span>
+                                    </p>
+
+                                    <p>
+                                        <strong>Size:</strong>
+                                        <span id="statusFileSize">-</span>
+                                    </p>
+                                </div>
+
+                                <div class="button-row">
+                                    <button
+                                        type="button"
+                                        class="primary-btn"
+                                        id="completeUploadBtn"
+                                        disabled>
+                                        Complete Upload
+                                    </button>
                                 </div>
                             </div>
-
-                            <p id="uploadStatusText" class="mt-3 status-text">
-                                0% uploaded.
-                            </p>
-
-                            <div class="status-box mt-4">
-                                <p>
-                                    <strong>Current State:</strong>
-                                    <span id="currentState">Idle</span>
-                                </p>
-
-                                <p>
-                                    <strong>Name:</strong>
-                                    <span id="statusFileName">-</span>
-                                </p>
-
-                                <p>
-                                    <strong>Type:</strong>
-                                    <span id="statusFileType">-</span>
-                                </p>
-
-                                <p>
-                                    <strong>Size:</strong>
-                                    <span id="statusFileSize">-</span>
-                                </p>
-                            </div>
-
-                            <div class="button-row">
-                                <button
-                                    type="button"
-                                    class="primary-btn"
-                                    id="completeUploadBtn"
-                                    disabled>
-                                    Complete Upload
-                                </button>
-                            </div>
-                        </div>
                         </div>
 
                     </div>
@@ -125,10 +125,18 @@
         var dropZone = document.getElementById("dropZone");
         var chooseFileButton = document.getElementById("chooseFileButton");
         var completeUploadBtn = document.getElementById("completeUploadBtn");
+        var pauseUploadBtn = document.getElementById("pauseUploadBtn");
+        var resumeUploadBtn = document.getElementById("resumeUploadBtn");
+
+        var CHUNK_SIZE = 256 * 1024;
 
         var currentRequest = null;
         var currentTempFileID = null;
+        var currentUploadID = null;
+        var currentFile = null;
+        var uploadedBytes = 0;
         var uploadCompleted = false;
+        var uploadPaused = false;
 
         chooseFileButton.addEventListener("click", function (event) {
             event.stopPropagation();
@@ -157,7 +165,7 @@
             if (droppedFiles.length > 0) {
                 fileInput.files = droppedFiles;
                 prepareUpload(droppedFiles[0]);
-                uploadTempFile();
+                startUploadSession();
             }
         });
 
@@ -166,7 +174,7 @@
 
             if (file) {
                 prepareUpload(file);
-                uploadTempFile();
+                startUploadSession();
             }
         });
 
@@ -177,10 +185,17 @@
         });
 
         function prepareUpload(file) {
-            uploadCompleted = false;
+            currentFile = file;
+            currentRequest = null;
             currentTempFileID = null;
+            currentUploadID = null;
+            uploadedBytes = 0;
+            uploadCompleted = false;
+            uploadPaused = false;
 
             completeUploadBtn.disabled = true;
+            pauseUploadBtn.disabled = true;
+            resumeUploadBtn.disabled = true;
 
             document.getElementById("selectedFileName").innerText = file.name;
             document.getElementById("statusFileName").innerText = file.name;
@@ -193,32 +208,183 @@
             document.getElementById("uploadStatusText").innerText = "Starting upload...";
         }
 
-        function uploadTempFile() {
-            if (!fileInput.files[0]) {
+        function startUploadSession() {
+            if (currentFile === null) {
                 alert("Please select a file first.");
                 return;
             }
 
-            var form = document.getElementById("uploadForm");
-            var formData = new FormData(form);
+            var formData = new FormData();
+            formData.append("file_name", currentFile.name);
+            formData.append("total_size", currentFile.size);
 
             var xhr = new XMLHttpRequest();
             currentRequest = xhr;
 
-            var progressBar = document.getElementById("uploadProgressBar");
-            var statusText = document.getElementById("uploadStatusText");
+            xhr.onload = function () {
+                currentRequest = null;
 
-            progressBar.classList.remove("bg-success", "bg-danger");
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
 
-            xhr.upload.onprogress = function (event) {
-                if (event.lengthComputable) {
-                    var percent = Math.round((event.loaded / event.total) * 100);
+                    currentUploadID = response.upload_id;
+                    uploadedBytes = response.bytes_uploaded;
+                    uploadPaused = false;
 
-                    progressBar.style.width = percent + "%";
-                    progressBar.innerText = percent + "%";
-                    statusText.innerText = percent + "% uploaded.";
+                    pauseUploadBtn.disabled = false;
+                    resumeUploadBtn.disabled = true;
+
+                    uploadNextChunk();
+                } else {
+                    handleUploadError(xhr, "Upload could not be started.");
                 }
             };
+
+            xhr.onerror = function () {
+                currentRequest = null;
+                markUploadFailed("Network error occurred while starting upload.");
+            };
+
+            xhr.open("POST", "/upload/start", true);
+            xhr.send(formData);
+        }
+
+        function uploadNextChunk() {
+            if (uploadPaused || currentFile === null || currentUploadID === null) {
+                return;
+            }
+
+            if (uploadedBytes >= currentFile.size) {
+                completeUploadSession();
+                return;
+            }
+
+            var chunkEnd = Math.min(uploadedBytes + CHUNK_SIZE, currentFile.size);
+            var chunk = currentFile.slice(uploadedBytes, chunkEnd);
+
+            var formData = new FormData();
+            formData.append("upload_id", currentUploadID);
+            formData.append("chunk_start", uploadedBytes);
+            formData.append("chunk", chunk);
+
+            var xhr = new XMLHttpRequest();
+            currentRequest = xhr;
+
+            xhr.onload = function () {
+                currentRequest = null;
+
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+
+                    uploadedBytes = response.bytes_uploaded;
+                    updateProgressDisplay(uploadedBytes, currentFile.size);
+                    uploadNextChunk();
+                } else {
+                    handleUploadError(xhr, "Upload chunk could not be saved.");
+                }
+            };
+
+            xhr.onerror = function () {
+                currentRequest = null;
+                markUploadFailed("Network error occurred during upload.");
+            };
+
+            xhr.onabort = function () {
+                currentRequest = null;
+            };
+
+            xhr.open("POST", "/upload/chunk", true);
+            xhr.send(formData);
+        }
+
+        function pauseUploadProcess() {
+            if (currentUploadID === null || uploadCompleted) {
+                return;
+            }
+
+            uploadPaused = true;
+
+            if (currentRequest !== null) {
+                currentRequest.abort();
+                currentRequest = null;
+            }
+
+            var formData = new FormData();
+            formData.append("upload_id", currentUploadID);
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    pauseUploadBtn.disabled = true;
+                    resumeUploadBtn.disabled = false;
+                    completeUploadBtn.disabled = true;
+
+                    document.getElementById("currentState").innerText = "Paused";
+                    document.getElementById("uploadStatusText").innerText = "Upload paused at " + getUploadPercent() + "%.";
+                } else {
+                    handleUploadError(xhr, "Upload progress could not be paused.");
+                }
+            };
+
+            xhr.onerror = function () {
+                markUploadFailed("Network error occurred while pausing upload.");
+            };
+
+            xhr.open("POST", "/upload/pause", true);
+            xhr.send(formData);
+        }
+
+        function resumeUploadProcess() {
+            if (currentUploadID === null || currentFile === null || uploadCompleted) {
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append("upload_id", currentUploadID);
+
+            var xhr = new XMLHttpRequest();
+            currentRequest = xhr;
+
+            xhr.onload = function () {
+                currentRequest = null;
+
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+
+                    uploadedBytes = response.bytes_uploaded;
+                    uploadPaused = false;
+
+                    pauseUploadBtn.disabled = false;
+                    resumeUploadBtn.disabled = true;
+                    completeUploadBtn.disabled = true;
+
+                    document.getElementById("currentState").innerText = "Uploading";
+                    document.getElementById("uploadStatusText").innerText = "Resuming upload...";
+
+                    updateProgressDisplay(uploadedBytes, currentFile.size);
+                    uploadNextChunk();
+                } else {
+                    handleUploadError(xhr, "Upload could not be resumed.");
+                }
+            };
+
+            xhr.onerror = function () {
+                currentRequest = null;
+                markUploadFailed("Network error occurred while resuming upload.");
+            };
+
+            xhr.open("POST", "/upload/resume", true);
+            xhr.send(formData);
+        }
+
+        function completeUploadSession() {
+            var formData = new FormData();
+            formData.append("upload_id", currentUploadID);
+            formData.append("file_type", currentFile.type || "Unknown");
+
+            var xhr = new XMLHttpRequest();
+            currentRequest = xhr;
 
             xhr.onload = function () {
                 currentRequest = null;
@@ -228,47 +394,34 @@
 
                     currentTempFileID = response.file_id;
                     uploadCompleted = true;
+                    uploadPaused = false;
 
-                    progressBar.style.width = "100%";
-                    progressBar.innerText = "100%";
-                    progressBar.classList.add("bg-success");
+                    updateProgressDisplay(currentFile.size, currentFile.size);
 
+                    document.getElementById("uploadProgressBar").classList.add("bg-success");
                     document.getElementById("currentState").innerText = "Completed";
-                    statusText.innerText = "100% uploaded. You may continue to preview.";
+                    document.getElementById("uploadStatusText").innerText = "100% uploaded. You may continue to preview.";
 
+                    pauseUploadBtn.disabled = true;
+                    resumeUploadBtn.disabled = true;
                     completeUploadBtn.disabled = false;
                 } else {
-                    progressBar.classList.add("bg-danger");
-                    document.getElementById("currentState").innerText = "Failed";
-
-                    try {
-                        var errorResponse = JSON.parse(xhr.responseText);
-                        statusText.innerText = errorResponse.message;
-                    } catch (e) {
-                        statusText.innerText = "Upload failed. Please check the Flask terminal.";
-                    }
+                    handleUploadError(xhr, "Upload could not be completed.");
                 }
             };
 
             xhr.onerror = function () {
                 currentRequest = null;
-                progressBar.classList.add("bg-danger");
-                document.getElementById("currentState").innerText = "Failed";
-                statusText.innerText = "Network error occurred during upload.";
+                markUploadFailed("Network error occurred while completing upload.");
             };
 
-            xhr.onabort = function () {
-                currentRequest = null;
-                progressBar.classList.add("bg-danger");
-                document.getElementById("currentState").innerText = "Cancelled";
-                statusText.innerText = "Upload was cancelled.";
-            };
-
-            xhr.open("POST", "/upload/temp", true);
+            xhr.open("POST", "/upload/complete", true);
             xhr.send(formData);
         }
 
         function cancelUploadProcess() {
+            uploadPaused = true;
+
             if (currentRequest !== null) {
                 currentRequest.abort();
                 currentRequest = null;
@@ -276,6 +429,8 @@
 
             if (currentTempFileID !== null) {
                 cancelTempUpload(currentTempFileID, null);
+            } else if (currentUploadID !== null) {
+                cancelUploadSession(currentUploadID, null);
             }
 
             clearUploadDisplay();
@@ -284,9 +439,13 @@
         }
 
         function handleExitUploadProcess(targetURL) {
-
             if (currentTempFileID !== null) {
                 cancelTempUpload(currentTempFileID, targetURL);
+                return false;
+            }
+
+            if (currentUploadID !== null && !uploadCompleted) {
+                cancelUploadSession(currentUploadID, targetURL);
                 return false;
             }
 
@@ -308,12 +467,34 @@
             xhr.send();
         }
 
+        function cancelUploadSession(uploadID, targetURL) {
+            var xhr = new XMLHttpRequest();
+
+            xhr.onload = function () {
+                currentUploadID = null;
+
+                if (targetURL !== null) {
+                    window.location.href = targetURL;
+                }
+            };
+
+            xhr.open("POST", "/upload/cancel-session/" + uploadID, true);
+            xhr.send();
+        }
+
         function clearUploadDisplay() {
             fileInput.value = "";
+            currentRequest = null;
             currentTempFileID = null;
+            currentUploadID = null;
+            currentFile = null;
+            uploadedBytes = 0;
             uploadCompleted = false;
+            uploadPaused = false;
 
             completeUploadBtn.disabled = true;
+            pauseUploadBtn.disabled = true;
+            resumeUploadBtn.disabled = true;
 
             document.getElementById("selectedFileName").innerText = "No file selected";
             document.getElementById("statusFileName").innerText = "-";
@@ -331,6 +512,47 @@
             progressBar.classList.remove("bg-success", "bg-danger");
 
             document.getElementById("uploadStatusText").innerText = "0% uploaded.";
+        }
+
+        function updateProgressDisplay(currentBytes, totalBytes) {
+            var progressBar = document.getElementById("uploadProgressBar");
+            var percent = Math.round((currentBytes / totalBytes) * 100);
+
+            progressBar.classList.remove("bg-danger");
+            progressBar.style.width = percent + "%";
+            progressBar.innerText = percent + "%";
+
+            document.getElementById("uploadStatusText").innerText = percent + "% uploaded.";
+        }
+
+        function getUploadPercent() {
+            if (currentFile === null || currentFile.size === 0) {
+                return 0;
+            }
+
+            return Math.round((uploadedBytes / currentFile.size) * 100);
+        }
+
+        function handleUploadError(xhr, defaultMessage) {
+            try {
+                var errorResponse = JSON.parse(xhr.responseText);
+                markUploadFailed(errorResponse.message || defaultMessage);
+            } catch (e) {
+                markUploadFailed(defaultMessage);
+            }
+        }
+
+        function markUploadFailed(message) {
+            var progressBar = document.getElementById("uploadProgressBar");
+
+            currentRequest = null;
+            progressBar.classList.add("bg-danger");
+            document.getElementById("currentState").innerText = "Failed";
+            document.getElementById("uploadStatusText").innerText = message;
+
+            pauseUploadBtn.disabled = true;
+            resumeUploadBtn.disabled = true;
+            completeUploadBtn.disabled = true;
         }
 
         function formatFileSize(sizeInBytes) {
