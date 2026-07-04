@@ -324,13 +324,10 @@ class UploadSession:
 
             cursor.execute("""
                 UPDATE upload_sessions
-                SET
-                    file_id = %s,
-                    upload_status = 'completed'
+                SET upload_status = 'completed'
                 WHERE upload_id = %s
                 AND user_id = %s
             """, (
-                file_id,
                 upload_id,
                 user_id
             ))
