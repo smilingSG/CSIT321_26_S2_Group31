@@ -10,6 +10,8 @@ from controllers.LoginC import login_bp
 from controllers.UserManagementC import user_management_bp
 from controllers.dashboardC import dashboard_bp
 from controllers.uploadFileC import upload_bp
+from controllers.PauseUploadC import pause_upload_bp
+from controllers.ResumeUploadC import resume_upload_bp
 from controllers.previewUploadedFileC import preview_bp
 from controllers.replaceUploadedFileC import replace_bp
 from controllers.configureFragmentsC import configure_fragments_bp
@@ -34,6 +36,8 @@ app.register_blueprint(login_bp)
 app.register_blueprint(user_management_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(upload_bp)
+app.register_blueprint(pause_upload_bp)
+app.register_blueprint(resume_upload_bp)
 app.register_blueprint(preview_bp)
 app.register_blueprint(replace_bp)
 app.register_blueprint(configure_fragments_bp)
