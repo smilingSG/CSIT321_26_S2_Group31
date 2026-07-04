@@ -319,6 +319,27 @@
             border: 1px solid #ffaaaa;
             background: rgba(255, 255, 255, 0.9);
         }
+
+        .file-management-page .empty-row {
+            color: #8393b2;
+            text-align: center;
+        }
+
+        .file-management-page .page-message {
+            min-height: 20px;
+            margin: 16px 0 0;
+            color: #66768f;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .file-management-page .page-message.error {
+            color: #ff4d4d;
+        }
+
+        .file-management-page .page-message.success {
+            color: #067647;
+        }
     </style>
 </head>
 
@@ -365,7 +386,12 @@
 
                     <div class="search-box">
                         <span class="search-icon">&#9906;</span>
-                        <input type="search" placeholder="Search files" aria-label="Search files">
+                        <input
+                            type="search"
+                            id="fileSearchInput"
+                            placeholder="Search files"
+                            aria-label="Search files"
+                            oninput="filterFiles()">
                     </div>
                 </div>
 
@@ -379,69 +405,102 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>Replacement-Document.pdf</td>
-                            <td><span class="status-pill">Encrypted</span></td>
-                            <td>8.6 MB</td>
-                            <td>2026-05-24</td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button type="button" class="table-action rename-button">Rename</button>
-                                    <button type="button" class="table-action download-button">Download</button>
-                                    <button type="button" class="table-action share-button">Share</button>
-                                    <button type="button" class="table-action delete-button">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Q1-Finance-Report.pdf</td>
-                            <td><span class="status-pill">Encrypted</span></td>
-                            <td>12.5 MB</td>
-                            <td>2026-05-20</td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button type="button" class="table-action rename-button">Rename</button>
-                                    <button type="button" class="table-action download-button">Download</button>
-                                    <button type="button" class="table-action share-button">Share</button>
-                                    <button type="button" class="table-action delete-button">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Vendor-Agreement.docx</td>
-                            <td><span class="status-pill">Fragmented</span></td>
-                            <td>3.8 MB</td>
-                            <td>2026-05-21</td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button type="button" class="table-action rename-button">Rename</button>
-                                    <button type="button" class="table-action download-button">Download</button>
-                                    <button type="button" class="table-action share-button">Share</button>
-                                    <button type="button" class="table-action delete-button">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>System-Backup.zip</td>
-                            <td><span class="status-pill">Encrypted</span></td>
-                            <td>42.1 MB</td>
-                            <td>2026-05-22</td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button type="button" class="table-action rename-button">Rename</button>
-                                    <button type="button" class="table-action download-button">Download</button>
-                                    <button type="button" class="table-action share-button">Share</button>
-                                    <button type="button" class="table-action delete-button">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
+                    <tbody id="fileTableBody">
+                        {% if managedFiles %}
+                            {% for file in managedFiles %}
+                                <tr data-file-name="{{ file.fileName | lower }}">
+                                    <td id="fileName-{{ file.fileID }}">{{ file.fileName }}</td>
+                                    <td><span class="status-pill">{{ file.fileStatus }}</span></td>
+                                    <td>{{ file.fileSize }}</td>
+                                    <td>{{ file.uploadedAt }}</td>
+                                    <td>
+                                        <div class="actions-cell">
+                                            <button
+                                                type="button"
+                                                class="table-action rename-button"
+                                                onclick="renameFile({{ file.fileID }}, '{{ file.fileName }}')">
+                                                Rename
+                                            </button>
+                                            <button type="button" class="table-action download-button">Download</button>
+                                            <button type="button" class="table-action share-button">Share</button>
+                                            <button type="button" class="table-action delete-button">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="empty-row">
+                                    No processed files available.
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
+
+                <p id="pageMessage" class="page-message"></p>
             </section>
         </div>
     </main>
 </div>
+
+<script>
+    function renameFile(fileID, currentFileName) {
+        var newName = prompt("Enter new file name:", currentFileName);
+
+        if (newName === null) {
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append("new_name", newName);
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            var pageMessage = document.getElementById("pageMessage");
+
+            if (xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+
+                document.getElementById("fileName-" + fileID).innerText = newName;
+                pageMessage.className = "page-message success";
+                pageMessage.innerText = response.message;
+            } else {
+                try {
+                    var errorResponse = JSON.parse(xhr.responseText);
+                    pageMessage.innerText = errorResponse.message;
+                } catch (e) {
+                    pageMessage.innerText = "Unable to rename file.";
+                }
+
+                pageMessage.className = "page-message error";
+            }
+        };
+
+        xhr.onerror = function () {
+            var pageMessage = document.getElementById("pageMessage");
+            pageMessage.className = "page-message error";
+            pageMessage.innerText = "Unable to rename file.";
+        };
+
+        xhr.open("POST", "/files/rename/" + fileID, true);
+        xhr.send(formData);
+    }
+
+    function filterFiles() {
+        var searchValue = document.getElementById("fileSearchInput").value.toLowerCase();
+        var rows = document.querySelectorAll("#fileTableBody tr[data-file-name]");
+
+        rows.forEach(function (row) {
+            if (row.dataset.fileName.indexOf(searchValue) !== -1) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+</script>
 
 </body>
 </html>
