@@ -20,6 +20,7 @@ from controllers.encryptFileC import encrypt_file_bp
 from controllers.splitFileC import split_file_bp
 from controllers.storeFragmentC import store_fragment_bp
 from controllers.cancelProcessingC import cancel_processing_bp
+from controllers.fileManagementC import file_management_bp
 
 app = Flask(__name__)
 app.secret_key = "temporary_secret_key"
@@ -46,6 +47,7 @@ app.register_blueprint(encrypt_file_bp)
 app.register_blueprint(split_file_bp)
 app.register_blueprint(store_fragment_bp)
 app.register_blueprint(cancel_processing_bp)
+app.register_blueprint(file_management_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(admin_search_bp)
 app.register_blueprint(admin_update_bp)
