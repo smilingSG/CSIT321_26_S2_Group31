@@ -300,35 +300,49 @@
 
         .preview-page .preview-actions {
             display: flex;
-            gap: 12px;
-            margin-top: 26px;
+            gap: 10px;
+            margin-top: 22px;
         }
 
         .preview-page .preview-actions button {
-            min-height: 47px;
-            padding: 0 24px;
-            border-radius: 14px;
-            font-size: 14px;
+            height: 42px;
+            min-height: 42px;
+            padding: 0;
+            border-radius: 13px;
+            font-size: 13px;
             font-weight: 800;
             border: 1px solid transparent;
+            box-shadow: none;
+        }
+
+        .preview-page #continueButton {
+            width: 86px;
+        }
+
+        .preview-page #replaceButton {
+            width: 104px;
+        }
+
+        .preview-page #deleteButton {
+            width: 96px;
         }
 
         .preview-page .primary-btn {
             color: #07172f;
-            background: linear-gradient(135deg, #23c7bd, #2f6df6);
-            box-shadow: 0 15px 28px rgba(47, 109, 246, 0.22);
+            background: linear-gradient(135deg, #26bed2 0%, #2f6df6 100%);
+            border-color: transparent;
         }
 
         .preview-page .outline-btn {
             color: #43536b;
-            background: rgba(255, 255, 255, 0.78);
+            background: rgba(255, 255, 255, 0.8);
             border-color: #c9d8f4;
         }
 
         .preview-page .danger-btn {
             color: #ff5757;
-            background: rgba(255, 255, 255, 0.78);
-            border-color: rgba(255, 87, 87, 0.32);
+            background: rgba(255, 255, 255, 0.82);
+            border-color: rgba(255, 87, 87, 0.36);
         }
 
         .preview-page .status-text {
