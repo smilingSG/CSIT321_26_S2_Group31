@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from typing import Optional
 from typing import Dict
 from typing import Any
+from typing import List
 
 # Import the application's MySQL connection function.
 from db import get_db_connection
@@ -199,6 +200,120 @@ class File:
         connection.close()
 
         return file_record
+
+    # Retrieve processed files belonging to a user for file management.
+    @staticmethod
+    def getManagedFilesByOwner(owner_id: int) -> List[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                file_name,
+                file_size,
+                file_status,
+                uploaded_at
+            FROM files
+            WHERE owner_id = %s
+            AND file_status = 'processed'
+            ORDER BY uploaded_at DESC
+        """, (
+            owner_id,
+        ))
+
+        file_records = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        managed_files = []
+
+        for file_record in file_records:
+            file_size_mb = file_record["file_size"] / (1024 * 1024)
+
+            managed_files.append({
+                "fileID": file_record["file_id"],
+                "fileName": file_record["file_name"],
+                "fileSize": str(round(file_size_mb, 1)) + " MB",
+                "fileStatus": file_record["file_status"].replace("_", " ").title(),
+                "uploadedAt": file_record["uploaded_at"].strftime("%Y-%m-%d")
+            })
+
+        return managed_files
+
+    # Check whether another managed file already uses the requested name.
+    @staticmethod
+    def checkNameExists(owner_id: int,
+                        file_id: int,
+                        new_name: str) -> bool:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM files
+            WHERE owner_id = %s
+            AND file_id != %s
+            AND file_name = %s
+            AND file_status = 'processed'
+        """, (
+            owner_id,
+            file_id,
+            new_name
+        ))
+
+        count = cursor.fetchone()[0]
+
+        cursor.close()
+        connection.close()
+
+        return count > 0
+
+    # Rename a processed file after checking that the new name is not in use.
+    @staticmethod
+    def updateName(owner_id: int,
+                   file_id: int,
+                   new_name: str) -> Optional[str]:
+
+        new_name = secure_filename(new_name)
+
+        if new_name == "":
+            return "Please enter a file name."
+
+        if not File.isAllowedFileType(new_name):
+            return "File name must keep an allowed file extension."
+
+        if File.checkNameExists(owner_id, file_id, new_name):
+            return "Name in use."
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE files
+            SET file_name = %s
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            new_name,
+            file_id,
+            owner_id
+        ))
+
+        updated = cursor.rowcount == 1
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        if not updated:
+            return "Unable to rename file."
+
+        return None
 
     # Validate and save the selected k-of-n fragment configuration.
     @staticmethod
@@ -523,6 +638,53 @@ class File:
 
         return file_record
 
+    # Retrieve summary information for the processing boundary.
+    @staticmethod
+    def getProcessingSummary(file_id: int,
+                             owner_id: int) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                file_name,
+                file_status,
+                total_fragments,
+                required_fragments,
+                encrypted_size
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status IN (
+                'encrypted',
+                'pending_processing',
+                'processed',
+                'failed'
+            )
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if file_record is None:
+            return None
+
+        return {
+            "fileID": file_record["file_id"],
+            "fileName": file_record["file_name"],
+            "fileStatus": file_record["file_status"],
+            "totalFragments": file_record["total_fragments"],
+            "requiredFragments": file_record["required_fragments"],
+            "encryptedSize": file_record["encrypted_size"]
+        }
+
     # Update the current processing status of a file.
     @staticmethod
     def updateFileStatus(file_id: int,
@@ -634,11 +796,7 @@ class File:
 
         encrypted_temp_path = file_record["encrypted_temp_path"]
 
-        # Remove the temporary encrypted file when a valid path exists.
-        if (
-            encrypted_temp_path is not None
-            and os.path.exists(encrypted_temp_path)
-        ):
+        if encrypted_temp_path is not None and os.path.exists(encrypted_temp_path):
             try:
                 os.remove(encrypted_temp_path)
             except OSError:
@@ -657,52 +815,10 @@ class File:
             owner_id
         ))
 
+        updated = cursor.rowcount == 1
         connection.commit()
 
         cursor.close()
         connection.close()
 
-        return True
-
-    # Retrieve and format file information for the processing boundary.
-    @staticmethod
-    def getProcessingSummary(file_id: int,
-                             owner_id: int) -> Optional[Dict[str, Any]]:
-
-        connection = get_db_connection()
-        cursor = connection.cursor(dictionary=True)
-
-        cursor.execute("""
-            SELECT
-                file_id,
-                file_name,
-                total_fragments,
-                required_fragments,
-                file_status,
-                encrypted_temp_path,
-                encrypted_size
-            FROM files
-            WHERE file_id = %s
-            AND owner_id = %s
-        """, (
-            file_id,
-            owner_id
-        ))
-
-        file_record = cursor.fetchone()
-
-        cursor.close()
-        connection.close()
-
-        if file_record is None:
-            return None
-
-        return {
-            "fileID": file_record["file_id"],
-            "fileName": file_record["file_name"],
-            "totalFragments": file_record["total_fragments"],
-            "requiredFragments": file_record["required_fragments"],
-            "fileStatus": file_record["file_status"],
-            "encryptedTempPath": file_record["encrypted_temp_path"],
-            "encryptedSize": file_record["encrypted_size"]
-        }
+        return updated
