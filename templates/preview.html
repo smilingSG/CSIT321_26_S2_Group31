@@ -269,17 +269,18 @@
         .preview-page .preview-actions {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             margin-top: 26px;
         }
 
         .preview-page .preview-actions button {
             all: unset;
             box-sizing: border-box;
-            height: 44px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 800;
+            height: 50px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1;
             text-align: center;
             display: inline-flex;
             align-items: center;
@@ -288,33 +289,33 @@
         }
 
         .preview-page #continueButton {
-            width: 86px;
-        }
-
-        .preview-page #replaceButton {
             width: 108px;
         }
 
+        .preview-page #replaceButton {
+            width: 130px;
+        }
+
         .preview-page #deleteButton {
-            width: 100px;
+            width: 122px;
         }
 
         .preview-page .primary-btn {
             color: #07172f;
             background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%);
-            box-shadow: 0 13px 22px rgba(47, 109, 246, 0.2);
+            box-shadow: none;
         }
 
         .preview-page .outline-btn {
-            color: #43536b;
-            background: rgba(255, 255, 255, 0.84);
-            border: 1px solid #c7d6ef;
+            color: #243a59;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #b8cef5;
         }
 
         .preview-page .danger-btn {
-            color: #ff5757;
-            background: rgba(255, 255, 255, 0.84);
-            border: 1px solid rgba(255, 87, 87, 0.36);
+            color: #ff3333;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ff9b9b;
         }
 
         .preview-page .status-text {
@@ -521,21 +522,6 @@
         };
 
         xhr.open("POST", "/upload/cancel/" + fileID, true);
-        xhr.send();
-    }
-
-    function replaceTempFile(fileID, targetURL) {
-        var xhr = new XMLHttpRequest();
-
-        xhr.onload = function () {
-            currentTempFileID = null;
-
-            if (targetURL !== null) {
-                window.location.href = targetURL;
-            }
-        };
-
-        xhr.open("POST", "/upload/replace/" + fileID, true);
         xhr.send();
     }
 </script>
