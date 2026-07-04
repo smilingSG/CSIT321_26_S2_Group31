@@ -8,7 +8,7 @@
 
     <style>
         body.file-management-page {
-            min-width: 1180px;
+            min-width: 1500px;
             min-height: 100vh;
             margin: 0;
             color: #07172f;
@@ -175,7 +175,7 @@
         }
 
         .file-management-page .management-panel {
-            width: 1020px;
+            width: 1320px;
             padding: 34px;
             border-radius: 28px;
             background: rgba(255, 255, 255, 0.86);
@@ -248,10 +248,36 @@
 
         .file-management-page .file-table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
             color: #43536b;
             font-size: 14px;
             font-weight: 600;
+        }
+
+        .file-management-page .file-table th:nth-child(1),
+        .file-management-page .file-table td:nth-child(1) {
+            width: 450px;
+        }
+
+        .file-management-page .file-table th:nth-child(2),
+        .file-management-page .file-table td:nth-child(2) {
+            width: 155px;
+        }
+
+        .file-management-page .file-table th:nth-child(3),
+        .file-management-page .file-table td:nth-child(3) {
+            width: 95px;
+        }
+
+        .file-management-page .file-table th:nth-child(4),
+        .file-management-page .file-table td:nth-child(4) {
+            width: 130px;
+        }
+
+        .file-management-page .file-table th:nth-child(5),
+        .file-management-page .file-table td:nth-child(5) {
+            width: 370px;
         }
 
         .file-management-page .file-table thead th {
@@ -269,6 +295,11 @@
             border-bottom: 1px solid #d9e3f5;
             vertical-align: middle;
             white-space: nowrap;
+        }
+
+        .file-management-page .file-table td:first-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .file-management-page .status-pill {
@@ -289,6 +320,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            width: 100%;
         }
 
         .file-management-page .table-action {
