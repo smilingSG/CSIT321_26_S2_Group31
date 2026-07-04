@@ -35,7 +35,8 @@ def fileManagementPage():
     # Display the file-management boundary with real file records.
     return render_template(
         "fileManagement.html",
-        managedFiles=managed_files
+        managedFiles=managed_files,
+        searchQuery=""
     )
 
 
