@@ -735,6 +735,48 @@ class File:
             "encryptedSize": file_record["encrypted_size"]
         }
 
+    # Retrieve the k-of-n requirement for reconstructing a processed file.
+    @staticmethod
+    def getReconstructionRequirement(file_id: int,
+                                     owner_id: int) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                file_name,
+                file_status,
+                total_fragments,
+                required_fragments,
+                encrypted_size
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if file_record is None:
+            return None
+
+        return {
+            "fileID": file_record["file_id"],
+            "fileName": file_record["file_name"],
+            "fileStatus": file_record["file_status"].replace("_", " ").title(),
+            "totalFragments": file_record["total_fragments"],
+            "requiredFragments": file_record["required_fragments"],
+            "encryptedSize": file_record["encrypted_size"]
+        }
+
     # Update the current processing status of a file.
     @staticmethod
     def updateFileStatus(file_id: int,
