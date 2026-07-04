@@ -104,6 +104,25 @@ class StorageNode:
         except (OSError, KeyError, TypeError):
             return None
 
+    # Retrieve one stored fragment from its storage node path.
+    @staticmethod
+    def retrieveFragment(fragment_path: str) -> Optional[bytes]:
+
+        try:
+            stored_fragment_path = Path(fragment_path)
+
+            if not stored_fragment_path.exists():
+                return None
+
+            if not stored_fragment_path.is_file():
+                return None
+
+            return stored_fragment_path.read_bytes()
+
+        # Missing or unreadable fragments are treated as unavailable.
+        except (OSError, TypeError):
+            return None
+
     # Delete a stored fragment and remove its folder when it becomes empty.
     @staticmethod
     def deleteStoredFragment(fragment_path: str) -> None:
