@@ -269,53 +269,49 @@
         .preview-page .preview-actions {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             margin-top: 26px;
         }
 
-        .preview-page .preview-actions button {
-            all: unset;
-            box-sizing: border-box;
-            height: 50px;
-            border-radius: 15px;
-            font-size: 16px;
-            font-weight: 500;
-            line-height: 1;
-            text-align: center;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+        .preview-page button.preview-action-button {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            box-sizing: border-box !important;
+            min-width: 0 !important;
+            height: 42px !important;
+            padding: 0 18px !important;
+            border-radius: 12px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            line-height: 1 !important;
+            text-align: center !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            box-shadow: none !important;
         }
 
         .preview-page #continueButton {
-            width: 108px;
+            width: 86px !important;
+            color: #07172f !important;
+            border: 1px solid transparent !important;
+            background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%) !important;
         }
 
         .preview-page #replaceButton {
-            width: 130px;
+            width: 106px !important;
+            color: #263a59 !important;
+            border: 1px solid #b8cef5 !important;
+            background: rgba(255, 255, 255, 0.9) !important;
         }
 
         .preview-page #deleteButton {
-            width: 122px;
-        }
-
-        .preview-page .primary-btn {
-            color: #07172f;
-            background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%);
-            box-shadow: none;
-        }
-
-        .preview-page .outline-btn {
-            color: #243a59;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #b8cef5;
-        }
-
-        .preview-page .danger-btn {
-            color: #ff3333;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ff9b9b;
+            width: 100px !important;
+            color: #ff4d4d !important;
+            border: 1px solid #ffaaaa !important;
+            background: rgba(255, 255, 255, 0.9) !important;
         }
 
         .preview-page .status-text {
@@ -409,7 +405,7 @@
                 <div class="preview-actions">
                     <button
                         type="button"
-                        class="primary-btn"
+                        class="preview-action-button"
                         id="continueButton"
                         onclick="continueToFragmentConfiguration()">
                         Continue
@@ -417,7 +413,7 @@
 
                     <button
                         type="button"
-                        class="outline-btn"
+                        class="preview-action-button"
                         id="replaceButton"
                         onclick="replaceFile()">
                         Replace File
@@ -425,7 +421,7 @@
 
                     <button
                         type="button"
-                        class="danger-btn"
+                        class="preview-action-button"
                         id="deleteButton"
                         onclick="deleteFile()">
                         Delete File
