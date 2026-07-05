@@ -260,6 +260,30 @@
             gap: 10px;
         }
 
+        .system-admin-page .policy-form {
+            display: grid;
+            grid-template-columns: 86px 86px 1fr auto;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .system-admin-page .policy-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #43536b;
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .system-admin-page .policy-checks {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
         .system-admin-page .number-input {
             width: 110px;
             height: 42px;
@@ -271,6 +295,10 @@
             font-weight: 800;
             outline: 0;
             background: rgba(255, 255, 255, 0.95);
+        }
+
+        .system-admin-page .policy-form .number-input {
+            width: 86px;
         }
 
         .system-admin-page .message {
@@ -336,12 +364,56 @@
             </p>
 
             <div class="settings-grid">
-                <div class="setting-card">
+                <div class="setting-card wide">
                     <div>
                         <p class="setting-title">Password Policy Requirements</p>
-                        <p class="setting-value">Minimum {{ settings.minPasswordLength }} characters, special character required</p>
+                        <p class="setting-value">
+                            {{ settings.minPasswordLength }}-{{ settings.maxPasswordLength }} characters,
+                            number {% if settings.requirePasswordNumber == 'true' %}required{% else %}optional{% endif %},
+                            special character {% if settings.requirePasswordSpecialCharacter == 'true' %}required{% else %}optional{% endif %}
+                        </p>
                     </div>
-                    <button class="settings-button disabled" type="button">Change</button>
+
+                    <form
+                        class="policy-form"
+                        method="POST"
+                        action="{{ url_for('password_policy_bp.setPasswordPolicy') }}">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="min_length"
+                            min="1"
+                            max="128"
+                            value="{{ settings.minPasswordLength }}"
+                            aria-label="Minimum password length">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="max_length"
+                            min="1"
+                            max="128"
+                            value="{{ settings.maxPasswordLength }}"
+                            aria-label="Maximum password length">
+                        <div class="policy-checks">
+                            <label class="policy-option">
+                                <input
+                                    type="checkbox"
+                                    name="require_number"
+                                    value="true"
+                                    {% if settings.requirePasswordNumber == 'true' %}checked{% endif %}>
+                                Number
+                            </label>
+                            <label class="policy-option">
+                                <input
+                                    type="checkbox"
+                                    name="require_special"
+                                    value="true"
+                                    {% if settings.requirePasswordSpecialCharacter == 'true' %}checked{% endif %}>
+                                Special
+                            </label>
+                        </div>
+                        <button class="settings-button primary" type="submit">Change</button>
+                    </form>
                 </div>
 
                 <div class="setting-card">
