@@ -23,6 +23,7 @@ class SystemSetting:
                 'require_password_number',
                 'require_password_special_character',
                 'min_username_length',
+                'max_username_length',
                 'max_login_attempts'
             )
         """)
@@ -39,6 +40,7 @@ class SystemSetting:
             "requirePasswordNumber": "true",
             "requirePasswordSpecialCharacter": "true",
             "minUsernameLength": "4",
+            "maxUsernameLength": "50",
             "maxLoginAttempts": "5"
         }
 
@@ -58,6 +60,8 @@ class SystemSetting:
                 settings["requirePasswordSpecialCharacter"] = setting_value
             elif setting_name == "min_username_length":
                 settings["minUsernameLength"] = setting_value
+            elif setting_name == "max_username_length":
+                settings["maxUsernameLength"] = setting_value
             elif setting_name == "max_login_attempts":
                 settings["maxLoginAttempts"] = setting_value
 
@@ -161,6 +165,49 @@ class SystemSetting:
         return True
 
     @staticmethod
+    def updateUsernamePolicy(policy_rules: Dict[str, Any],
+                             updated_by: int) -> bool:
+
+        try:
+            min_length = int(policy_rules.get("min_length"))
+            max_length = int(policy_rules.get("max_length"))
+        except (TypeError, ValueError):
+            return False
+
+        if min_length < 1:
+            return False
+
+        if max_length < min_length:
+            return False
+
+        if max_length > 50:
+            return False
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        SystemSetting.updateSettingValue(
+            cursor,
+            "min_username_length",
+            str(min_length),
+            updated_by
+        )
+
+        SystemSetting.updateSettingValue(
+            cursor,
+            "max_username_length",
+            str(max_length),
+            updated_by
+        )
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return True
+
+    @staticmethod
     def validatePasswordAgainstPolicy(password: str) -> bool:
 
         settings = SystemSetting.getSecuritySettings()
@@ -184,6 +231,25 @@ class SystemSetting:
         if settings["requirePasswordSpecialCharacter"] == "true":
             if not any(not character.isalnum() for character in password):
                 return False
+
+        return True
+
+    @staticmethod
+    def validateUsernameAgainstPolicy(username: str) -> bool:
+
+        settings = SystemSetting.getSecuritySettings()
+
+        try:
+            min_length = int(settings["minUsernameLength"])
+            max_length = int(settings["maxUsernameLength"])
+        except (TypeError, ValueError):
+            return False
+
+        if len(username) < min_length:
+            return False
+
+        if len(username) > max_length:
+            return False
 
         return True
 
