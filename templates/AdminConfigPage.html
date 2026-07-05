@@ -249,6 +249,11 @@
             background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%);
         }
 
+        .system-admin-page .settings-button.disabled {
+            cursor: default;
+            opacity: 0.55;
+        }
+
         .system-admin-page .inline-form {
             display: flex;
             align-items: center;
@@ -456,7 +461,7 @@
                         <p class="setting-title">Authentication Policies</p>
                         <p class="setting-value">Maximum {{ settings.maxLoginAttempts }} login attempts</p>
                     </div>
-                    <button class="settings-button" type="button">Change</button>
+                    <button class="settings-button disabled" type="button">Change</button>
                 </div>
 
                 <div class="setting-card">
