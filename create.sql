@@ -10,6 +10,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('user', 'user_admin', 'system_admin') DEFAULT 'user',
     account_status ENUM('active', 'suspended') DEFAULT 'active',
+    failed_login_attempts INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
