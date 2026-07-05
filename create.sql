@@ -147,6 +147,8 @@ INSERT INTO system_settings
 VALUES
 ('max_link_expiry_hours', '72', 4),
 ('min_password_length', '8', 4),
+('max_password_length', '64', 4),
+('require_password_number', 'true', 4),
 ('require_password_special_character', 'true', 4),
 ('min_username_length', '4', 4),
 ('max_login_attempts', '5', 4);
