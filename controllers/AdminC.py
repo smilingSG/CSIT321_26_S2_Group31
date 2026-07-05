@@ -43,7 +43,7 @@ class AdminC:
         )
 
         if user_id is None:
-            return "Password does not meet the current password policy."
+            return "Username or password does not meet the current account policy."
 
         return None
 
