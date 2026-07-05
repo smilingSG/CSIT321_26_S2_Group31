@@ -145,6 +145,9 @@ class UserAccount:
                       password: str,
                       role: str) -> Optional[int]:
 
+        if not SystemSetting.validateUsernameAgainstPolicy(username):
+            return None
+
         if not SystemSetting.validatePasswordAgainstPolicy(password):
             return None
 
