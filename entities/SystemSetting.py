@@ -208,6 +208,40 @@ class SystemSetting:
         return True
 
     @staticmethod
+    def updateAuthPolicy(policy_config: Dict[str, Any],
+                         updated_by: int) -> bool:
+
+        try:
+            max_login_attempts = int(
+                policy_config.get("max_login_attempts")
+            )
+        except (TypeError, ValueError):
+            return False
+
+        if max_login_attempts < 1:
+            return False
+
+        if max_login_attempts > 10:
+            return False
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        SystemSetting.updateSettingValue(
+            cursor,
+            "max_login_attempts",
+            str(max_login_attempts),
+            updated_by
+        )
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return True
+
+    @staticmethod
     def validatePasswordAgainstPolicy(password: str) -> bool:
 
         settings = SystemSetting.getSecuritySettings()
@@ -308,3 +342,13 @@ class SystemSetting:
             return int(setting_record[0])
         except (TypeError, ValueError):
             return None
+
+    @staticmethod
+    def getMaxLoginAttempts() -> int:
+
+        settings = SystemSetting.getSecuritySettings()
+
+        try:
+            return int(settings["maxLoginAttempts"])
+        except (TypeError, ValueError):
+            return 5
