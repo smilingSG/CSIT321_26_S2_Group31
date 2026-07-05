@@ -513,3 +513,31 @@ button:disabled,
     padding-top: 0 !important;
     border-top: 0 !important;
 }
+
+.file-management-page .table-action {
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.file-management-page .rename-button:hover,
+.file-management-page .download-button:hover {
+    color: var(--ink) !important;
+    border-color: #8fb4ff !important;
+    background: rgba(47, 109, 246, 0.08) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 18px rgba(47, 109, 246, 0.12) !important;
+}
+
+.file-management-page .share-button:hover {
+    color: var(--ink) !important;
+    background: linear-gradient(135deg, #1fb0c3 0%, #275ee2 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 22px rgba(47, 109, 246, 0.22) !important;
+}
+
+.file-management-page .delete-button:hover {
+    color: #b42323 !important;
+    border-color: #ff8a8a !important;
+    background: rgba(255, 87, 87, 0.16) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 18px rgba(255, 87, 87, 0.12) !important;
+}
