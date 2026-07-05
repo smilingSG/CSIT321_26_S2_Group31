@@ -19,6 +19,8 @@ class SystemSetting:
             WHERE setting_name IN (
                 'max_link_expiry_hours',
                 'min_password_length',
+                'max_password_length',
+                'require_password_number',
                 'require_password_special_character',
                 'min_username_length',
                 'max_login_attempts'
@@ -33,6 +35,8 @@ class SystemSetting:
         settings = {
             "maxLinkExpiryHours": "72",
             "minPasswordLength": "8",
+            "maxPasswordLength": "64",
+            "requirePasswordNumber": "true",
             "requirePasswordSpecialCharacter": "true",
             "minUsernameLength": "4",
             "maxLoginAttempts": "5"
@@ -46,6 +50,10 @@ class SystemSetting:
                 settings["maxLinkExpiryHours"] = setting_value
             elif setting_name == "min_password_length":
                 settings["minPasswordLength"] = setting_value
+            elif setting_name == "max_password_length":
+                settings["maxPasswordLength"] = setting_value
+            elif setting_name == "require_password_number":
+                settings["requirePasswordNumber"] = setting_value
             elif setting_name == "require_password_special_character":
                 settings["requirePasswordSpecialCharacter"] = setting_value
             elif setting_name == "min_username_length":
@@ -73,15 +81,128 @@ class SystemSetting:
         connection = get_db_connection()
         cursor = connection.cursor()
 
+        SystemSetting.updateSettingValue(
+            cursor,
+            "max_link_expiry_hours",
+            str(max_duration),
+            updated_by
+        )
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return True
+
+    @staticmethod
+    def updatePasswordPolicy(policy_rules: Dict[str, Any],
+                             updated_by: int) -> bool:
+
+        try:
+            min_length = int(policy_rules.get("min_length"))
+            max_length = int(policy_rules.get("max_length"))
+        except (TypeError, ValueError):
+            return False
+
+        if min_length < 1:
+            return False
+
+        if max_length < min_length:
+            return False
+
+        if max_length > 128:
+            return False
+
+        require_number = SystemSetting.normaliseBooleanSetting(
+            policy_rules.get("require_number")
+        )
+
+        require_special = SystemSetting.normaliseBooleanSetting(
+            policy_rules.get("require_special")
+        )
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        SystemSetting.updateSettingValue(
+            cursor,
+            "min_password_length",
+            str(min_length),
+            updated_by
+        )
+
+        SystemSetting.updateSettingValue(
+            cursor,
+            "max_password_length",
+            str(max_length),
+            updated_by
+        )
+
+        SystemSetting.updateSettingValue(
+            cursor,
+            "require_password_number",
+            require_number,
+            updated_by
+        )
+
+        SystemSetting.updateSettingValue(
+            cursor,
+            "require_password_special_character",
+            require_special,
+            updated_by
+        )
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return True
+
+    @staticmethod
+    def validatePasswordAgainstPolicy(password: str) -> bool:
+
+        settings = SystemSetting.getSecuritySettings()
+
+        try:
+            min_length = int(settings["minPasswordLength"])
+            max_length = int(settings["maxPasswordLength"])
+        except (TypeError, ValueError):
+            return False
+
+        if len(password) < min_length:
+            return False
+
+        if len(password) > max_length:
+            return False
+
+        if settings["requirePasswordNumber"] == "true":
+            if not any(character.isdigit() for character in password):
+                return False
+
+        if settings["requirePasswordSpecialCharacter"] == "true":
+            if not any(not character.isalnum() for character in password):
+                return False
+
+        return True
+
+    @staticmethod
+    def updateSettingValue(cursor,
+                           setting_name: str,
+                           setting_value: str,
+                           updated_by: int) -> None:
+
         cursor.execute("""
             UPDATE system_settings
             SET
                 setting_value = %s,
                 updated_by = %s
-            WHERE setting_name = 'max_link_expiry_hours'
+            WHERE setting_name = %s
         """, (
-            str(max_duration),
-            updated_by
+            setting_value,
+            updated_by,
+            setting_name
         ))
 
         if cursor.rowcount == 0:
@@ -94,17 +215,18 @@ class SystemSetting:
                 )
                 VALUES (%s, %s, %s)
             """, (
-                "max_link_expiry_hours",
-                str(max_duration),
+                setting_name,
+                setting_value,
                 updated_by
             ))
 
-        connection.commit()
+    @staticmethod
+    def normaliseBooleanSetting(setting_value) -> str:
 
-        cursor.close()
-        connection.close()
+        if setting_value in ("true", "on", "1", "yes"):
+            return "true"
 
-        return True
+        return "false"
 
     @staticmethod
     def getMaxExpiryDuration() -> Optional[int]:
