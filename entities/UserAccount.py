@@ -5,6 +5,7 @@ from typing import Any
 import bcrypt
 
 from db import get_db_connection
+from entities.SystemSetting import SystemSetting
 
 
 class UserAccount:
@@ -142,7 +143,10 @@ class UserAccount:
     def createAccount(username: str,
                       email: str,
                       password: str,
-                      role: str) -> int:
+                      role: str) -> Optional[int]:
+
+        if not SystemSetting.validatePasswordAgainstPolicy(password):
+            return None
 
         password_hash = bcrypt.hashpw(
             password.encode("utf-8"),
