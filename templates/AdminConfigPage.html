@@ -249,11 +249,6 @@
             background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%);
         }
 
-        .system-admin-page .settings-button.disabled {
-            cursor: default;
-            opacity: 0.55;
-        }
-
         .system-admin-page .inline-form {
             display: flex;
             align-items: center;
@@ -266,6 +261,13 @@
             align-items: center;
             gap: 10px;
             flex: 1;
+        }
+
+        .system-admin-page .username-form {
+            display: grid;
+            grid-template-columns: 86px 86px auto;
+            align-items: center;
+            gap: 10px;
         }
 
         .system-admin-page .policy-option {
@@ -297,7 +299,8 @@
             background: rgba(255, 255, 255, 0.95);
         }
 
-        .system-admin-page .policy-form .number-input {
+        .system-admin-page .policy-form .number-input,
+        .system-admin-page .username-form .number-input {
             width: 86px;
         }
 
@@ -416,12 +419,36 @@
                     </form>
                 </div>
 
-                <div class="setting-card">
+                <div class="setting-card wide">
                     <div>
                         <p class="setting-title">Username Policy Requirements</p>
-                        <p class="setting-value">Minimum {{ settings.minUsernameLength }} characters</p>
+                        <p class="setting-value">
+                            {{ settings.minUsernameLength }}-{{ settings.maxUsernameLength }} characters
+                        </p>
                     </div>
-                    <button class="settings-button disabled" type="button">Change</button>
+
+                    <form
+                        class="username-form"
+                        method="POST"
+                        action="{{ url_for('username_policy_bp.setUsernamePolicy') }}">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="min_length"
+                            min="1"
+                            max="50"
+                            value="{{ settings.minUsernameLength }}"
+                            aria-label="Minimum username length">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="max_length"
+                            min="1"
+                            max="50"
+                            value="{{ settings.maxUsernameLength }}"
+                            aria-label="Maximum username length">
+                        <button class="settings-button primary" type="submit">Change</button>
+                    </form>
                 </div>
 
                 <div class="setting-card">
@@ -429,7 +456,7 @@
                         <p class="setting-title">Authentication Policies</p>
                         <p class="setting-value">Maximum {{ settings.maxLoginAttempts }} login attempts</p>
                     </div>
-                    <button class="settings-button disabled" type="button">Change</button>
+                    <button class="settings-button" type="button">Change</button>
                 </div>
 
                 <div class="setting-card">
