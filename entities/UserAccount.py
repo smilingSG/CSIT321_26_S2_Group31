@@ -24,7 +24,8 @@ class UserAccount:
                 email,
                 password_hash,
                 role,
-                account_status
+                account_status,
+                failed_login_attempts
             FROM users
             WHERE (username = %s OR email = %s)
         """, (
@@ -40,21 +41,103 @@ class UserAccount:
         if user_record is None:
             return None
 
+        user_account = {
+            "userID": user_record["user_id"],
+            "username": user_record["username"],
+            "email": user_record["email"],
+            "role": user_record["role"],
+            "accountStatus": user_record["account_status"],
+            "failedLoginAttempts": user_record["failed_login_attempts"]
+        }
+
+        if user_record["account_status"] == "suspended":
+            user_account["authResult"] = "suspended"
+            return user_account
+
         stored_password_hash: str = user_record["password_hash"]
 
         if not bcrypt.checkpw(
             password.encode("utf-8"),
             stored_password_hash.encode("utf-8")
         ):
-            return None
+            max_login_attempts = SystemSetting.getMaxLoginAttempts()
+            failed_attempts = user_record["failed_login_attempts"] + 1
 
-        return {
-            "userID": user_record["user_id"],
-            "username": user_record["username"],
-            "email": user_record["email"],
-            "role": user_record["role"],
-            "accountStatus": user_record["account_status"]
-        }
+            UserAccount.recordFailedLogin(
+                user_record["user_id"],
+                failed_attempts,
+                max_login_attempts
+            )
+
+            if failed_attempts >= max_login_attempts:
+                user_account["accountStatus"] = "suspended"
+                user_account["authResult"] = "locked"
+                user_account["attemptsRemaining"] = 0
+                return user_account
+
+            user_account["authResult"] = "invalid"
+            user_account["attemptsRemaining"] = max_login_attempts - failed_attempts
+            return user_account
+
+        UserAccount.resetFailedLoginAttempts(
+            user_record["user_id"]
+        )
+
+        user_account["authResult"] = "success"
+        user_account["failedLoginAttempts"] = 0
+
+        return user_account
+
+    @staticmethod
+    def recordFailedLogin(user_id: int,
+                          failed_attempts: int,
+                          max_login_attempts: int) -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        if failed_attempts >= max_login_attempts:
+            cursor.execute("""
+                UPDATE users
+                SET
+                    failed_login_attempts = %s,
+                    account_status = 'suspended'
+                WHERE user_id = %s
+            """, (
+                failed_attempts,
+                user_id
+            ))
+        else:
+            cursor.execute("""
+                UPDATE users
+                SET failed_login_attempts = %s
+                WHERE user_id = %s
+            """, (
+                failed_attempts,
+                user_id
+            ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+    @staticmethod
+    def resetFailedLoginAttempts(user_id: int) -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE users
+            SET failed_login_attempts = 0
+            WHERE user_id = %s
+        """, (user_id,))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
 
     @staticmethod
     def getAllUserAccounts():
@@ -166,15 +249,17 @@ class UserAccount:
                 email,
                 password_hash,
                 role,
-                account_status
+                account_status,
+                failed_login_attempts
             )
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             username,
             email,
             password_hash,
             role,
-            "active"
+            "active",
+            0
         ))
 
         connection.commit()
