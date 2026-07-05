@@ -19,6 +19,9 @@ def getPostLoginRedirect(role: str) -> str:
     if role == "user_admin":
         return url_for("user_management_bp.userAdminDashboard")
 
+    if role == "system_admin":
+        return url_for("max_expiry_settings_bp.adminConfigPage")
+
     return url_for("dashboard_bp.dashboard")
 
 
@@ -37,7 +40,7 @@ class LoginC:
         if user_account is None:
             return None
 
-        if user_account["accountStatus"] == "suspended":
+        if user_account["authResult"] != "success":
             return user_account
 
         if user_account["role"] != selected_role:
@@ -90,15 +93,33 @@ def login():
     if user_account is None:
         return render_template(
             "login.html",
-            error="Invalid login credentials.",
+            error="Invalid login credentials. Too many failed attempts will result in account suspension.",
             login_credential=login_credential,
             selected_role=selected_role
         ), 401
 
-    if user_account.get("accountStatus") == "suspended":
+    if user_account.get("authResult") == "invalid":
+        attempts_remaining = user_account.get("attemptsRemaining")
+
         return render_template(
             "login.html",
-            error="This account is suspended.",
+            error="Invalid login credentials. " + str(attempts_remaining) + " login attempts remaining before account suspension.",
+            login_credential=login_credential,
+            selected_role=selected_role
+        ), 401
+
+    if user_account.get("authResult") == "locked":
+        return render_template(
+            "login.html",
+            error="Too many failed login attempts. This account has been suspended. Please contact a user administrator.",
+            login_credential=login_credential,
+            selected_role=selected_role
+        ), 403
+
+    if user_account.get("authResult") == "suspended":
+        return render_template(
+            "login.html",
+            error="This account is suspended. Please contact a user administrator.",
             login_credential=login_credential,
             selected_role=selected_role
         ), 403

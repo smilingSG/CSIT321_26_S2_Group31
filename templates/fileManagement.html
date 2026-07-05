@@ -463,7 +463,11 @@
                                                 onclick='renameFile({{ file.fileID }}, {{ file.fileName | tojson }})'>
                                                 Rename
                                             </button>
-                                            <button type="button" class="table-action download-button">Download</button>
+                                            <a
+                                                href="{{ url_for('reconstruct_file_bp.reconstructionPage', file_id=file.fileID) }}"
+                                                class="table-action download-button">
+                                                Download
+                                            </a>
                                             <button type="button" class="table-action share-button">Share</button>
                                             <button type="button" class="table-action delete-button">Delete</button>
                                         </div>

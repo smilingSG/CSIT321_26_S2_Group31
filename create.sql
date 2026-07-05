@@ -10,6 +10,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('user', 'user_admin', 'system_admin') DEFAULT 'user',
     account_status ENUM('active', 'suspended') DEFAULT 'active',
+    failed_login_attempts INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -147,6 +148,9 @@ INSERT INTO system_settings
 VALUES
 ('max_link_expiry_hours', '72', 4),
 ('min_password_length', '8', 4),
+('max_password_length', '64', 4),
+('require_password_number', 'true', 4),
 ('require_password_special_character', 'true', 4),
 ('min_username_length', '4', 4),
+('max_username_length', '50', 4),
 ('max_login_attempts', '5', 4);

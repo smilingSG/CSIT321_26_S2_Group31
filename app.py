@@ -22,6 +22,11 @@ from controllers.storeFragmentC import store_fragment_bp
 from controllers.cancelProcessingC import cancel_processing_bp
 from controllers.fileManagementC import file_management_bp
 from controllers.SearchFileC import search_file_bp
+from controllers.ReconstructFileC import reconstruct_file_bp
+from controllers.MaxExpirySettingsC import max_expiry_settings_bp
+from controllers.PasswordPolicyC import password_policy_bp
+from controllers.UsernamePolicyC import username_policy_bp
+from controllers.AuthPolicyC import auth_policy_bp
 
 app = Flask(__name__)
 app.secret_key = "temporary_secret_key"
@@ -50,6 +55,11 @@ app.register_blueprint(store_fragment_bp)
 app.register_blueprint(cancel_processing_bp)
 app.register_blueprint(file_management_bp)
 app.register_blueprint(search_file_bp)
+app.register_blueprint(reconstruct_file_bp)
+app.register_blueprint(max_expiry_settings_bp)
+app.register_blueprint(password_policy_bp)
+app.register_blueprint(username_policy_bp)
+app.register_blueprint(auth_policy_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(admin_search_bp)
 app.register_blueprint(admin_update_bp)

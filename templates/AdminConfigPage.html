@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Admin Settings - Lazarus</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body.system-admin-page {
+            min-width: 1180px;
+            min-height: 100vh;
+            margin: 0;
+            color: #07172f;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                linear-gradient(rgba(93, 130, 188, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(93, 130, 188, 0.08) 1px, transparent 1px),
+                radial-gradient(circle at 24% 8%, rgba(47, 109, 246, 0.18), transparent 28rem),
+                radial-gradient(circle at 82% 14%, rgba(35, 199, 189, 0.18), transparent 24rem),
+                linear-gradient(135deg, #eef5ff 0%, #f8fbff 48%, #f3f7fb 100%);
+            background-size: 66px 66px, 66px 66px, auto, auto, auto;
+        }
+
+        .system-admin-page .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+            background: transparent;
+        }
+
+        .system-admin-page .sidebar {
+            width: 310px;
+            min-height: 100vh;
+            padding: 30px 22px;
+            display: flex;
+            flex-direction: column;
+            background:
+                radial-gradient(circle at 20% 8%, rgba(35, 199, 189, 0.2), transparent 14rem),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 250, 255, 0.94) 100%);
+            box-shadow: 18px 0 44px rgba(15, 23, 42, 0.08);
+            border-right: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .system-admin-page .brand-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .system-admin-page .logo-box {
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #23c7bd, #2f6df6);
+            box-shadow: 0 18px 35px rgba(47, 109, 246, 0.34);
+        }
+
+        .system-admin-page .logo-box img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        .system-admin-page .portal-text {
+            margin: 0;
+            color: #8190aa;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            line-height: 1.1;
+        }
+
+        .system-admin-page .brand-title {
+            margin: 0;
+            color: #07172f;
+            font-size: 29px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .system-admin-page .system-name {
+            margin: 14px 0 36px;
+            color: #43536b;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.8;
+        }
+
+        .system-admin-page .nav-stack {
+            display: grid;
+            gap: 18px;
+        }
+
+        .system-admin-page .nav-item {
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            padding: 0 36px;
+            border-radius: 12px;
+            color: #43536b;
+            font-size: 15px;
+            font-weight: 800;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .system-admin-page .nav-item.active {
+            color: #07172f;
+            background: rgba(255, 255, 255, 0.88);
+            box-shadow: 0 16px 34px rgba(88, 115, 166, 0.12);
+        }
+
+        .system-admin-page .nav-item.active::before {
+            content: "";
+            position: absolute;
+            left: 20px;
+            top: 13px;
+            width: 5px;
+            height: 26px;
+            border-radius: 999px;
+            background: #25bed1;
+        }
+
+        .system-admin-page .logout {
+            margin-top: auto;
+            padding-top: 28px;
+            border-top: 1px solid rgba(148, 163, 184, 0.28);
+        }
+
+        .system-admin-page .main-area {
+            flex: 1;
+            min-width: 0;
+            padding: 24px 42px 42px;
+        }
+
+        .system-admin-page .top-bar {
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+            margin-bottom: 34px;
+        }
+
+        .system-admin-page .eyebrow {
+            margin: 0 0 6px;
+            color: #8190aa;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 6px;
+        }
+
+        .system-admin-page .top-title {
+            margin: 0;
+            color: #061027;
+            font-size: 34px;
+            font-weight: 900;
+        }
+
+        .system-admin-page .top-pill {
+            min-height: 46px;
+            padding: 0 26px;
+            border-radius: 999px;
+            border: 1px solid #c7d6ef;
+            color: #61708a;
+            background: rgba(255, 255, 255, 0.74);
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .system-admin-page .settings-panel {
+            width: 1040px;
+            padding: 34px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(201, 216, 244, 0.92);
+            box-shadow: 0 24px 54px rgba(88, 115, 166, 0.16);
+        }
+
+        .system-admin-page h1 {
+            margin: 0 0 8px;
+            color: #061027;
+            font-size: 32px;
+            font-weight: 900;
+        }
+
+        .system-admin-page .page-subtitle {
+            margin: 0 0 24px;
+            color: #8393b2;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .system-admin-page .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .system-admin-page .setting-card {
+            min-height: 98px;
+            padding: 22px;
+            border-radius: 22px;
+            border: 1px solid #c7d6ef;
+            background: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .system-admin-page .setting-card.wide {
+            grid-column: 1 / span 2;
+        }
+
+        .system-admin-page .setting-title {
+            margin: 0 0 10px;
+            color: #8393b2;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .system-admin-page .setting-value {
+            margin: 0;
+            color: #43536b;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .system-admin-page .settings-button {
+            height: 42px;
+            padding: 0 20px;
+            border-radius: 14px;
+            border: 1px solid #b8cef5;
+            color: #43536b;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .system-admin-page .settings-button.primary {
+            border: 0;
+            color: #07172f;
+            background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%);
+        }
+
+        .system-admin-page .settings-button.disabled {
+            cursor: default;
+            opacity: 0.55;
+        }
+
+        .system-admin-page .inline-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .system-admin-page .policy-form {
+            display: grid;
+            grid-template-columns: 86px 86px 1fr auto;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .system-admin-page .username-form {
+            display: grid;
+            grid-template-columns: 86px 86px auto;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .system-admin-page .auth-form {
+            display: grid;
+            grid-template-columns: 86px auto;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .system-admin-page .policy-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #43536b;
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .system-admin-page .policy-checks {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .system-admin-page .number-input {
+            width: 110px;
+            height: 42px;
+            border-radius: 14px;
+            border: 1px solid #c7d6ef;
+            padding: 0 14px;
+            color: #43536b;
+            font-size: 14px;
+            font-weight: 800;
+            outline: 0;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .system-admin-page .policy-form .number-input,
+        .system-admin-page .username-form .number-input,
+        .system-admin-page .auth-form .number-input {
+            width: 86px;
+        }
+
+        .system-admin-page .message {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .system-admin-page .message.success {
+            color: #067647;
+            border: 1px solid #9ce2c1;
+            background: #ecfdf3;
+        }
+
+        .system-admin-page .message.error {
+            color: #b42318;
+            border: 1px solid #fda29b;
+            background: #fff1f0;
+        }
+    </style>
+</head>
+
+<body class="system-admin-page">
+
+<div class="page-wrapper">
+    <aside class="sidebar">
+        <div class="brand-row">
+            <div class="logo-box">
+                <img src="{{ url_for('static', filename='lazarus-logo.png') }}" alt="SFSRS logo">
+            </div>
+            <div>
+                <p class="portal-text">SYSTEM<br>ADMIN</p>
+                <h2 class="brand-title">SFSRS</h2>
+            </div>
+        </div>
+
+        <p class="system-name">Secure File Sharing and Recovery System</p>
+
+        <nav class="nav-stack">
+            <a href="{{ url_for('max_expiry_settings_bp.adminConfigPage') }}" class="nav-item active">
+                Security Settings
+            </a>
+        </nav>
+
+        <a href="{{ url_for('logout') }}" class="nav-item logout">Logout</a>
+    </aside>
+
+    <main class="main-area">
+        <div class="top-bar">
+            <div>
+                <p class="eyebrow">WEB-BASED SYSTEM</p>
+                <h1 class="top-title">Secure File Sharing and Recovery System</h1>
+            </div>
+            <div class="top-pill">Security policy and encryption configuration</div>
+        </div>
+
+        <section class="settings-panel">
+            <h1>System Admin Security Settings Page</h1>
+            <p class="page-subtitle">
+                Configure password, username, authentication, encryption, and maximum link expiry settings.
+            </p>
+
+            <div class="settings-grid">
+                <div class="setting-card wide">
+                    <div>
+                        <p class="setting-title">Password Policy Requirements</p>
+                        <p class="setting-value">
+                            {{ settings.minPasswordLength }}-{{ settings.maxPasswordLength }} characters,
+                            number {% if settings.requirePasswordNumber == 'true' %}required{% else %}optional{% endif %},
+                            special character {% if settings.requirePasswordSpecialCharacter == 'true' %}required{% else %}optional{% endif %}
+                        </p>
+                    </div>
+
+                    <form
+                        class="policy-form"
+                        method="POST"
+                        action="{{ url_for('password_policy_bp.setPasswordPolicy') }}">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="min_length"
+                            min="1"
+                            max="128"
+                            value="{{ settings.minPasswordLength }}"
+                            aria-label="Minimum password length">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="max_length"
+                            min="1"
+                            max="128"
+                            value="{{ settings.maxPasswordLength }}"
+                            aria-label="Maximum password length">
+                        <div class="policy-checks">
+                            <label class="policy-option">
+                                <input
+                                    type="checkbox"
+                                    name="require_number"
+                                    value="true"
+                                    {% if settings.requirePasswordNumber == 'true' %}checked{% endif %}>
+                                Number
+                            </label>
+                            <label class="policy-option">
+                                <input
+                                    type="checkbox"
+                                    name="require_special"
+                                    value="true"
+                                    {% if settings.requirePasswordSpecialCharacter == 'true' %}checked{% endif %}>
+                                Special
+                            </label>
+                        </div>
+                        <button class="settings-button primary" type="submit">Change</button>
+                    </form>
+                </div>
+
+                <div class="setting-card wide">
+                    <div>
+                        <p class="setting-title">Username Policy Requirements</p>
+                        <p class="setting-value">
+                            {{ settings.minUsernameLength }}-{{ settings.maxUsernameLength }} characters
+                        </p>
+                    </div>
+
+                    <form
+                        class="username-form"
+                        method="POST"
+                        action="{{ url_for('username_policy_bp.setUsernamePolicy') }}">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="min_length"
+                            min="1"
+                            max="50"
+                            value="{{ settings.minUsernameLength }}"
+                            aria-label="Minimum username length">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="max_length"
+                            min="1"
+                            max="50"
+                            value="{{ settings.maxUsernameLength }}"
+                            aria-label="Maximum username length">
+                        <button class="settings-button primary" type="submit">Change</button>
+                    </form>
+                </div>
+
+                <div class="setting-card">
+                    <div>
+                        <p class="setting-title">Authentication Policies</p>
+                        <p class="setting-value">Maximum {{ settings.maxLoginAttempts }} failed login attempts</p>
+                    </div>
+                    <form
+                        class="auth-form"
+                        method="POST"
+                        action="{{ url_for('auth_policy_bp.setAuthPolicy') }}">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="max_login_attempts"
+                            min="1"
+                            max="10"
+                            value="{{ settings.maxLoginAttempts }}"
+                            aria-label="Maximum failed login attempts">
+                        <button class="settings-button primary" type="submit">Change</button>
+                    </form>
+                </div>
+
+                <div class="setting-card">
+                    <div>
+                        <p class="setting-title">System Encryption Settings</p>
+                        <p class="setting-value">AES-256-GCM encryption enforced system-wide</p>
+                    </div>
+                </div>
+
+                <div class="setting-card wide">
+                    <div>
+                        <p class="setting-title">Maximum Allowed Link Expiry Duration</p>
+                        <p class="setting-value">{{ settings.maxLinkExpiryHours }} hours maximum link lifetime</p>
+                    </div>
+
+                    <form
+                        class="inline-form"
+                        method="POST"
+                        action="{{ url_for('max_expiry_settings_bp.configureMaxExpiry') }}">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="max_duration"
+                            min="1"
+                            max="168"
+                            value="{{ settings.maxLinkExpiryHours }}"
+                            aria-label="Maximum link expiry duration in hours">
+                        <button class="settings-button primary" type="submit">Change</button>
+                    </form>
+                </div>
+            </div>
+
+            {% if successMessage %}
+                <div class="message success">{{ successMessage }}</div>
+            {% endif %}
+
+            {% if errorMessage %}
+                <div class="message error">{{ errorMessage }}</div>
+            {% endif %}
+        </section>
+    </main>
+</div>
+
+</body>
+</html>
