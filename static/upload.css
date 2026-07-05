@@ -670,3 +670,121 @@ body.upload-page {
 .upload-page .profile-fab {
     box-shadow: 0 18px 34px rgba(7, 39, 95, 0.28);
 }
+
+.upload-page .nav-stack,
+.preview-page .nav-stack,
+.fragment-config-page .nav-stack,
+.processing-page .nav-stack,
+.reconstruction-page .nav-stack {
+    gap: 9px !important;
+    margin-top: 34px !important;
+}
+
+.upload-page .nav-item,
+.preview-page .nav-item,
+.fragment-config-page .nav-item,
+.processing-page .nav-item,
+.reconstruction-page .nav-item {
+    min-height: 48px !important;
+    padding: 12px 18px !important;
+    margin-bottom: 0 !important;
+    border-radius: 8px !important;
+    color: #334155 !important;
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    line-height: 1.2 !important;
+    display: flex !important;
+    align-items: center !important;
+    text-decoration: none !important;
+    position: relative !important;
+    transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease !important;
+}
+
+.upload-page .nav-item:hover,
+.preview-page .nav-item:hover,
+.fragment-config-page .nav-item:hover,
+.processing-page .nav-item:hover,
+.reconstruction-page .nav-item:hover {
+    color: #07172f !important;
+    background: rgba(47, 109, 246, 0.08) !important;
+    transform: translateX(4px) !important;
+}
+
+.upload-page .nav-item.active,
+.preview-page .nav-item.active,
+.fragment-config-page .nav-item.active,
+.processing-page .nav-item.active,
+.reconstruction-page .nav-item.active {
+    color: #07172f !important;
+    background: #ffffff !important;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1) !important;
+}
+
+.upload-page .nav-item.active::before,
+.preview-page .nav-item.active::before,
+.fragment-config-page .nav-item.active::before,
+.processing-page .nav-item.active::before,
+.reconstruction-page .nav-item.active::before {
+    content: "" !important;
+    width: 5px !important;
+    height: 24px !important;
+    border-radius: 999px !important;
+    background: #23c7bd !important;
+    margin-right: 12px !important;
+    position: static !important;
+    flex: 0 0 auto !important;
+}
+
+.upload-page .logout,
+.preview-page .logout,
+.fragment-config-page .logout,
+.processing-page .logout,
+.reconstruction-page .logout {
+    margin-top: auto !important;
+    padding-top: 0 !important;
+    border-top: 0 !important;
+}
+
+.upload-page button:not(:disabled),
+.upload-page .choose-btn:not(:disabled),
+.upload-page .outline-btn:not(:disabled),
+.upload-page .primary-btn:not(:disabled),
+.upload-page .danger-btn:not(:disabled),
+.preview-page button:not(:disabled),
+.fragment-config-page button:not(:disabled),
+.fragment-config-page .config-action-button,
+.processing-page .file-management-button,
+.reconstruction-page .primary-button,
+.reconstruction-page .secondary-button {
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.upload-page .choose-btn:not(:disabled):hover,
+.upload-page .primary-btn:not(:disabled):hover,
+.preview-page #continueButton:hover,
+.fragment-config-page .continue-button:hover,
+.processing-page .file-management-button:hover,
+.reconstruction-page .primary-button:hover {
+    color: #07172f !important;
+    background: linear-gradient(135deg, #1fb0c3 0%, #275ee2 100%) !important;
+    box-shadow: 0 14px 26px rgba(47, 109, 246, 0.24) !important;
+    transform: translateY(-2px) !important;
+}
+
+.upload-page .outline-btn:not(:disabled):hover,
+.preview-page #replaceButton:hover,
+.fragment-config-page .back-button:hover,
+.reconstruction-page .secondary-button:hover {
+    color: #07172f !important;
+    border-color: #8fb4ff !important;
+    background: rgba(47, 109, 246, 0.08) !important;
+    transform: translateY(-2px) !important;
+}
+
+.upload-page .danger-btn:not(:disabled):hover,
+.preview-page #deleteButton:hover {
+    color: #b42323 !important;
+    border-color: #ff8a8a !important;
+    background: rgba(255, 87, 87, 0.16) !important;
+    transform: translateY(-2px) !important;
+}
