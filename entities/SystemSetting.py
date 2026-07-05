@@ -194,31 +194,21 @@ class SystemSetting:
                            updated_by: int) -> None:
 
         cursor.execute("""
-            UPDATE system_settings
-            SET
-                setting_value = %s,
-                updated_by = %s
-            WHERE setting_name = %s
-        """, (
-            setting_value,
-            updated_by,
-            setting_name
-        ))
-
-        if cursor.rowcount == 0:
-            cursor.execute("""
-                INSERT INTO system_settings
-                (
-                    setting_name,
-                    setting_value,
-                    updated_by
-                )
-                VALUES (%s, %s, %s)
-            """, (
+            INSERT INTO system_settings
+            (
                 setting_name,
                 setting_value,
                 updated_by
-            ))
+            )
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                setting_value = VALUES(setting_value),
+                updated_by = VALUES(updated_by)
+        """, (
+            setting_name,
+            setting_value,
+            updated_by
+        ))
 
     @staticmethod
     def normaliseBooleanSetting(setting_value) -> str:
