@@ -541,3 +541,35 @@ button:disabled,
     transform: translateY(-2px) !important;
     box-shadow: 0 10px 18px rgba(255, 87, 87, 0.12) !important;
 }
+
+.file-management-page .brand-row {
+    margin-bottom: 0 !important;
+}
+
+.file-management-page .brand-title {
+    font-size: 27px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+}
+
+.file-management-page .logo-box {
+    width: 62px !important;
+    height: 62px !important;
+}
+
+.file-management-page .profile-fab {
+    right: 14px !important;
+    bottom: 14px !important;
+    width: 50px !important;
+    height: 50px !important;
+    background: linear-gradient(135deg, #07275f 0%, var(--cyan) 100%) !important;
+}
+
+.file-management-page .profile-fab-head {
+    top: 11px !important;
+}
+
+.file-management-page .profile-fab-body {
+    left: 12px !important;
+    bottom: 11px !important;
+}
