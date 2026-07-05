@@ -1,3 +1,5 @@
+from typing import Optional
+
 from flask import Blueprint
 from flask import flash
 from flask import redirect
@@ -25,22 +27,25 @@ class AdminC:
     def createUser(username: str,
                    email: str,
                    password: str,
-                   role: str) -> bool:
+                   role: str) -> Optional[str]:
 
         if UserAccount.checkUserExists(
             username=username,
             email=email
         ):
-            return False
+            return "Account exists."
 
-        UserAccount.createAccount(
+        user_id = UserAccount.createAccount(
             username=username,
             email=email,
             password=password,
             role=role
         )
 
-        return True
+        if user_id is None:
+            return "Password does not meet the current password policy."
+
+        return None
 
 
 @admin_bp.route("/user-management/create", methods=["GET", "POST"])
@@ -73,15 +78,15 @@ def createUser():
         flash("Please enter valid account details.", "error")
         return redirect(url_for("admin_bp.createUser"))
 
-    user_created = AdminC.createUser(
+    creation_error = AdminC.createUser(
         username=username,
         email=email,
         password=password,
         role=role
     )
 
-    if not user_created:
-        flash("Account exists.", "error")
+    if creation_error is not None:
+        flash(creation_error, "error")
         return redirect(url_for("admin_bp.createUser"))
 
     flash("User account created successfully.", "success")
