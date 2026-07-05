@@ -78,50 +78,51 @@
 
         .file-management-page .nav-stack {
             display: grid;
-            gap: 22px;
-            margin-top: 38px;
+            gap: 9px;
+            margin-top: 34px;
         }
 
         .file-management-page .nav-item {
-            min-height: 52px;
+            min-height: 48px;
             display: flex;
             align-items: center;
-            padding: 0 36px;
-            border-radius: 12px;
-            color: #43536b;
-            font-size: 15px;
-            font-weight: 700;
+            padding: 12px 18px;
+            border-radius: 8px;
+            color: #334155;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 1.2;
             text-decoration: none;
             position: relative;
-            transition: color 0.2s ease, background 0.2s ease;
+            transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
         }
 
         .file-management-page .nav-item:hover {
             color: #07172f;
             background: rgba(47, 109, 246, 0.08);
+            transform: translateX(4px);
         }
 
         .file-management-page .nav-item.active {
             color: #07172f;
-            background: rgba(255, 255, 255, 0.88);
-            box-shadow: 0 16px 34px rgba(88, 115, 166, 0.12);
+            background: #ffffff;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
         }
 
         .file-management-page .nav-item.active::before {
             content: "";
-            position: absolute;
-            left: 20px;
-            top: 13px;
             width: 5px;
-            height: 26px;
+            height: 24px;
             border-radius: 999px;
-            background: #25bed1;
+            background: #23c7bd;
+            margin-right: 12px;
+            flex: 0 0 auto;
         }
 
         .file-management-page .logout {
             margin-top: auto;
-            padding-top: 28px;
-            border-top: 1px solid rgba(148, 163, 184, 0.28);
+            padding-top: 0;
+            border-top: 0;
         }
 
         .file-management-page .profile-fab {
@@ -338,6 +339,7 @@
             cursor: pointer;
             text-decoration: none;
             white-space: nowrap;
+            transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
 
         .file-management-page .rename-button,
@@ -347,16 +349,40 @@
             background: rgba(255, 255, 255, 0.9);
         }
 
+        .file-management-page .rename-button:hover,
+        .file-management-page .download-button:hover {
+            color: #07172f;
+            border-color: #8fb4ff;
+            background: rgba(47, 109, 246, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 18px rgba(47, 109, 246, 0.12);
+        }
+
         .file-management-page .share-button {
             color: #07172f;
             border: 1px solid transparent;
             background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%);
         }
 
+        .file-management-page .share-button:hover {
+            color: #07172f;
+            background: linear-gradient(135deg, #1fb0c3 0%, #275ee2 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 22px rgba(47, 109, 246, 0.22);
+        }
+
         .file-management-page .delete-button {
             color: #ff4d4d;
             border: 1px solid #ffaaaa;
             background: rgba(255, 255, 255, 0.9);
+        }
+
+        .file-management-page .delete-button:hover {
+            color: #b42323;
+            border-color: #ff8a8a;
+            background: rgba(255, 87, 87, 0.16);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 18px rgba(255, 87, 87, 0.12);
         }
 
         .file-management-page .empty-row {
@@ -378,6 +404,129 @@
 
         .file-management-page .page-message.success {
             color: #067647;
+        }
+
+        .file-management-page .rename-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(7, 23, 47, 0.28);
+            backdrop-filter: blur(6px);
+        }
+
+        .file-management-page .rename-modal-backdrop.is-open {
+            display: flex;
+        }
+
+        .file-management-page .rename-modal {
+            width: 430px;
+            padding: 28px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(201, 216, 244, 0.92);
+            box-shadow: 0 28px 60px rgba(15, 23, 42, 0.22);
+        }
+
+        .file-management-page .rename-modal h2 {
+            margin: 0 0 8px;
+            color: #061027;
+            font-size: 25px;
+            font-weight: 900;
+        }
+
+        .file-management-page .rename-modal-subtitle {
+            margin: 0 0 20px;
+            color: #8393b2;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .file-management-page .rename-modal label {
+            display: block;
+            margin-bottom: 8px;
+            color: #43536b;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .file-management-page .rename-modal input {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px;
+            border-radius: 15px;
+            border: 1px solid #c7d6ef;
+            outline: 0;
+            color: #07172f;
+            background: rgba(255, 255, 255, 0.92);
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .file-management-page .rename-modal input:focus {
+            border-color: #2f6df6;
+            box-shadow: 0 0 0 4px rgba(47, 109, 246, 0.12);
+        }
+
+        .file-management-page .rename-modal-message {
+            min-height: 20px;
+            margin: 12px 0 0;
+            color: #66768f;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .file-management-page .rename-modal-message.error {
+            color: #ff4d4d;
+        }
+
+        .file-management-page .rename-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .file-management-page .modal-button {
+            min-width: 94px;
+            height: 42px;
+            padding: 0 18px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .file-management-page .modal-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .file-management-page .cancel-button {
+            color: #43536b;
+            border: 1px solid #b8cef5;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .file-management-page .cancel-button:hover {
+            color: #07172f;
+            background: rgba(47, 109, 246, 0.08);
+            box-shadow: 0 10px 18px rgba(47, 109, 246, 0.12);
+        }
+
+        .file-management-page .save-button {
+            color: #07172f;
+            border: 1px solid transparent;
+            background: linear-gradient(135deg, #25bed1 0%, #2f6df6 100%);
+            box-shadow: 0 12px 24px rgba(47, 109, 246, 0.22);
+        }
+
+        .file-management-page .save-button:hover {
+            background: linear-gradient(135deg, #1fb0c3 0%, #275ee2 100%);
+            box-shadow: 0 16px 28px rgba(47, 109, 246, 0.28);
         }
     </style>
 </head>
@@ -401,7 +550,7 @@
             <a href="/upload" class="nav-item">Upload File</a>
             <a href="/files" class="nav-item active">File Management</a>
             <a href="/shared" class="nav-item">Shared Files</a>
-            <a href="/download" class="nav-item">Download</a>
+            <a href="/download" class="nav-item">Download & Access</a>
         </nav>
 
         <a href="/logout" class="nav-item logout">Logout</a>
@@ -494,11 +643,67 @@
     </main>
 </div>
 
-<script>
-    function renameFile(fileID, currentFileName) {
-        var newName = prompt("Enter new file name:", currentFileName);
+<div id="renameModalBackdrop" class="rename-modal-backdrop" aria-hidden="true">
+    <form id="renameModal" class="rename-modal" onsubmit="submitRenameForm(event)">
+        <h2>Rename File</h2>
+        <p class="rename-modal-subtitle">Enter a new name for the selected file.</p>
 
-        if (newName === null) {
+        <label for="renameInput">File name</label>
+        <input id="renameInput" type="text" maxlength="255" required>
+
+        <p id="renameModalMessage" class="rename-modal-message"></p>
+
+        <div class="rename-modal-actions">
+            <button type="button" class="modal-button cancel-button" onclick="closeRenameModal()">Cancel</button>
+            <button type="submit" class="modal-button save-button">Save</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    var selectedRenameFileID = null;
+
+    function renameFile(fileID, currentFileName) {
+        selectedRenameFileID = fileID;
+
+        var renameInput = document.getElementById("renameInput");
+        var modalMessage = document.getElementById("renameModalMessage");
+        var modalBackdrop = document.getElementById("renameModalBackdrop");
+
+        renameInput.value = currentFileName;
+        modalMessage.className = "rename-modal-message";
+        modalMessage.innerText = "";
+
+        modalBackdrop.classList.add("is-open");
+        modalBackdrop.setAttribute("aria-hidden", "false");
+
+        setTimeout(function () {
+            renameInput.focus();
+            renameInput.select();
+        }, 0);
+    }
+
+    function closeRenameModal() {
+        selectedRenameFileID = null;
+
+        var modalBackdrop = document.getElementById("renameModalBackdrop");
+        modalBackdrop.classList.remove("is-open");
+        modalBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    function submitRenameForm(event) {
+        event.preventDefault();
+
+        if (selectedRenameFileID === null) {
+            return;
+        }
+
+        var newName = document.getElementById("renameInput").value.trim();
+        var modalMessage = document.getElementById("renameModalMessage");
+
+        if (newName === "") {
+            modalMessage.className = "rename-modal-message error";
+            modalMessage.innerText = "Please enter a file name.";
             return;
         }
 
@@ -511,30 +716,42 @@
             var pageMessage = document.getElementById("pageMessage");
 
             if (xhr.status === 200) {
+                closeRenameModal();
                 pageMessage.className = "page-message success";
                 pageMessage.innerText = "File renamed successfully.";
                 window.location.reload();
             } else {
                 try {
                     var errorResponse = JSON.parse(xhr.responseText);
-                    pageMessage.innerText = errorResponse.message;
+                    modalMessage.innerText = errorResponse.message;
                 } catch (e) {
-                    pageMessage.innerText = "Unable to rename file.";
+                    modalMessage.innerText = "Unable to rename file.";
                 }
 
-                pageMessage.className = "page-message error";
+                modalMessage.className = "rename-modal-message error";
             }
         };
 
         xhr.onerror = function () {
-            var pageMessage = document.getElementById("pageMessage");
-            pageMessage.className = "page-message error";
-            pageMessage.innerText = "Unable to rename file.";
+            modalMessage.className = "rename-modal-message error";
+            modalMessage.innerText = "Unable to rename file.";
         };
 
-        xhr.open("POST", "/files/rename/" + fileID, true);
+        xhr.open("POST", "/files/rename/" + selectedRenameFileID, true);
         xhr.send(formData);
     }
+
+    document.getElementById("renameModalBackdrop").addEventListener("click", function (event) {
+        if (event.target === this) {
+            closeRenameModal();
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeRenameModal();
+        }
+    });
 </script>
 
 </body>
