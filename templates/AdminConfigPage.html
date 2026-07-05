@@ -275,6 +275,13 @@
             gap: 10px;
         }
 
+        .system-admin-page .auth-form {
+            display: grid;
+            grid-template-columns: 86px auto;
+            align-items: center;
+            gap: 10px;
+        }
+
         .system-admin-page .policy-option {
             display: flex;
             align-items: center;
@@ -305,7 +312,8 @@
         }
 
         .system-admin-page .policy-form .number-input,
-        .system-admin-page .username-form .number-input {
+        .system-admin-page .username-form .number-input,
+        .system-admin-page .auth-form .number-input {
             width: 86px;
         }
 
@@ -459,9 +467,22 @@
                 <div class="setting-card">
                     <div>
                         <p class="setting-title">Authentication Policies</p>
-                        <p class="setting-value">Maximum {{ settings.maxLoginAttempts }} login attempts</p>
+                        <p class="setting-value">Maximum {{ settings.maxLoginAttempts }} failed login attempts</p>
                     </div>
-                    <button class="settings-button disabled" type="button">Change</button>
+                    <form
+                        class="auth-form"
+                        method="POST"
+                        action="{{ url_for('auth_policy_bp.setAuthPolicy') }}">
+                        <input
+                            class="number-input"
+                            type="number"
+                            name="max_login_attempts"
+                            min="1"
+                            max="10"
+                            value="{{ settings.maxLoginAttempts }}"
+                            aria-label="Maximum failed login attempts">
+                        <button class="settings-button primary" type="submit">Change</button>
+                    </form>
                 </div>
 
                 <div class="setting-card">
