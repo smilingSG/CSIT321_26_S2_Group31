@@ -389,14 +389,26 @@ class UserAccount:
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        cursor.execute("""
-            UPDATE users
-            SET account_status = %s
-            WHERE user_id = %s
-        """, (
-            account_status,
-            user_id
-        ))
+        if account_status == "active":
+            cursor.execute("""
+                UPDATE users
+                SET
+                    account_status = %s,
+                    failed_login_attempts = 0
+                WHERE user_id = %s
+            """, (
+                account_status,
+                user_id
+            ))
+        else:
+            cursor.execute("""
+                UPDATE users
+                SET account_status = %s
+                WHERE user_id = %s
+            """, (
+                account_status,
+                user_id
+            ))
 
         connection.commit()
 
