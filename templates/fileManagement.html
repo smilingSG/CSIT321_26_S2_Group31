@@ -656,6 +656,7 @@
 
 <script>
     var selectedRenameFileID = null;
+    var downloadInProgress = false;
     var reconstructionCleanupURL = "{{ url_for('reconstruct_file_bp.cleanupReconstruction') }}";
 
     function showPageMessage(message, messageType) {
@@ -666,6 +667,10 @@
     }
 
     function cleanupReconstructedTempFile() {
+        if (downloadInProgress) {
+            return;
+        }
+
         if (navigator.sendBeacon) {
             navigator.sendBeacon(reconstructionCleanupURL, new Blob([], { type: "text/plain" }));
             return;
@@ -697,7 +702,9 @@
             }
 
             if (xhr.status === 200 && response.success) {
-                showPageMessage(response.message, "success");
+                showPageMessage("Reconstruction complete. Download starting...", "success");
+                downloadInProgress = true;
+                window.location.href = "/files/decrypt/" + fileID;
                 return;
             }
 
