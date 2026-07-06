@@ -1,55 +1,47 @@
-# Import Flask components used for routing, templates, sessions, and redirects.
+# Import filesystem utilities used to clean up reconstructed temporary files.
+import os
+
+# Import Flask components used for routing, sessions, redirects, and JSON responses.
 from flask import Blueprint
+from flask import jsonify
 from flask import redirect
-from flask import render_template
 from flask import session
 from flask import url_for
 
-# Import entities used in the reconstruction workflow.
+# Import entities used in the encrypted file reconstruction workflow.
 from entities.File import File
 from entities.Fragment import Fragment
+from entities.StorageNode import StorageNode
 
 
-# Create the blueprint containing the reconstruction routes.
+# Create the blueprint containing the reconstruction route.
 reconstruct_file_bp = Blueprint(
     "reconstruct_file_bp",
     __name__
 )
 
 
-# Display the reconstruction page for a processed file.
-@reconstruct_file_bp.route(
-    "/files/reconstruct/<int:file_id>",
-    methods=["GET"]
-)
-def reconstructionPage(file_id: int):
+# Delete a reconstructed temporary file if it still exists.
+def cleanupReconstructedTempFile(reconstructed_path: str) -> None:
 
-    # Retrieve the logged-in user's ID from the session.
-    owner_id = session.get("user_id")
+    if reconstructed_path is None:
+        return
 
-    # Redirect unauthenticated users to the login page.
-    if owner_id is None:
-        return redirect(url_for("login_bp.login"))
-
-    # Ask the File entity for the file's k-of-n reconstruction requirement.
-    reconstruction_data = File.getReconstructionRequirement(
-        file_id,
-        owner_id
-    )
-
-    if reconstruction_data is None:
-        return "Reconstruction file record could not be found.", 404
-
-    return render_template(
-        "reconstruction.html",
-        reconstructionData=reconstruction_data
-    )
+    if os.path.exists(reconstructed_path):
+        try:
+            os.remove(reconstructed_path)
+        except OSError:
+            pass
 
 
 # Reconstruct the encrypted file only when enough valid fragments are available.
 @reconstruct_file_bp.route(
     "/files/reconstruct/<int:file_id>",
-    methods=["POST"]
+    methods=["GET"]
+)
+@reconstruct_file_bp.route(
+    "/files/download/<int:file_id>",
+    methods=["GET"]
 )
 def reconstructFile(file_id: int):
 
@@ -60,32 +52,35 @@ def reconstructFile(file_id: int):
     if owner_id is None:
         return redirect(url_for("login_bp.login"))
 
-    # Ask the File entity for the required and total fragment counts.
+    # Remove any previous reconstructed temporary file from the same session.
+    previous_reconstructed_path = session.get("reconstructed_temp_path")
+    cleanupReconstructedTempFile(previous_reconstructed_path)
+    session.pop("reconstructed_temp_path", None)
+    session.pop("reconstructed_file_id", None)
+
+    # Ask the File entity for the reconstruction requirements.
     reconstruction_data = File.getReconstructionRequirement(
         file_id,
         owner_id
     )
 
     if reconstruction_data is None:
-        return "Reconstruction file record could not be found.", 404
+        return jsonify({
+            "success": False,
+            "message": "Unable to reconstruct file. File record could not be found."
+        }), 404
 
     required_fragments = reconstruction_data["requiredFragments"]
     total_fragments = reconstruction_data["totalFragments"]
     encrypted_size = reconstruction_data["encryptedSize"]
 
-    # Ask the Fragment entity for readable fragments on active storage nodes.
-    available_fragments = Fragment.getAvailableFragments(file_id)
+    # Ask the Fragment entity for available stored fragment paths.
+    available_fragment_paths = Fragment.getAvailableFragments(file_id)
 
-    if len(available_fragments) < required_fragments:
-        return render_template(
-            "reconstruction.html",
-            reconstructionData=reconstruction_data,
-            errorMessage="Insufficient fragments. Required: "
-                         + str(required_fragments)
-                         + ", available: "
-                         + str(len(available_fragments))
-                         + "."
-        ), 400
+    # Ask the StorageNode entity to retrieve readable fragment bytes from the paths.
+    available_fragments = StorageNode.retrieveFragments(
+        available_fragment_paths
+    )
 
     # Ask the Fragment entity to reconstruct the encrypted file using zfec.
     reconstructed_path = Fragment.reconstructFragments(
@@ -97,15 +92,33 @@ def reconstructFile(file_id: int):
     )
 
     if reconstructed_path is None:
-        return render_template(
-            "reconstruction.html",
-            reconstructionData=reconstruction_data,
-            errorMessage="File reconstruction failed."
-        ), 400
+        return jsonify({
+            "success": False,
+            "message": "Unable to reconstruct file. Not enough fragments are currently available."
+        }), 400
 
-    return render_template(
-        "reconstruction.html",
-        reconstructionData=reconstruction_data,
-        successMessage="Encrypted file reconstructed successfully.",
-        reconstructedPath=reconstructed_path
-    )
+    # Keep the reconstructed encrypted file path for the next processing step.
+    session["reconstructed_temp_path"] = reconstructed_path
+    session["reconstructed_file_id"] = file_id
+
+    return jsonify({
+        "success": True,
+        "message": "Encrypted file reconstructed successfully. Preparing file for decryption."
+    })
+
+
+# Remove the reconstructed encrypted file if the user leaves before decryption.
+@reconstruct_file_bp.route(
+    "/files/reconstruct/cleanup",
+    methods=["POST"]
+)
+def cleanupReconstruction():
+
+    reconstructed_path = session.get("reconstructed_temp_path")
+
+    cleanupReconstructedTempFile(reconstructed_path)
+
+    session.pop("reconstructed_temp_path", None)
+    session.pop("reconstructed_file_id", None)
+
+    return "", 204

@@ -257,29 +257,15 @@
         }
 
         .file-management-page .file-table th:nth-child(1),
-        .file-management-page .file-table td:nth-child(1) {
-            width: 450px;
-        }
-
+        .file-management-page .file-table td:nth-child(1) { width: 450px; }
         .file-management-page .file-table th:nth-child(2),
-        .file-management-page .file-table td:nth-child(2) {
-            width: 155px;
-        }
-
+        .file-management-page .file-table td:nth-child(2) { width: 155px; }
         .file-management-page .file-table th:nth-child(3),
-        .file-management-page .file-table td:nth-child(3) {
-            width: 95px;
-        }
-
+        .file-management-page .file-table td:nth-child(3) { width: 95px; }
         .file-management-page .file-table th:nth-child(4),
-        .file-management-page .file-table td:nth-child(4) {
-            width: 130px;
-        }
-
+        .file-management-page .file-table td:nth-child(4) { width: 130px; }
         .file-management-page .file-table th:nth-child(5),
-        .file-management-page .file-table td:nth-child(5) {
-            width: 370px;
-        }
+        .file-management-page .file-table td:nth-child(5) { width: 370px; }
 
         .file-management-page .file-table thead th {
             padding: 16px 16px;
@@ -391,19 +377,32 @@
         }
 
         .file-management-page .page-message {
-            min-height: 20px;
-            margin: 16px 0 0;
-            color: #66768f;
+            display: none;
+            align-items: center;
+            min-height: 44px;
+            margin: 18px 0 0;
+            padding: 12px 16px;
+            border-radius: 16px;
             font-size: 14px;
-            font-weight: 700;
+            font-weight: 800;
+            line-height: 1.35;
+            border: 1px solid transparent;
+        }
+
+        .file-management-page .page-message.is-visible {
+            display: flex;
         }
 
         .file-management-page .page-message.error {
-            color: #ff4d4d;
+            color: #b42323;
+            background: rgba(255, 87, 87, 0.12);
+            border-color: rgba(255, 138, 138, 0.8);
         }
 
         .file-management-page .page-message.success {
-            color: #067647;
+            color: #066047;
+            background: rgba(35, 199, 189, 0.14);
+            border-color: rgba(35, 199, 189, 0.38);
         }
 
         .file-management-page .rename-modal-backdrop {
@@ -417,9 +416,7 @@
             backdrop-filter: blur(6px);
         }
 
-        .file-management-page .rename-modal-backdrop.is-open {
-            display: flex;
-        }
+        .file-management-page .rename-modal-backdrop.is-open { display: flex; }
 
         .file-management-page .rename-modal {
             width: 430px;
@@ -479,9 +476,7 @@
             font-weight: 700;
         }
 
-        .file-management-page .rename-modal-message.error {
-            color: #ff4d4d;
-        }
+        .file-management-page .rename-modal-message.error { color: #ff4d4d; }
 
         .file-management-page .rename-modal-actions {
             display: flex;
@@ -501,9 +496,7 @@
             transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
-        .file-management-page .modal-button:hover {
-            transform: translateY(-2px);
-        }
+        .file-management-page .modal-button:hover { transform: translateY(-2px); }
 
         .file-management-page .cancel-button {
             color: #43536b;
@@ -612,11 +605,12 @@
                                                 onclick='renameFile({{ file.fileID }}, {{ file.fileName | tojson }})'>
                                                 Rename
                                             </button>
-                                            <a
-                                                href="{{ url_for('reconstruct_file_bp.reconstructionPage', file_id=file.fileID) }}"
-                                                class="table-action download-button">
+                                            <button
+                                                type="button"
+                                                class="table-action download-button"
+                                                onclick="reconstructFile({{ file.fileID }})">
                                                 Download
-                                            </a>
+                                            </button>
                                             <button type="button" class="table-action share-button">Share</button>
                                             <button type="button" class="table-action delete-button">Delete</button>
                                         </div>
@@ -662,6 +656,136 @@
 
 <script>
     var selectedRenameFileID = null;
+    var downloadInProgress = false;
+    var reconstructionCleanupURL = "{{ url_for('reconstruct_file_bp.cleanupReconstruction') }}";
+
+    function showPageMessage(message, messageType) {
+        var pageMessage = document.getElementById("pageMessage");
+
+        pageMessage.className = "page-message is-visible " + messageType;
+        pageMessage.innerText = message;
+    }
+
+    function cleanupReconstructedTempFile() {
+        if (downloadInProgress) {
+            return;
+        }
+
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(reconstructionCleanupURL, new Blob([], { type: "text/plain" }));
+            return;
+        }
+
+        fetch(reconstructionCleanupURL, {
+            method: "POST",
+            keepalive: true
+        });
+    }
+
+    window.addEventListener("pagehide", cleanupReconstructedTempFile);
+
+    function getDownloadFileName(xhr) {
+        var disposition = xhr.getResponseHeader("Content-Disposition");
+
+        if (disposition === null) {
+            return "downloaded_file";
+        }
+
+        var filenameMatch = disposition.match(/filename="?([^";]+)"?/);
+
+        if (filenameMatch === null) {
+            return "downloaded_file";
+        }
+
+        return filenameMatch[1];
+    }
+
+    function decryptFile(fileID) {
+        showPageMessage("Decrypting file...", "success");
+        downloadInProgress = true;
+
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = "blob";
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                var blobURL = window.URL.createObjectURL(xhr.response);
+                var downloadLink = document.createElement("a");
+
+                downloadLink.href = blobURL;
+                downloadLink.download = getDownloadFileName(xhr);
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                window.URL.revokeObjectURL(blobURL);
+
+                downloadInProgress = false;
+                showPageMessage("File decrypted and downloaded successfully.", "success");
+                return;
+            }
+
+            var reader = new FileReader();
+
+            reader.onload = function () {
+                var response = null;
+
+                try {
+                    response = JSON.parse(reader.result);
+                } catch (e) {
+                    response = {
+                        message: "Decryption failed. Please try again."
+                    };
+                }
+
+                downloadInProgress = false;
+                showPageMessage(response.message, "error");
+            };
+
+            reader.readAsText(xhr.response);
+        };
+
+        xhr.onerror = function () {
+            downloadInProgress = false;
+            showPageMessage("Decryption failed. Please try again.", "error");
+        };
+
+        xhr.open("GET", "/files/decrypt/" + fileID, true);
+        xhr.send();
+    }
+
+    function reconstructFile(fileID) {
+        showPageMessage("Reconstructing encrypted file...", "success");
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            var response = null;
+
+            try {
+                response = JSON.parse(xhr.responseText);
+            } catch (e) {
+                response = {
+                    success: false,
+                    message: "Unable to reconstruct file. Please try again."
+                };
+            }
+
+            if (xhr.status === 200 && response.success) {
+                showPageMessage("Reconstruction complete. Download starting...", "success");
+                decryptFile(fileID);
+                return;
+            }
+
+            showPageMessage(response.message, "error");
+        };
+
+        xhr.onerror = function () {
+            showPageMessage("Unable to reconstruct file. Please try again.", "error");
+        };
+
+        xhr.open("GET", "/files/reconstruct/" + fileID, true);
+        xhr.send();
+    }
 
     function renameFile(fileID, currentFileName) {
         selectedRenameFileID = fileID;
@@ -713,12 +837,9 @@
         var xhr = new XMLHttpRequest();
 
         xhr.onload = function () {
-            var pageMessage = document.getElementById("pageMessage");
-
             if (xhr.status === 200) {
                 closeRenameModal();
-                pageMessage.className = "page-message success";
-                pageMessage.innerText = "File renamed successfully.";
+                showPageMessage("File renamed successfully.", "success");
                 window.location.reload();
             } else {
                 try {

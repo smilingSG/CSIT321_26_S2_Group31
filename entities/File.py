@@ -154,7 +154,6 @@ class File:
         if file_record is None:
             return None
 
-        # Convert the stored byte count into a readable kilobyte value.
         file_size_kb = round(
             file_record["file_size"] / 1024,
             2
@@ -373,7 +372,6 @@ class File:
                                     required_fragments,
                                     active_node_count: int) -> Optional[str]:
 
-        # Ensure both form values were supplied and contain integers.
         if total_fragments is None:
             return "Please enter total fragments."
 
@@ -386,7 +384,6 @@ class File:
         except ValueError:
             return "Fragment values must be numbers."
 
-        # Apply the k-of-n rules before updating the database.
         if total_fragments < 2:
             return "Total fragments must be at least 2."
 
@@ -460,7 +457,6 @@ class File:
             connection.close()
             return False
 
-        # Remove the physical temporary upload before deleting its metadata.
         temp_upload_path = file_record["temp_upload_path"]
 
         if temp_upload_path is not None and os.path.exists(temp_upload_path):
@@ -564,38 +560,29 @@ class File:
             return False
 
         encrypted_filename = stored_filename + ".enc"
-
         encrypted_temp_path = os.path.join(
             ENCRYPTED_TEMP_FOLDER,
             encrypted_filename
         )
 
-        # Generate a new 256-bit AES key for this file.
         file_key = AESGCM.generate_key(bit_length=256)
         aesgcm = AESGCM(file_key)
-
-        # Generate the recommended 12-byte nonce for AES-GCM.
         nonce = os.urandom(12)
 
-        # Read the original temporary file as binary data.
         with open(temp_upload_path, "rb") as input_file:
             file_data = input_file.read()
 
-        # Encrypt the data and append the GCM authentication tag.
         encrypted_data = aesgcm.encrypt(
             nonce,
             file_data,
             None
         )
 
-        # Write the authenticated ciphertext to temporary encrypted storage.
         with open(encrypted_temp_path, "wb") as output_file:
             output_file.write(encrypted_data)
 
         encrypted_size = os.path.getsize(encrypted_temp_path)
 
-        # Store the encryption metadata and advance the file status.
-        # The prototype currently stores the raw file key in MySQL.
         cursor.execute("""
             UPDATE files
             SET
@@ -619,7 +606,6 @@ class File:
 
         connection.commit()
 
-        # Remove the original readable file after encryption succeeds.
         if os.path.exists(temp_upload_path):
             os.remove(temp_upload_path)
 
@@ -828,7 +814,6 @@ class File:
             connection.close()
             return False
 
-        # Remove the temporary ciphertext before deleting its metadata.
         encrypted_temp_path = file_record["encrypted_temp_path"]
 
         if (
@@ -914,3 +899,72 @@ class File:
         connection.close()
 
         return updated
+
+    # Decrypt a reconstructed encrypted file using the file's AES-GCM metadata.
+    @staticmethod
+    def decryptFile(file_id: int,
+                    owner_id: int,
+                    reconstructed_temp_path: str) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_name,
+                file_type,
+                nonce,
+                encrypted_file_key
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if file_record is None:
+            return None
+
+        if reconstructed_temp_path is None:
+            return None
+
+        if not os.path.exists(reconstructed_temp_path):
+            return None
+
+        try:
+            nonce = bytes(file_record["nonce"])
+            file_key = bytes(file_record["encrypted_file_key"])
+
+            with open(reconstructed_temp_path, "rb") as encrypted_file:
+                encrypted_data = encrypted_file.read()
+
+            aesgcm = AESGCM(file_key)
+
+            original_data = aesgcm.decrypt(
+                nonce,
+                encrypted_data,
+                None
+            )
+
+            return {
+                "fileName": file_record["file_name"],
+                "fileType": file_record["file_type"] or "application/octet-stream",
+                "fileBytes": original_data
+            }
+
+        except Exception:
+            return None
+
+        finally:
+            if os.path.exists(reconstructed_temp_path):
+                try:
+                    os.remove(reconstructed_temp_path)
+                except OSError:
+                    pass
