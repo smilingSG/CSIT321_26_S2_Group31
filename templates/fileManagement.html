@@ -377,15 +377,33 @@
         }
 
         .file-management-page .page-message {
-            min-height: 20px;
-            margin: 16px 0 0;
-            color: #66768f;
+            display: none;
+            align-items: center;
+            min-height: 44px;
+            margin: 18px 0 0;
+            padding: 12px 16px;
+            border-radius: 16px;
             font-size: 14px;
-            font-weight: 700;
+            font-weight: 800;
+            line-height: 1.35;
+            border: 1px solid transparent;
         }
 
-        .file-management-page .page-message.error { color: #ff4d4d; }
-        .file-management-page .page-message.success { color: #067647; }
+        .file-management-page .page-message.is-visible {
+            display: flex;
+        }
+
+        .file-management-page .page-message.error {
+            color: #b42323;
+            background: rgba(255, 87, 87, 0.12);
+            border-color: rgba(255, 138, 138, 0.8);
+        }
+
+        .file-management-page .page-message.success {
+            color: #066047;
+            background: rgba(35, 199, 189, 0.14);
+            border-color: rgba(35, 199, 189, 0.38);
+        }
 
         .file-management-page .rename-modal-backdrop {
             position: fixed;
@@ -587,11 +605,12 @@
                                                 onclick='renameFile({{ file.fileID }}, {{ file.fileName | tojson }})'>
                                                 Rename
                                             </button>
-                                            <a
-                                                href="{{ url_for('reconstruct_file_bp.reconstructionPage', file_id=file.fileID) }}"
-                                                class="table-action download-button">
+                                            <button
+                                                type="button"
+                                                class="table-action download-button"
+                                                onclick="reconstructFile({{ file.fileID }})">
                                                 Download
-                                            </a>
+                                            </button>
                                             <button type="button" class="table-action share-button">Share</button>
                                             <button type="button" class="table-action delete-button">Delete</button>
                                         </div>
@@ -639,6 +658,13 @@
     var selectedRenameFileID = null;
     var reconstructionCleanupURL = "{{ url_for('reconstruct_file_bp.cleanupReconstruction') }}";
 
+    function showPageMessage(message, messageType) {
+        var pageMessage = document.getElementById("pageMessage");
+
+        pageMessage.className = "page-message is-visible " + messageType;
+        pageMessage.innerText = message;
+    }
+
     function cleanupReconstructedTempFile() {
         if (navigator.sendBeacon) {
             navigator.sendBeacon(reconstructionCleanupURL, new Blob([], { type: "text/plain" }));
@@ -652,6 +678,39 @@
     }
 
     window.addEventListener("pagehide", cleanupReconstructedTempFile);
+
+    function reconstructFile(fileID) {
+        showPageMessage("Reconstructing encrypted file...", "success");
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            var response = null;
+
+            try {
+                response = JSON.parse(xhr.responseText);
+            } catch (e) {
+                response = {
+                    success: false,
+                    message: "Unable to reconstruct file. Please try again."
+                };
+            }
+
+            if (xhr.status === 200 && response.success) {
+                showPageMessage(response.message, "success");
+                return;
+            }
+
+            showPageMessage(response.message, "error");
+        };
+
+        xhr.onerror = function () {
+            showPageMessage("Unable to reconstruct file. Please try again.", "error");
+        };
+
+        xhr.open("GET", "/files/reconstruct/" + fileID, true);
+        xhr.send();
+    }
 
     function renameFile(fileID, currentFileName) {
         selectedRenameFileID = fileID;
@@ -703,12 +762,9 @@
         var xhr = new XMLHttpRequest();
 
         xhr.onload = function () {
-            var pageMessage = document.getElementById("pageMessage");
-
             if (xhr.status === 200) {
                 closeRenameModal();
-                pageMessage.className = "page-message success";
-                pageMessage.innerText = "File renamed successfully.";
+                showPageMessage("File renamed successfully.", "success");
                 window.location.reload();
             } else {
                 try {
