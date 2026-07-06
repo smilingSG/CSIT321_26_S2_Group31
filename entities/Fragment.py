@@ -16,8 +16,6 @@ from zfec import easyfec
 
 # Import the application's MySQL connection function.
 from db import get_db_connection
-# Import storage-node operations used to retrieve stored fragment bytes.
-from entities.StorageNode import StorageNode
 
 # Define the folder used while fragments are awaiting node storage.
 TEMP_FRAGMENT_FOLDER: str = "temp_fragments"
@@ -225,9 +223,9 @@ class Fragment:
 
         return fragment_list
 
-    # Retrieve available fragments from active storage nodes for reconstruction.
+    # Retrieve available fragment records on active storage nodes for reconstruction.
     @staticmethod
-    def getAvailableFragments(file_id: int) -> List[Dict[str, Any]]:
+    def getAvailableFragmentRecords(file_id: int) -> List[Dict[str, Any]]:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -253,28 +251,7 @@ class Fragment:
         cursor.close()
         connection.close()
 
-        available_fragments = []
-
-        for fragment_record in fragment_records:
-            fragment_bytes = StorageNode.retrieveFragment(
-                fragment_record["fragment_path"]
-            )
-
-            # Missing or unreadable fragment files are skipped as unavailable.
-            if fragment_bytes is None:
-                continue
-
-            available_fragments.append({
-                "fragment_id": fragment_record["fragment_id"],
-                "file_id": fragment_record["file_id"],
-                "fragment_number": fragment_record["fragment_number"],
-                "fragment_path": fragment_record["fragment_path"],
-                "node_id": fragment_record["node_id"],
-                "share_number": fragment_record["fragment_number"] - 1,
-                "fragment_bytes": fragment_bytes
-            })
-
-        return available_fragments
+        return fragment_records
 
     # Reconstruct the encrypted file from at least k available fragments.
     @staticmethod
