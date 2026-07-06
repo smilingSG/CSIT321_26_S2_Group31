@@ -40,12 +40,12 @@ def deleteFile(file_id: int):
         }), 401
 
     if request.path.startswith("/files/delete/"):
-        file_exists = File.verifyFileOwner(
+        file_delete_details = File.getFileDeleteDetails(
             file_id,
             owner_id
         )
 
-        if not file_exists:
+        if file_delete_details is None:
             return jsonify({
                 "success": False,
                 "message": "Unable to delete file."
