@@ -384,3 +384,31 @@ class UploadSession:
                 cursor.close()
             if connection is not None:
                 connection.close()
+
+    # Delete upload-session records that belong to the selected file.
+    @staticmethod
+    def deleteUploadSessions(file_id: int) -> bool:
+
+        connection = None
+        cursor = None
+
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                DELETE FROM upload_sessions
+                WHERE file_id = %s
+            """, (file_id,))
+
+            connection.commit()
+            return True
+
+        except Exception:
+            return False
+
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if connection is not None:
+                connection.close()
