@@ -43,7 +43,7 @@ def cleanupReconstructedTempFile(reconstructed_path: str) -> None:
     "/files/download/<int:file_id>",
     methods=["GET"]
 )
-def reconstructionPage(file_id: int):
+def reconstructFile(file_id: int):
 
     # Retrieve the logged-in user's ID from the session.
     owner_id = session.get("user_id")
@@ -58,7 +58,7 @@ def reconstructionPage(file_id: int):
     session.pop("reconstructed_temp_path", None)
     session.pop("reconstructed_file_id", None)
 
-    # Ask the File entity for the required and total fragment counts.
+    # Ask the File entity for the reconstruction requirements.
     reconstruction_data = File.getReconstructionRequirement(
         file_id,
         owner_id
@@ -74,32 +74,13 @@ def reconstructionPage(file_id: int):
     total_fragments = reconstruction_data["totalFragments"]
     encrypted_size = reconstruction_data["encryptedSize"]
 
-    # Ask the Fragment entity for stored fragment paths and metadata.
-    fragment_records = Fragment.getAvailableFragmentRecords(file_id)
+    # Ask the Fragment entity for available stored fragment paths.
+    available_fragment_paths = Fragment.getAvailableFragments(file_id)
 
-    available_fragments = []
-
-    # Try to retrieve each fragment's physical bytes from its storage node path.
-    for fragment_record in fragment_records:
-        fragment_bytes = StorageNode.retrieveFragment(
-            fragment_record["fragment_path"]
-        )
-
-        if fragment_bytes is None:
-            continue
-
-        available_fragments.append({
-            "fragment_id": fragment_record["fragment_id"],
-            "file_id": fragment_record["file_id"],
-            "fragment_number": fragment_record["fragment_number"],
-            "fragment_path": fragment_record["fragment_path"],
-            "node_id": fragment_record["node_id"],
-            "share_number": fragment_record["fragment_number"] - 1,
-            "fragment_bytes": fragment_bytes
-        })
-
-        if len(available_fragments) == required_fragments:
-            break
+    # Ask the StorageNode entity to retrieve readable fragment bytes from the paths.
+    available_fragments = StorageNode.retrieveFragments(
+        available_fragment_paths
+    )
 
     # Ask the Fragment entity to reconstruct the encrypted file using zfec.
     reconstructed_path = Fragment.reconstructFragments(
