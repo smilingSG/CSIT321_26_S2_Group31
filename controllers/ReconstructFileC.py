@@ -20,10 +20,14 @@ reconstruct_file_bp = Blueprint(
 
 # Reconstruct the encrypted file only when enough valid fragments are available.
 @reconstruct_file_bp.route(
+    "/files/reconstruct/<int:file_id>",
+    methods=["GET"]
+)
+@reconstruct_file_bp.route(
     "/files/download/<int:file_id>",
     methods=["GET"]
 )
-def downloadReconstructedFile(file_id: int):
+def reconstructionPage(file_id: int):
 
     # Retrieve the logged-in user's ID from the session.
     owner_id = session.get("user_id")
