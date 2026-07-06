@@ -257,29 +257,15 @@
         }
 
         .file-management-page .file-table th:nth-child(1),
-        .file-management-page .file-table td:nth-child(1) {
-            width: 450px;
-        }
-
+        .file-management-page .file-table td:nth-child(1) { width: 450px; }
         .file-management-page .file-table th:nth-child(2),
-        .file-management-page .file-table td:nth-child(2) {
-            width: 155px;
-        }
-
+        .file-management-page .file-table td:nth-child(2) { width: 155px; }
         .file-management-page .file-table th:nth-child(3),
-        .file-management-page .file-table td:nth-child(3) {
-            width: 95px;
-        }
-
+        .file-management-page .file-table td:nth-child(3) { width: 95px; }
         .file-management-page .file-table th:nth-child(4),
-        .file-management-page .file-table td:nth-child(4) {
-            width: 130px;
-        }
-
+        .file-management-page .file-table td:nth-child(4) { width: 130px; }
         .file-management-page .file-table th:nth-child(5),
-        .file-management-page .file-table td:nth-child(5) {
-            width: 370px;
-        }
+        .file-management-page .file-table td:nth-child(5) { width: 370px; }
 
         .file-management-page .file-table thead th {
             padding: 16px 16px;
@@ -398,13 +384,8 @@
             font-weight: 700;
         }
 
-        .file-management-page .page-message.error {
-            color: #ff4d4d;
-        }
-
-        .file-management-page .page-message.success {
-            color: #067647;
-        }
+        .file-management-page .page-message.error { color: #ff4d4d; }
+        .file-management-page .page-message.success { color: #067647; }
 
         .file-management-page .rename-modal-backdrop {
             position: fixed;
@@ -417,9 +398,7 @@
             backdrop-filter: blur(6px);
         }
 
-        .file-management-page .rename-modal-backdrop.is-open {
-            display: flex;
-        }
+        .file-management-page .rename-modal-backdrop.is-open { display: flex; }
 
         .file-management-page .rename-modal {
             width: 430px;
@@ -479,9 +458,7 @@
             font-weight: 700;
         }
 
-        .file-management-page .rename-modal-message.error {
-            color: #ff4d4d;
-        }
+        .file-management-page .rename-modal-message.error { color: #ff4d4d; }
 
         .file-management-page .rename-modal-actions {
             display: flex;
@@ -501,9 +478,7 @@
             transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
-        .file-management-page .modal-button:hover {
-            transform: translateY(-2px);
-        }
+        .file-management-page .modal-button:hover { transform: translateY(-2px); }
 
         .file-management-page .cancel-button {
             color: #43536b;
@@ -662,6 +637,21 @@
 
 <script>
     var selectedRenameFileID = null;
+    var reconstructionCleanupURL = "{{ url_for('reconstruct_file_bp.cleanupReconstruction') }}";
+
+    function cleanupReconstructedTempFile() {
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(reconstructionCleanupURL, new Blob([], { type: "text/plain" }));
+            return;
+        }
+
+        fetch(reconstructionCleanupURL, {
+            method: "POST",
+            keepalive: true
+        });
+    }
+
+    window.addEventListener("pagehide", cleanupReconstructedTempFile);
 
     function renameFile(fileID, currentFileName) {
         selectedRenameFileID = fileID;
