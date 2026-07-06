@@ -2,7 +2,7 @@
 import os
 import uuid
 
-# Import the trusted AES-GCM implementation used for file encryption.
+# Import the trusted AES-GCM implementation used for file encryption and decryption.
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from werkzeug.utils import secure_filename
 
@@ -595,7 +595,7 @@ class File:
         encrypted_size = os.path.getsize(encrypted_temp_path)
 
         # Store the encryption metadata and advance the file status.
-        # The prototype currently stores the raw file key in MySQL.
+        # The current implementation stores the raw file key in MySQL.
         cursor.execute("""
             UPDATE files
             SET
@@ -776,6 +776,64 @@ class File:
             "requiredFragments": file_record["required_fragments"],
             "encryptedSize": file_record["encrypted_size"]
         }
+
+    # Decrypt a reconstructed encrypted file using the stored AES-GCM metadata.
+    @staticmethod
+    def decryptReconstructedFile(file_id: int,
+                                 owner_id: int,
+                                 reconstructed_path: str) -> Optional[bytes]:
+
+        if reconstructed_path is None:
+            return None
+
+        if not os.path.exists(reconstructed_path):
+            return None
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                nonce,
+                encrypted_file_key
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if file_record is None:
+            return None
+
+        nonce = file_record["nonce"]
+        file_key = file_record["encrypted_file_key"]
+
+        if nonce is None or file_key is None:
+            return None
+
+        with open(reconstructed_path, "rb") as reconstructed_file:
+            encrypted_data = reconstructed_file.read()
+
+        try:
+            aesgcm = AESGCM(file_key)
+
+            return aesgcm.decrypt(
+                nonce,
+                encrypted_data,
+                None
+            )
+
+        # AES-GCM rejects corrupted, tampered, or mismatched encrypted data.
+        except Exception:
+            return None
 
     # Update the current processing status of a file.
     @staticmethod
