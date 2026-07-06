@@ -16,6 +16,8 @@ from zfec import easyfec
 
 # Import the application's MySQL connection function.
 from db import get_db_connection
+# Import the StorageNode entity used to remove physical fragment files.
+from entities.StorageNode import StorageNode
 
 # Define the folder used while fragments are awaiting node storage.
 TEMP_FRAGMENT_FOLDER: str = "temp_fragments"
@@ -405,3 +407,38 @@ class Fragment:
 
         cursor.close()
         connection.close()
+
+    # Delete stored fragment files before removing their database records.
+    @staticmethod
+    def deleteFragments(file_id: int) -> bool:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                fragment_id,
+                fragment_path
+            FROM fragments
+            WHERE file_id = %s
+            ORDER BY fragment_number
+        """, (file_id,))
+
+        fragment_paths = cursor.fetchall()
+
+        if not StorageNode.deleteStoredFragments(fragment_paths):
+            cursor.close()
+            connection.close()
+            return False
+
+        cursor.execute("""
+            DELETE FROM fragments
+            WHERE file_id = %s
+        """, (file_id,))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return True

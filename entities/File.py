@@ -56,13 +56,11 @@ class File:
     def createTempFileRecord(owner_id: int,
                              uploaded_file) -> Optional[int]:
 
-        # Sanitise the supplied filename and reject unsupported extensions.
         original_filename: str = secure_filename(uploaded_file.filename)
 
         if not File.isAllowedFileType(original_filename):
             return None
 
-        # Generate a unique local filename while preserving the extension.
         file_extension: str = os.path.splitext(original_filename)[1]
         stored_filename: str = str(uuid.uuid4()) + file_extension
         temp_upload_path: str = os.path.join(
@@ -70,7 +68,6 @@ class File:
             stored_filename
         )
 
-        # Save the physical upload and collect the metadata stored in MySQL.
         uploaded_file.save(temp_upload_path)
         file_size: int = os.path.getsize(temp_upload_path)
         file_type: str = uploaded_file.content_type or "Unknown"
@@ -107,7 +104,6 @@ class File:
             connection.commit()
             return cursor.lastrowid
 
-        # Remove the physical upload if its metadata cannot be recorded.
         except Exception:
             if os.path.exists(temp_upload_path):
                 os.remove(temp_upload_path)
@@ -968,3 +964,59 @@ class File:
                     os.remove(reconstructed_temp_path)
                 except OSError:
                     pass
+
+    # Retrieve delete details for a processed file belonging to the logged-in user.
+    @staticmethod
+    def getFileDeleteDetails(file_id: int,
+                             owner_id: int) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                owner_id,
+                file_name,
+                file_status
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return file_record
+
+    # Delete only the selected processed file record from the files table.
+    @staticmethod
+    def deleteFileRecord(file_id: int,
+                         owner_id: int) -> bool:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            DELETE FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        deleted = cursor.rowcount == 1
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return deleted
