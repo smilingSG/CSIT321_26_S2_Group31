@@ -612,7 +612,12 @@
                                                 Download
                                             </button>
                                             <button type="button" class="table-action share-button">Share</button>
-                                            <button type="button" class="table-action delete-button">Delete</button>
+                                            <button
+                                                type="button"
+                                                class="table-action delete-button"
+                                                onclick="deleteFile({{ file.fileID }})">
+                                                Delete
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -784,6 +789,44 @@
         };
 
         xhr.open("GET", "/files/reconstruct/" + fileID, true);
+        xhr.send();
+    }
+
+    function deleteFile(fileID) {
+        if (!confirm("Delete this file permanently?")) {
+            return;
+        }
+
+        showPageMessage("Deleting file...", "success");
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function () {
+            var response = null;
+
+            try {
+                response = JSON.parse(xhr.responseText);
+            } catch (e) {
+                response = {
+                    success: false,
+                    message: "Unable to delete file."
+                };
+            }
+
+            if (xhr.status === 200 && response.success) {
+                showPageMessage(response.message, "success");
+                window.location.reload();
+                return;
+            }
+
+            showPageMessage(response.message, "error");
+        };
+
+        xhr.onerror = function () {
+            showPageMessage("Unable to delete file.", "error");
+        };
+
+        xhr.open("POST", "/files/delete/" + fileID, true);
         xhr.send();
     }
 
