@@ -965,16 +965,20 @@ class File:
                 except OSError:
                     pass
 
-    # Confirm that a processed file belongs to the logged-in user.
+    # Retrieve delete details for a processed file belonging to the logged-in user.
     @staticmethod
-    def verifyFileOwner(file_id: int,
-                        owner_id: int) -> bool:
+    def getFileDeleteDetails(file_id: int,
+                             owner_id: int) -> Optional[Dict[str, Any]]:
 
         connection = get_db_connection()
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT COUNT(*)
+            SELECT
+                file_id,
+                owner_id,
+                file_name,
+                file_status
             FROM files
             WHERE file_id = %s
             AND owner_id = %s
@@ -984,12 +988,12 @@ class File:
             owner_id
         ))
 
-        count = cursor.fetchone()[0]
+        file_record = cursor.fetchone()
 
         cursor.close()
         connection.close()
 
-        return count == 1
+        return file_record
 
     # Delete only the selected processed file record from the files table.
     @staticmethod
