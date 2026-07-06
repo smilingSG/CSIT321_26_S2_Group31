@@ -131,6 +131,10 @@ def reconstructionPage(file_id: int):
     session["reconstructed_temp_path"] = reconstructed_path
     session["reconstructed_file_id"] = file_id
 
+    # The current page unloads because the Download link navigates here.
+    # Skip that automatic cleanup so the reconstructed file can remain for decryption.
+    session["skip_next_reconstruction_cleanup"] = True
+
     return redirect(url_for("file_management_bp.fileManagementPage"))
 
 
@@ -140,6 +144,9 @@ def reconstructionPage(file_id: int):
     methods=["POST"]
 )
 def cleanupReconstruction():
+
+    if session.pop("skip_next_reconstruction_cleanup", False):
+        return "", 204
 
     reconstructed_path = session.get("reconstructed_temp_path")
 
