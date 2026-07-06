@@ -56,13 +56,11 @@ class File:
     def createTempFileRecord(owner_id: int,
                              uploaded_file) -> Optional[int]:
 
-        # Sanitise the supplied filename and reject unsupported extensions.
         original_filename: str = secure_filename(uploaded_file.filename)
 
         if not File.isAllowedFileType(original_filename):
             return None
 
-        # Generate a unique local filename while preserving the extension.
         file_extension: str = os.path.splitext(original_filename)[1]
         stored_filename: str = str(uuid.uuid4()) + file_extension
         temp_upload_path: str = os.path.join(
@@ -70,7 +68,6 @@ class File:
             stored_filename
         )
 
-        # Save the physical upload and collect the metadata stored in MySQL.
         uploaded_file.save(temp_upload_path)
         file_size: int = os.path.getsize(temp_upload_path)
         file_type: str = uploaded_file.content_type or "Unknown"
@@ -107,7 +104,6 @@ class File:
             connection.commit()
             return cursor.lastrowid
 
-        # Remove the physical upload if its metadata cannot be recorded.
         except Exception:
             if os.path.exists(temp_upload_path):
                 os.remove(temp_upload_path)
@@ -969,18 +965,16 @@ class File:
                 except OSError:
                     pass
 
-    # Delete a processed file after removing dependent records and fragments.
+    # Confirm that a processed file belongs to the logged-in user.
     @staticmethod
-    def deleteFile(file_id: int,
-                   owner_id: int) -> bool:
-
-        from entities.Fragment import Fragment
+    def verifyFileOwner(file_id: int,
+                        owner_id: int) -> bool:
 
         connection = get_db_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor()
 
         cursor.execute("""
-            SELECT file_id
+            SELECT COUNT(*)
             FROM files
             WHERE file_id = %s
             AND owner_id = %s
@@ -990,31 +984,20 @@ class File:
             owner_id
         ))
 
-        file_record = cursor.fetchone()
-
-        if file_record is None:
-            cursor.close()
-            connection.close()
-            return False
+        count = cursor.fetchone()[0]
 
         cursor.close()
         connection.close()
 
-        if not Fragment.deleteFragments(file_id):
-            return False
+        return count == 1
+
+    # Delete only the selected processed file record from the files table.
+    @staticmethod
+    def deleteFileRecord(file_id: int,
+                         owner_id: int) -> bool:
 
         connection = get_db_connection()
         cursor = connection.cursor()
-
-        cursor.execute("""
-            DELETE FROM share_links
-            WHERE file_id = %s
-        """, (file_id,))
-
-        cursor.execute("""
-            DELETE FROM upload_sessions
-            WHERE file_id = %s
-        """, (file_id,))
 
         cursor.execute("""
             DELETE FROM files
