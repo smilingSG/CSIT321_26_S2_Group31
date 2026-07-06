@@ -1,8 +1,9 @@
 # Import filesystem utilities used to clean up reconstructed temporary files.
 import os
 
-# Import Flask components used for routing, sessions, and redirects.
+# Import Flask components used for routing, sessions, redirects, and JSON responses.
 from flask import Blueprint
+from flask import jsonify
 from flask import redirect
 from flask import session
 from flask import url_for
@@ -64,7 +65,10 @@ def reconstructionPage(file_id: int):
     )
 
     if reconstruction_data is None:
-        return "Reconstruction file record could not be found.", 404
+        return jsonify({
+            "success": False,
+            "message": "Unable to reconstruct file. File record could not be found."
+        }), 404
 
     required_fragments = reconstruction_data["requiredFragments"]
     total_fragments = reconstruction_data["totalFragments"]
@@ -74,10 +78,10 @@ def reconstructionPage(file_id: int):
     fragment_records = Fragment.getAvailableFragmentRecords(file_id)
 
     if len(fragment_records) < required_fragments:
-        return (
-            "Unable to reconstruct file. "
-            "Not enough fragments are currently available."
-        ), 400
+        return jsonify({
+            "success": False,
+            "message": "Unable to reconstruct file. Not enough fragments are currently available."
+        }), 400
 
     available_fragments = []
 
@@ -104,10 +108,10 @@ def reconstructionPage(file_id: int):
             break
 
     if len(available_fragments) < required_fragments:
-        return (
-            "Unable to reconstruct file. "
-            "Not enough fragments are currently available."
-        ), 400
+        return jsonify({
+            "success": False,
+            "message": "Unable to reconstruct file. Not enough fragments are currently available."
+        }), 400
 
     # Ask the Fragment entity to reconstruct the encrypted file using zfec.
     reconstructed_path = Fragment.reconstructFragments(
@@ -119,17 +123,19 @@ def reconstructionPage(file_id: int):
     )
 
     if reconstructed_path is None:
-        return "File reconstruction failed.", 400
+        return jsonify({
+            "success": False,
+            "message": "Unable to reconstruct file. Please try again."
+        }), 400
 
     # Keep the reconstructed encrypted file path for the next processing step.
     session["reconstructed_temp_path"] = reconstructed_path
     session["reconstructed_file_id"] = file_id
 
-    # The current page unloads because the Download link navigates here.
-    # Skip that automatic cleanup so the reconstructed file can remain for decryption.
-    session["skip_next_reconstruction_cleanup"] = True
-
-    return redirect(url_for("file_management_bp.fileManagementPage"))
+    return jsonify({
+        "success": True,
+        "message": "Encrypted file reconstructed successfully. Preparing file for decryption."
+    })
 
 
 # Remove the reconstructed encrypted file if the user leaves before decryption.
@@ -138,9 +144,6 @@ def reconstructionPage(file_id: int):
     methods=["POST"]
 )
 def cleanupReconstruction():
-
-    if session.pop("skip_next_reconstruction_cleanup", False):
-        return "", 204
 
     reconstructed_path = session.get("reconstructed_temp_path")
 
