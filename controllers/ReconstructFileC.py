@@ -1,9 +1,8 @@
 # Import filesystem utilities used to clean up reconstructed temporary files.
 import os
 
-# Import Flask components used for routing, sessions, redirects, and response cleanup.
+# Import Flask components used for routing, sessions, and redirects.
 from flask import Blueprint
-from flask import after_this_request
 from flask import redirect
 from flask import session
 from flask import url_for
@@ -51,6 +50,12 @@ def reconstructionPage(file_id: int):
     # Redirect unauthenticated users to the login page.
     if owner_id is None:
         return redirect(url_for("login_bp.login"))
+
+    # Remove any previous reconstructed temporary file from the same session.
+    previous_reconstructed_path = session.get("reconstructed_temp_path")
+    cleanupReconstructedTempFile(previous_reconstructed_path)
+    session.pop("reconstructed_temp_path", None)
+    session.pop("reconstructed_file_id", None)
 
     # Ask the File entity for the required and total fragment counts.
     reconstruction_data = File.getReconstructionRequirement(
@@ -122,13 +127,8 @@ def reconstructionPage(file_id: int):
     if reconstructed_path is None:
         return "File reconstruction failed.", 400
 
-    # Delete the reconstructed temporary file after Flask finishes the response.
-    @after_this_request
-    def removeReconstructedTempFile(response):
-        cleanupReconstructedTempFile(reconstructed_path)
-        return response
+    # Keep the reconstructed encrypted file path for the next processing step.
+    session["reconstructed_temp_path"] = reconstructed_path
+    session["reconstructed_file_id"] = file_id
 
-    return (
-        "Encrypted file reconstructed successfully. "
-        "Decryption and original file download are handled in the next user story."
-    ), 200
+    return redirect(url_for("file_management_bp.fileManagementPage"))
