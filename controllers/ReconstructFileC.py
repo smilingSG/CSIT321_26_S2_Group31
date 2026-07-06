@@ -1,5 +1,9 @@
+# Import filesystem utilities used to clean up reconstructed temporary files.
+import os
+
 # Import Flask components used for routing, sessions, redirects, and file download.
 from flask import Blueprint
+from flask import after_this_request
 from flask import redirect
 from flask import send_file
 from flask import session
@@ -16,6 +20,19 @@ reconstruct_file_bp = Blueprint(
     "reconstruct_file_bp",
     __name__
 )
+
+
+# Delete a reconstructed temporary file if it still exists.
+def cleanupReconstructedTempFile(reconstructed_path: str) -> None:
+
+    if reconstructed_path is None:
+        return
+
+    if os.path.exists(reconstructed_path):
+        try:
+            os.remove(reconstructed_path)
+        except OSError:
+            pass
 
 
 # Reconstruct the encrypted file only when enough valid fragments are available.
@@ -106,10 +123,21 @@ def reconstructionPage(file_id: int):
     if reconstructed_path is None:
         return "File reconstruction failed.", 400
 
-    # User story 24 currently returns the reconstructed encrypted file.
-    # User story 20 will decrypt this before returning the final original file.
-    return send_file(
-        reconstructed_path,
-        as_attachment=True,
-        download_name=reconstruction_data["fileName"] + ".enc"
-    )
+    # Delete the reconstructed temporary file after Flask finishes the response.
+    @after_this_request
+    def removeReconstructedTempFile(response):
+        cleanupReconstructedTempFile(reconstructed_path)
+        return response
+
+    try:
+        # User story 24 currently returns the reconstructed encrypted file.
+        # User story 20 will decrypt this before returning the final original file.
+        return send_file(
+            reconstructed_path,
+            as_attachment=True,
+            download_name=reconstruction_data["fileName"] + ".enc"
+        )
+
+    except Exception:
+        cleanupReconstructedTempFile(reconstructed_path)
+        raise
