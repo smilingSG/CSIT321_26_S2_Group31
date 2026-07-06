@@ -138,6 +138,21 @@ class StorageNode:
 
         return fragment_data
 
+    # Delete multiple stored fragments from their storage node paths.
+    @staticmethod
+    def deleteStoredFragments(fragment_paths: List[Dict[str, Any]]) -> bool:
+
+        try:
+            for fragment_path_record in fragment_paths:
+                StorageNode.deleteStoredFragment(
+                    fragment_path_record["fragment_path"]
+                )
+
+            return True
+
+        except (OSError, KeyError, TypeError):
+            return False
+
     # Delete a stored fragment and remove its folder when it becomes empty.
     @staticmethod
     def deleteStoredFragment(fragment_path: str) -> None:
