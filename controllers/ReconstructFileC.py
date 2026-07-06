@@ -132,3 +132,20 @@ def reconstructionPage(file_id: int):
     session["reconstructed_file_id"] = file_id
 
     return redirect(url_for("file_management_bp.fileManagementPage"))
+
+
+# Remove the reconstructed encrypted file if the user leaves before decryption.
+@reconstruct_file_bp.route(
+    "/files/reconstruct/cleanup",
+    methods=["POST"]
+)
+def cleanupReconstruction():
+
+    reconstructed_path = session.get("reconstructed_temp_path")
+
+    cleanupReconstructedTempFile(reconstructed_path)
+
+    session.pop("reconstructed_temp_path", None)
+    session.pop("reconstructed_file_id", None)
+
+    return "", 204
