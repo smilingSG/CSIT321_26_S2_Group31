@@ -74,18 +74,12 @@ def reconstructionPage(file_id: int):
     total_fragments = reconstruction_data["totalFragments"]
     encrypted_size = reconstruction_data["encryptedSize"]
 
-    # Ask the Fragment entity for fragment metadata on active storage nodes.
+    # Ask the Fragment entity for stored fragment paths and metadata.
     fragment_records = Fragment.getAvailableFragmentRecords(file_id)
-
-    if len(fragment_records) < required_fragments:
-        return jsonify({
-            "success": False,
-            "message": "Unable to reconstruct file. Not enough fragments are currently available."
-        }), 400
 
     available_fragments = []
 
-    # Retrieve each selected fragment's physical bytes from its storage node path.
+    # Try to retrieve each fragment's physical bytes from its storage node path.
     for fragment_record in fragment_records:
         fragment_bytes = StorageNode.retrieveFragment(
             fragment_record["fragment_path"]
@@ -107,12 +101,6 @@ def reconstructionPage(file_id: int):
         if len(available_fragments) == required_fragments:
             break
 
-    if len(available_fragments) < required_fragments:
-        return jsonify({
-            "success": False,
-            "message": "Unable to reconstruct file. Not enough fragments are currently available."
-        }), 400
-
     # Ask the Fragment entity to reconstruct the encrypted file using zfec.
     reconstructed_path = Fragment.reconstructFragments(
         file_id,
@@ -125,7 +113,7 @@ def reconstructionPage(file_id: int):
     if reconstructed_path is None:
         return jsonify({
             "success": False,
-            "message": "Unable to reconstruct file. Please try again."
+            "message": "Unable to reconstruct file. Not enough fragments are currently available."
         }), 400
 
     # Keep the reconstructed encrypted file path for the next processing step.
