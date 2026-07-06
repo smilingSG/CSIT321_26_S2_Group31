@@ -1,17 +1,14 @@
 # Import filesystem utilities used to clean up reconstructed temporary files.
 import os
-# Import BytesIO so decrypted data can be downloaded without another temp file.
-from io import BytesIO
 
-# Import Flask components used for routing, sessions, redirects, and file download.
+# Import Flask components used for routing, sessions, redirects, and response cleanup.
 from flask import Blueprint
 from flask import after_this_request
 from flask import redirect
-from flask import send_file
 from flask import session
 from flask import url_for
 
-# Import entities used in the reconstruction and decryption workflow.
+# Import entities used in the encrypted file reconstruction workflow.
 from entities.File import File
 from entities.Fragment import Fragment
 from entities.StorageNode import StorageNode
@@ -37,7 +34,7 @@ def cleanupReconstructedTempFile(reconstructed_path: str) -> None:
             pass
 
 
-# Reconstruct and decrypt the file only when enough valid fragments are available.
+# Reconstruct the encrypted file only when enough valid fragments are available.
 @reconstruct_file_bp.route(
     "/files/reconstruct/<int:file_id>",
     methods=["GET"]
@@ -131,28 +128,7 @@ def reconstructionPage(file_id: int):
         cleanupReconstructedTempFile(reconstructed_path)
         return response
 
-    try:
-        # Ask the File entity to decrypt the reconstructed encrypted file.
-        decrypted_file_data = File.decryptReconstructedFile(
-            file_id,
-            owner_id,
-            reconstructed_path
-        )
-
-        if decrypted_file_data is None:
-            cleanupReconstructedTempFile(reconstructed_path)
-            return (
-                "File decryption failed. The file may be corrupted or tampered with."
-            ), 400
-
-        # Send only the original decrypted file to the browser.
-        return send_file(
-            BytesIO(decrypted_file_data),
-            as_attachment=True,
-            download_name=reconstruction_data["fileName"],
-            mimetype="application/octet-stream"
-        )
-
-    except Exception:
-        cleanupReconstructedTempFile(reconstructed_path)
-        raise
+    return (
+        "Encrypted file reconstructed successfully. "
+        "Decryption and original file download are handled in the next user story."
+    ), 200
