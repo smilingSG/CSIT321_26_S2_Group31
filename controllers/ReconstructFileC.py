@@ -75,11 +75,8 @@ def reconstructionPage(file_id: int):
 
     if len(fragment_records) < required_fragments:
         return (
-            "Insufficient fragments. Required: "
-            + str(required_fragments)
-            + ", available: "
-            + str(len(fragment_records))
-            + "."
+            "Unable to reconstruct file. "
+            "Not enough fragments are currently available."
         ), 400
 
     available_fragments = []
@@ -108,11 +105,8 @@ def reconstructionPage(file_id: int):
 
     if len(available_fragments) < required_fragments:
         return (
-            "Insufficient readable fragments. Required: "
-            + str(required_fragments)
-            + ", readable: "
-            + str(len(available_fragments))
-            + "."
+            "Unable to reconstruct file. "
+            "Not enough fragments are currently available."
         ), 400
 
     # Ask the Fragment entity to reconstruct the encrypted file using zfec.
