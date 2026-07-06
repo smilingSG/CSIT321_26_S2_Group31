@@ -223,9 +223,9 @@ class Fragment:
 
         return fragment_list
 
-    # Retrieve available fragment records on active storage nodes for reconstruction.
+    # Retrieve available fragment paths on active storage nodes for reconstruction.
     @staticmethod
-    def getAvailableFragmentRecords(file_id: int) -> List[Dict[str, Any]]:
+    def getAvailableFragments(file_id: int) -> List[Dict[str, Any]]:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -246,12 +246,12 @@ class Fragment:
             ORDER BY fragments.fragment_number
         """, (file_id,))
 
-        fragment_records = cursor.fetchall()
+        available_fragment_paths = cursor.fetchall()
 
         cursor.close()
         connection.close()
 
-        return fragment_records
+        return available_fragment_paths
 
     # Reconstruct the encrypted file from at least k available fragments.
     @staticmethod
