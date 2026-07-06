@@ -4,8 +4,11 @@ from flask import jsonify
 from flask import request
 from flask import session
 
-# Import the File entity used to retrieve and delete files.
+# Import entities used by the delete flow.
 from entities.File import File
+from entities.Fragment import Fragment
+from entities.ShareLink import ShareLink
+from entities.UploadSession import UploadSession
 
 
 # Create the blueprint containing the file deletion route.
@@ -37,12 +40,33 @@ def deleteFile(file_id: int):
         }), 401
 
     if request.path.startswith("/files/delete/"):
-        file_deleted = File.deleteFile(
+        file_exists = File.verifyFileOwner(
             file_id,
             owner_id
         )
 
-        if not file_deleted:
+        if not file_exists:
+            return jsonify({
+                "success": False,
+                "message": "Unable to delete file."
+            }), 404
+
+        share_links_deleted = ShareLink.deleteShareLinks(file_id)
+        upload_sessions_deleted = UploadSession.deleteUploadSessions(file_id)
+        fragments_deleted = Fragment.deleteFragments(file_id)
+        file_record_deleted = False
+
+        if (
+            share_links_deleted
+            and upload_sessions_deleted
+            and fragments_deleted
+        ):
+            file_record_deleted = File.deleteFileRecord(
+                file_id,
+                owner_id
+            )
+
+        if not file_record_deleted:
             return jsonify({
                 "success": False,
                 "message": "Unable to delete file."
