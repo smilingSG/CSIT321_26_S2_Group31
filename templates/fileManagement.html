@@ -684,6 +684,75 @@
 
     window.addEventListener("pagehide", cleanupReconstructedTempFile);
 
+    function getDownloadFileName(xhr) {
+        var disposition = xhr.getResponseHeader("Content-Disposition");
+
+        if (disposition === null) {
+            return "downloaded_file";
+        }
+
+        var filenameMatch = disposition.match(/filename="?([^";]+)"?/);
+
+        if (filenameMatch === null) {
+            return "downloaded_file";
+        }
+
+        return filenameMatch[1];
+    }
+
+    function decryptFile(fileID) {
+        showPageMessage("Decrypting file...", "success");
+        downloadInProgress = true;
+
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = "blob";
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                var blobURL = window.URL.createObjectURL(xhr.response);
+                var downloadLink = document.createElement("a");
+
+                downloadLink.href = blobURL;
+                downloadLink.download = getDownloadFileName(xhr);
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                window.URL.revokeObjectURL(blobURL);
+
+                downloadInProgress = false;
+                showPageMessage("File decrypted and downloaded successfully.", "success");
+                return;
+            }
+
+            var reader = new FileReader();
+
+            reader.onload = function () {
+                var response = null;
+
+                try {
+                    response = JSON.parse(reader.result);
+                } catch (e) {
+                    response = {
+                        message: "Decryption failed. Please try again."
+                    };
+                }
+
+                downloadInProgress = false;
+                showPageMessage(response.message, "error");
+            };
+
+            reader.readAsText(xhr.response);
+        };
+
+        xhr.onerror = function () {
+            downloadInProgress = false;
+            showPageMessage("Decryption failed. Please try again.", "error");
+        };
+
+        xhr.open("GET", "/files/decrypt/" + fileID, true);
+        xhr.send();
+    }
+
     function reconstructFile(fileID) {
         showPageMessage("Reconstructing encrypted file...", "success");
 
@@ -703,8 +772,7 @@
 
             if (xhr.status === 200 && response.success) {
                 showPageMessage("Reconstruction complete. Download starting...", "success");
-                downloadInProgress = true;
-                window.location.href = "/files/decrypt/" + fileID;
+                decryptFile(fileID);
                 return;
             }
 
