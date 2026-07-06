@@ -405,7 +405,8 @@
             border-color: rgba(35, 199, 189, 0.38);
         }
 
-        .file-management-page .rename-modal-backdrop {
+        .file-management-page .rename-modal-backdrop,
+        .file-management-page .delete-modal-backdrop {
             position: fixed;
             inset: 0;
             z-index: 100;
@@ -416,9 +417,11 @@
             backdrop-filter: blur(6px);
         }
 
-        .file-management-page .rename-modal-backdrop.is-open { display: flex; }
+        .file-management-page .rename-modal-backdrop.is-open,
+        .file-management-page .delete-modal-backdrop.is-open { display: flex; }
 
-        .file-management-page .rename-modal {
+        .file-management-page .rename-modal,
+        .file-management-page .delete-modal {
             width: 430px;
             padding: 28px;
             border-radius: 24px;
@@ -427,19 +430,33 @@
             box-shadow: 0 28px 60px rgba(15, 23, 42, 0.22);
         }
 
-        .file-management-page .rename-modal h2 {
+        .file-management-page .rename-modal h2,
+        .file-management-page .delete-modal h2 {
             margin: 0 0 8px;
             color: #061027;
             font-size: 25px;
             font-weight: 900;
         }
 
-        .file-management-page .rename-modal-subtitle {
+        .file-management-page .rename-modal-subtitle,
+        .file-management-page .delete-modal-subtitle {
             margin: 0 0 20px;
             color: #8393b2;
             font-size: 14px;
             font-weight: 600;
             line-height: 1.5;
+        }
+
+        .file-management-page .delete-file-name {
+            margin: 0 0 18px;
+            padding: 12px 14px;
+            border-radius: 15px;
+            color: #43536b;
+            background: rgba(255, 87, 87, 0.08);
+            border: 1px solid rgba(255, 170, 170, 0.7);
+            font-size: 14px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
         }
 
         .file-management-page .rename-modal label {
@@ -478,7 +495,8 @@
 
         .file-management-page .rename-modal-message.error { color: #ff4d4d; }
 
-        .file-management-page .rename-modal-actions {
+        .file-management-page .rename-modal-actions,
+        .file-management-page .delete-modal-actions {
             display: flex;
             justify-content: flex-end;
             gap: 12px;
@@ -520,6 +538,18 @@
         .file-management-page .save-button:hover {
             background: linear-gradient(135deg, #1fb0c3 0%, #275ee2 100%);
             box-shadow: 0 16px 28px rgba(47, 109, 246, 0.28);
+        }
+
+        .file-management-page .confirm-delete-button {
+            color: #ffffff;
+            border: 1px solid transparent;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff3f3f 100%);
+            box-shadow: 0 12px 24px rgba(255, 87, 87, 0.24);
+        }
+
+        .file-management-page .confirm-delete-button:hover {
+            background: linear-gradient(135deg, #f45d5d 0%, #e93434 100%);
+            box-shadow: 0 16px 28px rgba(255, 87, 87, 0.3);
         }
     </style>
 </head>
@@ -615,7 +645,7 @@
                                             <button
                                                 type="button"
                                                 class="table-action delete-button"
-                                                onclick="deleteFile({{ file.fileID }})">
+                                                onclick='openDeleteModal({{ file.fileID }}, {{ file.fileName | tojson }})'>
                                                 Delete
                                             </button>
                                         </div>
@@ -659,8 +689,24 @@
     </form>
 </div>
 
+<div id="deleteModalBackdrop" class="delete-modal-backdrop" aria-hidden="true">
+    <section class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+        <h2 id="deleteModalTitle">Delete File</h2>
+        <p class="delete-modal-subtitle">
+            This will permanently remove the file, stored fragments, and related records.
+        </p>
+        <p id="deleteFileName" class="delete-file-name"></p>
+
+        <div class="delete-modal-actions">
+            <button type="button" class="modal-button cancel-button" onclick="closeDeleteModal()">Cancel</button>
+            <button type="button" class="modal-button confirm-delete-button" onclick="confirmDeleteFile()">Delete</button>
+        </div>
+    </section>
+</div>
+
 <script>
     var selectedRenameFileID = null;
+    var selectedDeleteFileID = null;
     var downloadInProgress = false;
     var reconstructionCleanupURL = "{{ url_for('reconstruct_file_bp.cleanupReconstruction') }}";
 
@@ -792,11 +838,36 @@
         xhr.send();
     }
 
-    function deleteFile(fileID) {
-        if (!confirm("Delete this file permanently?")) {
+    function openDeleteModal(fileID, fileName) {
+        selectedDeleteFileID = fileID;
+
+        var deleteFileName = document.getElementById("deleteFileName");
+        var modalBackdrop = document.getElementById("deleteModalBackdrop");
+
+        deleteFileName.innerText = fileName;
+        modalBackdrop.classList.add("is-open");
+        modalBackdrop.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDeleteModal() {
+        selectedDeleteFileID = null;
+
+        var modalBackdrop = document.getElementById("deleteModalBackdrop");
+        modalBackdrop.classList.remove("is-open");
+        modalBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    function confirmDeleteFile() {
+        if (selectedDeleteFileID === null) {
             return;
         }
 
+        var fileID = selectedDeleteFileID;
+        closeDeleteModal();
+        deleteFile(fileID);
+    }
+
+    function deleteFile(fileID) {
         showPageMessage("Deleting file...", "success");
 
         var xhr = new XMLHttpRequest();
@@ -911,9 +982,16 @@
         }
     });
 
+    document.getElementById("deleteModalBackdrop").addEventListener("click", function (event) {
+        if (event.target === this) {
+            closeDeleteModal();
+        }
+    });
+
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
             closeRenameModal();
+            closeDeleteModal();
         }
     });
 </script>
