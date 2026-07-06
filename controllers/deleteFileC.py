@@ -1,6 +1,7 @@
-# Import Flask components used for routing, JSON responses, and sessions.
+# Import Flask components used for routing, JSON responses, requests, and sessions.
 from flask import Blueprint
 from flask import jsonify
+from flask import request
 from flask import session
 
 # Import the File entity used to retrieve and delete files.
@@ -14,9 +15,13 @@ delete_bp = Blueprint(
 )
 
 
-# Process a request to delete a temporary uploaded file.
+# Process a request to delete either a temporary upload or a processed file.
 @delete_bp.route(
     "/upload/delete/<int:file_id>",
+    methods=["POST"]
+)
+@delete_bp.route(
+    "/files/delete/<int:file_id>",
     methods=["POST"]
 )
 def deleteFile(file_id: int):
@@ -31,7 +36,24 @@ def deleteFile(file_id: int):
             "message": "Please log in before deleting a file."
         }), 401
 
-    # Confirm that the file belongs to the logged-in user.
+    if request.path.startswith("/files/delete/"):
+        file_deleted = File.deleteFile(
+            file_id,
+            owner_id
+        )
+
+        if not file_deleted:
+            return jsonify({
+                "success": False,
+                "message": "Unable to delete file."
+            }), 400
+
+        return jsonify({
+            "success": True,
+            "message": "File deleted successfully."
+        })
+
+    # Confirm that the temporary file belongs to the logged-in user.
     file_record = File.getTempFileById(
         file_id,
         owner_id
