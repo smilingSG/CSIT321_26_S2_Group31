@@ -968,3 +968,68 @@ class File:
                     os.remove(reconstructed_temp_path)
                 except OSError:
                     pass
+
+    # Delete a processed file after removing dependent records and fragments.
+    @staticmethod
+    def deleteFile(file_id: int,
+                   owner_id: int) -> bool:
+
+        from entities.Fragment import Fragment
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT file_id
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        if file_record is None:
+            cursor.close()
+            connection.close()
+            return False
+
+        cursor.close()
+        connection.close()
+
+        if not Fragment.deleteFragments(file_id):
+            return False
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            DELETE FROM share_links
+            WHERE file_id = %s
+        """, (file_id,))
+
+        cursor.execute("""
+            DELETE FROM upload_sessions
+            WHERE file_id = %s
+        """, (file_id,))
+
+        cursor.execute("""
+            DELETE FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        deleted = cursor.rowcount == 1
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return deleted
