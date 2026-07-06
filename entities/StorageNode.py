@@ -104,24 +104,39 @@ class StorageNode:
         except (OSError, KeyError, TypeError):
             return None
 
-    # Retrieve one stored fragment from its storage node path.
+    # Retrieve stored fragments from their storage node paths.
     @staticmethod
-    def retrieveFragment(fragment_path: str) -> Optional[bytes]:
+    def retrieveFragments(fragment_paths: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
-        try:
-            stored_fragment_path = Path(fragment_path)
+        fragment_data = []
 
-            if not stored_fragment_path.exists():
-                return None
+        for fragment_path_record in fragment_paths:
+            try:
+                stored_fragment_path = Path(
+                    fragment_path_record["fragment_path"]
+                )
 
-            if not stored_fragment_path.is_file():
-                return None
+                if not stored_fragment_path.exists():
+                    continue
 
-            return stored_fragment_path.read_bytes()
+                if not stored_fragment_path.is_file():
+                    continue
 
-        # Missing or unreadable fragments are treated as unavailable.
-        except (OSError, TypeError):
-            return None
+                fragment_data.append({
+                    "fragment_id": fragment_path_record["fragment_id"],
+                    "file_id": fragment_path_record["file_id"],
+                    "fragment_number": fragment_path_record["fragment_number"],
+                    "fragment_path": fragment_path_record["fragment_path"],
+                    "node_id": fragment_path_record["node_id"],
+                    "share_number": fragment_path_record["fragment_number"] - 1,
+                    "fragment_bytes": stored_fragment_path.read_bytes()
+                })
+
+            # Missing or unreadable fragments are treated as unavailable.
+            except (OSError, KeyError, TypeError):
+                continue
+
+        return fragment_data
 
     # Delete a stored fragment and remove its folder when it becomes empty.
     @staticmethod
