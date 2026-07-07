@@ -451,7 +451,7 @@ class File:
         if file_record is None:
             cursor.close()
             connection.close()
-            return False
+            return True
 
         temp_upload_path = file_record["temp_upload_path"]
 

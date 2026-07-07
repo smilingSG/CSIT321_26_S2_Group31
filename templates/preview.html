@@ -314,6 +314,11 @@
             background: rgba(255, 255, 255, 0.9) !important;
         }
 
+        .preview-page button.preview-action-button:disabled {
+            cursor: not-allowed !important;
+            opacity: 0.52 !important;
+        }
+
         .preview-page .status-text {
             color: #66768f;
             font-size: 14px;
@@ -489,6 +494,9 @@
 
                 fileDeleted = true;
                 currentTempFileID = null;
+
+                document.getElementById("continueButton").disabled = true;
+                document.getElementById("deleteButton").disabled = true;
 
                 document.getElementById("previewTitle").innerText =
                     "Deleted before encryption";
