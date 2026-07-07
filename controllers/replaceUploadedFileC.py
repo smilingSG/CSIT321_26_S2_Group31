@@ -1,7 +1,7 @@
 # Import Flask components used for routing, JSON responses, and sessions.
 from flask import Blueprint, jsonify, session
 
-# Import the File entity used to retrieve and delete temporary files.
+# Import the File entity used to remove temporary files.
 from entities.File import File
 
 
@@ -23,19 +23,7 @@ def replaceTempFile(file_id: int):
             "message": "Please log in before replacing a file."
         }), 401
 
-    # Confirm that the temporary record belongs to the logged-in user.
-    file_record = File.getTempFileById(
-        file_id,
-        owner_id
-    )
-
-    if file_record is None:
-        return jsonify({
-            "success": False,
-            "message": "Temporary file record not found."
-        }), 404
-
-    # Ask the entity to remove both the physical file and its metadata.
+    # Ask the entity to remove the temporary file if it still exists.
     file_deleted = File.deleteTempFileRecord(
         file_id,
         owner_id
