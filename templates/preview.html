@@ -455,13 +455,7 @@
     }
 
     function replaceFile() {
-
-        if (fileDeleted === true || currentTempFileID === null) {
-            window.location.href = "/upload";
-            return;
-        }
-
-        replaceTempFile(currentTempFileID, "/upload");
+        replaceTempFile({{ previewData.fileID }}, "/upload");
     }
 
     function replaceTempFile(fileID, targetURL) {
