@@ -48,7 +48,6 @@ class LoginC:
 
         return user_account
 
-
 @login_bp.route("/login", methods=["GET", "POST"])
 def login():
 

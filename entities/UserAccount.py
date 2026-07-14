@@ -3,6 +3,8 @@ from typing import Dict
 from typing import Any
 
 import bcrypt
+import hashlib
+from datetime import datetime
 
 from db import get_db_connection
 from entities.SystemSetting import SystemSetting
@@ -138,6 +140,325 @@ class UserAccount:
 
         cursor.close()
         connection.close()
+
+    @staticmethod
+    def ensurePasswordResetTable() -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                reset_id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                token_hash CHAR(64) NOT NULL UNIQUE,
+                expires_at DATETIME NOT NULL,
+                used_at DATETIME NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                FOREIGN KEY (user_id) REFERENCES users(user_id)
+            )
+        """)
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+    @staticmethod
+    def getByEmail(email: str) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                user_id,
+                username,
+                email,
+                account_status
+            FROM users
+            WHERE email = %s
+        """, (email,))
+
+        user_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return user_record
+
+    @staticmethod
+    def createPasswordResetToken(user_id: int,
+                                 token: str,
+                                 expires_at: datetime) -> None:
+
+        UserAccount.ensurePasswordResetTable()
+
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE password_reset_tokens
+            SET used_at = NOW()
+            WHERE user_id = %s
+            AND used_at IS NULL
+        """, (user_id,))
+
+        cursor.execute("""
+            INSERT INTO password_reset_tokens
+            (
+                user_id,
+                token_hash,
+                expires_at
+            )
+            VALUES (%s, %s, %s)
+        """, (
+            user_id,
+            token_hash,
+            expires_at
+        ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+    @staticmethod
+    def resetPassword(email: str,
+                      token: str,
+                      new_password: str) -> bool:
+
+        if not SystemSetting.validatePasswordAgainstPolicy(new_password):
+            return False
+
+        UserAccount.ensurePasswordResetTable()
+
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        password_hash = bcrypt.hashpw(
+            new_password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                password_reset_tokens.reset_id,
+                users.user_id
+            FROM password_reset_tokens
+            INNER JOIN users
+                ON users.user_id = password_reset_tokens.user_id
+            WHERE users.email = %s
+            AND password_reset_tokens.token_hash = %s
+            AND password_reset_tokens.used_at IS NULL
+            AND password_reset_tokens.expires_at > NOW()
+            AND users.account_status = 'active'
+        """, (
+            email,
+            token_hash
+        ))
+
+        reset_record = cursor.fetchone()
+
+        if reset_record is None:
+            cursor.close()
+            connection.close()
+            return False
+
+        cursor.execute("""
+            UPDATE users
+            SET
+                password_hash = %s,
+                failed_login_attempts = 0
+            WHERE user_id = %s
+        """, (
+            password_hash,
+            reset_record["user_id"]
+        ))
+
+        cursor.execute("""
+            UPDATE password_reset_tokens
+            SET used_at = NOW()
+            WHERE reset_id = %s
+        """, (reset_record["reset_id"],))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return True
+
+    @staticmethod
+    def ensureRegistrationVerificationTable() -> None:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS registration_verification_tokens (
+                verification_id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) NOT NULL,
+                email VARCHAR(100) NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                role ENUM('user', 'user_admin', 'system_admin') DEFAULT 'user',
+                token_hash CHAR(64) NOT NULL UNIQUE,
+                expires_at DATETIME NOT NULL,
+                used_at DATETIME NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+    @staticmethod
+    def createRegistrationVerification(username: str,
+                                       email: str,
+                                       password: str,
+                                       role: str,
+                                       token: str,
+                                       expires_at: datetime) -> bool:
+
+        if not SystemSetting.validateUsernameAgainstPolicy(username):
+            return False
+
+        if not SystemSetting.validatePasswordAgainstPolicy(password):
+            return False
+
+        UserAccount.ensureRegistrationVerificationTable()
+
+        password_hash = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE registration_verification_tokens
+            SET used_at = NOW()
+            WHERE email = %s
+            AND used_at IS NULL
+        """, (email,))
+
+        cursor.execute("""
+            INSERT INTO registration_verification_tokens
+            (
+                username,
+                email,
+                password_hash,
+                role,
+                token_hash,
+                expires_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (
+            username,
+            email,
+            password_hash,
+            role,
+            token_hash,
+            expires_at
+        ))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return True
+
+    @staticmethod
+    def verifyRegistration(email: str,
+                           token: str) -> bool:
+
+        UserAccount.ensureRegistrationVerificationTable()
+
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                verification_id,
+                username,
+                email,
+                password_hash,
+                role
+            FROM registration_verification_tokens
+            WHERE email = %s
+            AND token_hash = %s
+            AND used_at IS NULL
+            AND expires_at > NOW()
+        """, (
+            email,
+            token_hash
+        ))
+
+        verification_record = cursor.fetchone()
+
+        if verification_record is None:
+            cursor.close()
+            connection.close()
+            return False
+
+        if UserAccount.checkUserExists(
+            username=verification_record["username"],
+            email=verification_record["email"]
+        ):
+            cursor.execute("""
+                UPDATE registration_verification_tokens
+                SET used_at = NOW()
+                WHERE verification_id = %s
+            """, (verification_record["verification_id"],))
+
+            connection.commit()
+            cursor.close()
+            connection.close()
+            return False
+
+        cursor.execute("""
+            INSERT INTO users
+            (
+                username,
+                email,
+                password_hash,
+                role,
+                account_status,
+                failed_login_attempts
+            )
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (
+            verification_record["username"],
+            verification_record["email"],
+            verification_record["password_hash"],
+            verification_record["role"],
+            "active",
+            0
+        ))
+
+        cursor.execute("""
+            UPDATE registration_verification_tokens
+            SET used_at = NOW()
+            WHERE verification_id = %s
+        """, (verification_record["verification_id"],))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return True
 
     @staticmethod
     def getAllUserAccounts():

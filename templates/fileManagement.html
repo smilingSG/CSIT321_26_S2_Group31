@@ -641,7 +641,11 @@
                                                 onclick="reconstructFile({{ file.fileID }})">
                                                 Download
                                             </button>
-                                            <button type="button" class="table-action share-button">Share</button>
+                                            <a
+                                                href="{{ url_for('share_file_bp.sharedFilesPage') }}?file_id={{ file.fileID }}"
+                                                class="table-action share-button">
+                                                Share
+                                            </a>
                                             <button
                                                 type="button"
                                                 class="table-action delete-button"

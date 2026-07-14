@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, redirect, session, url_for
 
 # Import the File entity used to retrieve file information.
 from entities.File import File
+from entities.ShareLink import ShareLink
 
 
 # Create the blueprint containing the dashboard routes.
@@ -35,11 +36,8 @@ def dashboard():
     # Retrieve and prepare the user's dashboard statistics.
     dashboard_data = {
         "total_files": File.countProcessedFilesByOwner(user_id),
-
-        # These values remain at zero until their features are implemented.
-        "shared_files": 0,
-        "active_links": 0,
-        "recovered_files": 0
+        "shared_files": ShareLink.countActiveLinksByOwner(user_id),
+        "active_links": ShareLink.countActiveLinksByOwner(user_id)
     }
 
     # Display the dashboard with its statistics and logged-in username.

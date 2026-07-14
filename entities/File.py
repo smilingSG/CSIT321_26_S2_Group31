@@ -238,6 +238,92 @@ class File:
 
         return managed_files
 
+    # Retrieve processed files that can be shared by the owner.
+    @staticmethod
+    def getShareableFilesByOwner(owner_id: int) -> List[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                file_name
+            FROM files
+            WHERE owner_id = %s
+            AND file_status = 'processed'
+            ORDER BY uploaded_at DESC
+        """, (owner_id,))
+
+        file_records = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return [
+            {
+                "fileID": file_record["file_id"],
+                "fileName": file_record["file_name"]
+            }
+            for file_record in file_records
+        ]
+
+    # Confirm that a processed file belongs to a user before sharing it.
+    @staticmethod
+    def verifyFileOwnership(file_id: int,
+                            owner_id: int) -> bool:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_count = cursor.fetchone()[0]
+
+        cursor.close()
+        connection.close()
+
+        return file_count == 1
+
+    # Retrieve metadata needed for a recipient to reconstruct a shared file.
+    @staticmethod
+    def getSharedDownloadDetails(file_id: int) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                file_name,
+                file_type,
+                nonce,
+                encrypted_file_key,
+                encrypted_size,
+                total_fragments,
+                required_fragments,
+                file_status
+            FROM files
+            WHERE file_id = %s
+            AND file_status = 'processed'
+        """, (file_id,))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return file_record
+
     # Search processed files belonging to a user by file name.
     @staticmethod
     def searchManagedFilesByName(owner_id: int,
@@ -919,6 +1005,70 @@ class File:
             file_id,
             owner_id
         ))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if file_record is None:
+            return None
+
+        if reconstructed_temp_path is None:
+            return None
+
+        if not os.path.exists(reconstructed_temp_path):
+            return None
+
+        try:
+            nonce = bytes(file_record["nonce"])
+            file_key = bytes(file_record["encrypted_file_key"])
+
+            with open(reconstructed_temp_path, "rb") as encrypted_file:
+                encrypted_data = encrypted_file.read()
+
+            aesgcm = AESGCM(file_key)
+
+            original_data = aesgcm.decrypt(
+                nonce,
+                encrypted_data,
+                None
+            )
+
+            return {
+                "fileName": file_record["file_name"],
+                "fileType": file_record["file_type"] or "application/octet-stream",
+                "fileBytes": original_data
+            }
+
+        except Exception:
+            return None
+
+        finally:
+            if os.path.exists(reconstructed_temp_path):
+                try:
+                    os.remove(reconstructed_temp_path)
+                except OSError:
+                    pass
+
+    # Decrypt a reconstructed shared file without requiring owner identity.
+    @staticmethod
+    def decryptSharedFile(file_id: int,
+                          reconstructed_temp_path: str) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_name,
+                file_type,
+                nonce,
+                encrypted_file_key
+            FROM files
+            WHERE file_id = %s
+            AND file_status = 'processed'
+        """, (file_id,))
 
         file_record = cursor.fetchone()
 
