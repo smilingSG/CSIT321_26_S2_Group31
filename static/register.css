@@ -1,0 +1,178 @@
+body {
+    background:
+        linear-gradient(rgba(134, 178, 230, 0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(134, 178, 230, 0.14) 1px, transparent 1px),
+        radial-gradient(circle at 16% 0%, rgba(90, 132, 238, 0.24), transparent 34%),
+        radial-gradient(circle at 88% 0%, rgba(54, 195, 194, 0.16), transparent 32%),
+        #f1f7fd;
+    background-size: 66px 66px, 66px 66px, auto, auto, auto;
+    color: #081431;
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+.register-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 22px;
+}
+
+.register-panel {
+    width: 100%;
+    max-width: 532px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid #c7d8f4;
+    border-radius: 26px;
+    padding: 24px 34px 22px;
+    box-shadow: 0 14px 34px rgba(42, 75, 136, 0.12);
+}
+
+.page-tag {
+    display: inline-block;
+    color: #4a70c9;
+    background: #dfe8ff;
+    border-radius: 999px;
+    padding: 5px 16px;
+    margin: 0 0 18px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.register-panel h1 {
+    color: #0a1537;
+    font-size: 29px;
+    font-weight: 800;
+    line-height: 1.08;
+    margin: 0 0 24px;
+}
+
+.form-label {
+    color: #4c5e7f;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.form-control {
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid #b9cbef;
+    color: #122344;
+    border-radius: 15px;
+    padding: 10px 17px;
+    font-size: 14px;
+    min-height: 41px;
+}
+
+.form-control::placeholder {
+    color: #8797b4;
+}
+
+.form-control:focus {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: #7fa6ee;
+    color: #122344;
+    box-shadow: 0 0 0 0.2rem rgba(61, 119, 238, 0.14);
+}
+
+.password-field {
+    position: relative;
+}
+
+.password-field .form-control {
+    padding-right: 46px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 9px;
+    transform: translateY(-50%);
+    border: 1px solid #b9cbef;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.78);
+    color: #4c5e7f;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.password-toggle:hover {
+    border-color: #7fa6ee;
+    color: #0a1537;
+}
+
+.eye-icon {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.eye-show,
+.password-toggle.is-visible .eye-hide {
+    display: none;
+}
+
+.eye-hide,
+.password-toggle.is-visible .eye-show {
+    display: block;
+}
+
+.register-actions {
+    display: flex;
+    gap: 13px;
+    align-items: center;
+    margin-top: 0;
+}
+
+.primary-action,
+.secondary-action {
+    border-radius: 14px;
+    font-size: 14px;
+    min-height: 41px;
+    padding: 11px 20px;
+    text-decoration: none;
+}
+
+.primary-action {
+    background: linear-gradient(135deg, #35bfd1, #3674f2);
+    border: 0;
+    color: #071936;
+    box-shadow: 0 12px 24px rgba(42, 111, 231, 0.18);
+}
+
+.secondary-action {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid #b9cbef;
+    color: #20304d;
+}
+
+.primary-action:hover,
+.secondary-action:hover {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+    .register-page {
+        padding: 14px;
+    }
+
+    .register-panel {
+        border-radius: 28px;
+        padding: 30px 24px;
+    }
+
+    .register-panel h1 {
+        font-size: 34px;
+    }
+}
