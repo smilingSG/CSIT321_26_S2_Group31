@@ -157,41 +157,41 @@ class ShareLink:
     @staticmethod
     def getActiveLinkByToken(share_token: str) -> Optional[Dict[str, Any]]:
 
-        ShareLink.expireOldLinks()
+        link_record = ShareLink.checkLinkExpiry(share_token)
 
-        connection = get_db_connection()
-        cursor = connection.cursor(dictionary=True)
+        if link_record is None:
+            return None
 
-        cursor.execute("""
-            SELECT
-                share_links.share_id,
-                share_links.file_id,
-                share_links.recipient_id,
-                share_links.is_one_time,
-                files.file_name,
-                share_links.link_status
-            FROM share_links
-            INNER JOIN files
-                ON files.file_id = share_links.file_id
-            WHERE share_links.share_token = %s
-            AND share_links.link_status = 'active'
-            AND (
-                share_links.expiry_datetime IS NULL
-                OR share_links.expiry_datetime > NOW()
-            )
-        """, (share_token,))
-
-        link_record = cursor.fetchone()
-
-        cursor.close()
-        connection.close()
+        if link_record["link_status"] != "active":
+            return None
 
         return link_record
 
     @staticmethod
     def getLinkByToken(share_token: str) -> Optional[Dict[str, Any]]:
 
-        ShareLink.expireOldLinks()
+        return ShareLink.checkLinkExpiry(share_token)
+
+    @staticmethod
+    def checkLinkExpiry(share_token: str) -> Optional[Dict[str, Any]]:
+
+        link_record = ShareLink.getLinkExpiryDetails(share_token)
+
+        if link_record is None:
+            return None
+
+        if link_record["link_status"] == "active" and link_record["is_expired"]:
+            ShareLink.updateLinkStatus(
+                share_id=link_record["share_id"],
+                link_status="expired",
+                required_current_status="active"
+            )
+            link_record["link_status"] = "expired"
+
+        return link_record
+
+    @staticmethod
+    def getLinkExpiryDetails(share_token: str) -> Optional[Dict[str, Any]]:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -203,7 +203,14 @@ class ShareLink:
                 share_links.recipient_id,
                 share_links.is_one_time,
                 files.file_name,
-                share_links.link_status
+                share_links.expiry_datetime,
+                share_links.link_status,
+                CASE
+                    WHEN share_links.expiry_datetime IS NOT NULL
+                    AND share_links.expiry_datetime <= NOW()
+                    THEN TRUE
+                    ELSE FALSE
+                END AS is_expired
             FROM share_links
             INNER JOIN files
                 ON files.file_id = share_links.file_id
@@ -290,6 +297,34 @@ class ShareLink:
                 share_id,
                 required_current_status
             ))
+
+        updated = cursor.rowcount == 1
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return updated
+
+    @staticmethod
+    def updateExpiryDateTime(share_id: int,
+                             expiry_datetime: datetime) -> bool:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE share_links
+            SET
+                expiry_datetime = %s,
+                link_status = 'active'
+            WHERE share_id = %s
+            AND link_status = 'active'
+        """, (
+            expiry_datetime,
+            share_id
+        ))
 
         updated = cursor.rowcount == 1
 

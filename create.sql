@@ -116,6 +116,29 @@ CREATE TABLE share_links (
     FOREIGN KEY (recipient_id) REFERENCES users(user_id)
 );
 
+CREATE TABLE password_reset_tokens (
+    reset_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token_hash CHAR(64) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE registration_verification_tokens (
+    verification_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('user', 'user_admin', 'system_admin') DEFAULT 'user',
+    token_hash CHAR(64) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE system_settings (
     setting_id INT AUTO_INCREMENT PRIMARY KEY,
     setting_name VARCHAR(100) NOT NULL UNIQUE,
