@@ -6,7 +6,7 @@ from flask import url_for
 
 from entities.UserAccount import UserAccount
 
-admin_suspend_bp = Blueprint("admin_suspend_bp", __name__)
+admin_unsuspend_bp = Blueprint("admin_unsuspend_bp", __name__)
 
 
 def getPostLoginRedirect(role: str) -> str:
@@ -17,29 +17,29 @@ def getPostLoginRedirect(role: str) -> str:
     return url_for("dashboard_bp.dashboard")
 
 
-class AdminSuspendC:
+class AdminUnsuspendC:
 
     @staticmethod
-    def suspendUser(user_id: int) -> bool:
+    def unsuspendUser(user_id: int) -> bool:
 
         if not UserAccount.checkUserExistsById(user_id):
             return False
 
         account_status = UserAccount.getStatus(user_id)
 
-        if account_status == "suspended":
+        if account_status == "active":
             return False
 
         UserAccount.setStatus(
             user_id=user_id,
-            account_status="suspended"
+            account_status="active"
         )
 
         return True
 
 
-@admin_suspend_bp.route("/user-management/suspend/<int:user_id>", methods=["POST"])
-def suspendUser(user_id: int):
+@admin_unsuspend_bp.route("/user-management/unsuspend/<int:user_id>", methods=["POST"])
+def unsuspendUser(user_id: int):
 
     if session.get("user_id") is None:
         return redirect(url_for("login_bp.login"))
@@ -47,11 +47,11 @@ def suspendUser(user_id: int):
     if session.get("role") != "user_admin":
         return redirect(getPostLoginRedirect(session.get("role")))
 
-    user_suspended = AdminSuspendC.suspendUser(user_id)
+    user_unsuspended = AdminUnsuspendC.unsuspendUser(user_id)
 
-    if not user_suspended:
-        flash("User not found or already suspended.", "error")
+    if not user_unsuspended:
+        flash("User not found or already active.", "error")
         return redirect(url_for("admin_search_bp.userManagement"))
 
-    flash("User account suspended successfully.", "success")
+    flash("User account unsuspended successfully.", "success")
     return redirect(url_for("admin_search_bp.userManagement"))
