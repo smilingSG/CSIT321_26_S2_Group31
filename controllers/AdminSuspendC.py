@@ -22,20 +22,7 @@ class AdminSuspendC:
     @staticmethod
     def suspendUser(user_id: int) -> bool:
 
-        if not UserAccount.checkUserExistsById(user_id):
-            return False
-
-        account_status = UserAccount.getStatus(user_id)
-
-        if account_status == "suspended":
-            return False
-
-        UserAccount.setStatus(
-            user_id=user_id,
-            account_status="suspended"
-        )
-
-        return True
+        return UserAccount.suspendAccount(user_id)
 
 
 @admin_suspend_bp.route("/user-management/suspend/<int:user_id>", methods=["POST"])

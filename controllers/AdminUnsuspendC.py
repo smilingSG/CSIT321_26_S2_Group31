@@ -22,20 +22,7 @@ class AdminUnsuspendC:
     @staticmethod
     def unsuspendUser(user_id: int) -> bool:
 
-        if not UserAccount.checkUserExistsById(user_id):
-            return False
-
-        account_status = UserAccount.getStatus(user_id)
-
-        if account_status == "active":
-            return False
-
-        UserAccount.setStatus(
-            user_id=user_id,
-            account_status="active"
-        )
-
-        return True
+        return UserAccount.unsuspendAccount(user_id)
 
 
 @admin_unsuspend_bp.route("/user-management/unsuspend/<int:user_id>", methods=["POST"])
