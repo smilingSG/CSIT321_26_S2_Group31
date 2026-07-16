@@ -702,6 +702,75 @@ class UserAccount:
         connection.close()
 
     @staticmethod
+    def updateProfile(user_id: int,
+                      display_name: str,
+                      new_password: str,
+                      confirm_password: str) -> tuple[bool, str]:
+
+        display_name = display_name.strip()
+
+        if display_name == "":
+            return False, "Display name is required."
+
+        if not SystemSetting.validateUsernameAgainstPolicy(display_name):
+            return False, "Display name does not meet the current username policy."
+
+        password_change_requested = (
+            new_password != ""
+            or confirm_password != ""
+        )
+
+        if password_change_requested:
+            if new_password != confirm_password:
+                return False, "Passwords do not match."
+
+            if not SystemSetting.validatePasswordAgainstPolicy(new_password):
+                return False, "Password does not meet the current password policy."
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        if password_change_requested:
+            password_hash = bcrypt.hashpw(
+                new_password.encode("utf-8"),
+                bcrypt.gensalt()
+            ).decode("utf-8")
+
+            cursor.execute("""
+                UPDATE users
+                SET
+                    username = %s,
+                    password_hash = %s,
+                    failed_login_attempts = 0
+                WHERE user_id = %s
+            """, (
+                display_name,
+                password_hash,
+                user_id
+            ))
+        else:
+            cursor.execute("""
+                UPDATE users
+                SET username = %s
+                WHERE user_id = %s
+            """, (
+                display_name,
+                user_id
+            ))
+
+        updated = cursor.rowcount == 1
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        if not updated:
+            return False, "Profile could not be updated."
+
+        return True, "Profile updated successfully."
+
+    @staticmethod
     def deleteAccount(user_id: int) -> None:
 
         connection = get_db_connection()
