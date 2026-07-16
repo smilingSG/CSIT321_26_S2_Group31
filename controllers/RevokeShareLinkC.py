@@ -15,18 +15,9 @@ class RevokeShareLinkC:
     def revokeShareLink(share_id: int,
                         user_id: int) -> bool:
 
-        link_valid = ShareLink.verifyLinkOwner(
+        return ShareLink.revokeLink(
             share_id=share_id,
-            user_id=user_id
-        )
-
-        if not link_valid:
-            return False
-
-        return ShareLink.updateLinkStatus(
-            share_id=share_id,
-            link_status="revoked",
-            required_current_status="active"
+            created_by=user_id
         )
 
 

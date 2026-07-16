@@ -7,7 +7,6 @@ from flask import url_for
 
 from entities.File import File
 from entities.ShareLink import ShareLink
-from entities.UserAccount import UserAccount
 
 
 share_file_bp = Blueprint("share_file_bp", __name__)
@@ -22,31 +21,13 @@ class ShareFileC:
                         is_one_time: bool,
                         expiry_hours: int):
 
-        file_valid = File.verifyFileOwnership(
+        return ShareLink.createShareLinkForRecipient(
             file_id=file_id,
-            owner_id=user_id
-        )
-
-        if not file_valid:
-            return None, "Unable to create secure link."
-
-        recipient = UserAccount.getByEmail(recipient_email)
-
-        if recipient is None or recipient["account_status"] != "active":
-            return None, "Recipient account could not be found."
-
-        if recipient["user_id"] == user_id:
-            return None, "Select another user as the recipient."
-
-        secure_token = ShareLink.createShareLink(
-            file_id=file_id,
-            created_by=user_id,
-            recipient_id=recipient["user_id"],
+            recipient_email=recipient_email,
+            user_id=user_id,
             is_one_time=is_one_time,
             expiry_hours=expiry_hours
         )
-
-        return secure_token, None
 
     @staticmethod
     def getShareData(user_id: int):
@@ -128,18 +109,9 @@ def regenerateSharedLink(share_id: int):
     if user_id is None:
         return redirect(url_for("login_bp.login"))
 
-    link_record = ShareLink.getLinkForRenewal(
+    ShareLink.regenerateShareLink(
         share_id=share_id,
-        created_by=user_id
+        user_id=user_id
     )
-
-    if link_record is not None:
-        ShareLink.createShareLink(
-            file_id=link_record["file_id"],
-            created_by=user_id,
-            recipient_id=link_record["recipient_id"],
-            is_one_time=bool(link_record["is_one_time"]),
-            expiry_hours=72
-        )
 
     return redirect(url_for("share_file_bp.sharedFilesPage"))
