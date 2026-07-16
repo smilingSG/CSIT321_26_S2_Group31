@@ -1,0 +1,107 @@
+from flask import Blueprint
+from flask import redirect
+from flask import render_template
+from flask import request
+from flask import session
+from flask import url_for
+
+from entities.ShareLink import ShareLink
+
+
+access_shared_file_bp = Blueprint("access_shared_file_bp", __name__)
+
+
+class AccessSharedFileC:
+
+    @staticmethod
+    def extractShareToken(shared_link: str) -> str:
+
+        shared_link = shared_link.strip()
+
+        if shared_link == "":
+            return ""
+
+        if "/share/" not in shared_link:
+            return shared_link
+
+        share_token = shared_link.rsplit("/share/", 1)[1]
+
+        if "/" in share_token:
+            share_token = share_token.split("/", 1)[0]
+
+        if "?" in share_token:
+            share_token = share_token.split("?", 1)[0]
+
+        return share_token
+
+    @staticmethod
+    def accessSharedLink(share_token: str,
+                         user_id: int):
+
+        return ShareLink.accessSharedLink(
+            share_token=share_token,
+            user_id=user_id
+        )
+
+
+@access_shared_file_bp.route("/download", methods=["GET", "POST"])
+def downloadPage():
+
+    user_id = session.get("user_id")
+
+    if user_id is None:
+        return redirect(url_for("login_bp.login"))
+
+    if request.method == "POST":
+        share_token = AccessSharedFileC.extractShareToken(
+            request.form.get("shared_link", "")
+        )
+
+        if share_token == "":
+            return render_template(
+                "sharedDownload.html",
+                errorMessage="Access denied or link invalid.",
+                activeStatus="no_permission",
+                sharedLinkValue=""
+            ), 400
+
+        return redirect(url_for(
+            "access_shared_file_bp.viewSharedFile",
+            share_token=share_token
+        ))
+
+    return render_template(
+        "sharedDownload.html",
+        sharedLinkValue=""
+    )
+
+
+@access_shared_file_bp.route("/share/<share_token>", methods=["GET"])
+def viewSharedFile(share_token: str):
+
+    user_id = session.get("user_id")
+
+    if user_id is None:
+        return redirect(url_for("login_bp.login"))
+
+    link_record, error_message, active_status = AccessSharedFileC.accessSharedLink(
+        share_token=share_token,
+        user_id=user_id
+    )
+
+    if link_record is None:
+        return render_template(
+            "sharedDownload.html",
+            errorMessage=error_message,
+            activeStatus=active_status,
+            shareToken=share_token,
+            sharedLinkValue=request.url
+        ), 404
+
+    return render_template(
+        "sharedDownload.html",
+        sharedFile=link_record,
+        activeStatus=active_status,
+        shareToken=share_token,
+        sharedLinkValue=request.url
+    )

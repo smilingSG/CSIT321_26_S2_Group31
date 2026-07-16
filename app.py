@@ -4,6 +4,7 @@ from controllers.AdminC import admin_bp
 from controllers.AdminDeleteC import admin_delete_bp
 from controllers.AdminSearchC import admin_search_bp
 from controllers.AdminSuspendC import admin_suspend_bp
+from controllers.AdminUnsuspendC import admin_unsuspend_bp
 from controllers.AdminUpdateC import admin_update_bp
 from controllers.AdminViewC import admin_view_bp
 from controllers.LoginC import login_bp
@@ -28,6 +29,15 @@ from controllers.MaxExpirySettingsC import max_expiry_settings_bp
 from controllers.PasswordPolicyC import password_policy_bp
 from controllers.UsernamePolicyC import username_policy_bp
 from controllers.AuthPolicyC import auth_policy_bp
+from controllers.AccessSharedFileC import access_shared_file_bp
+from controllers.DownloadFileC import download_file_bp
+from controllers.ExpiredSharedFileC import expired_shared_file_bp
+from controllers.PasswordResetC import password_reset_bp
+from controllers.RegisterC import register_bp
+from controllers.RevokeShareLinkC import revoke_share_link_bp
+from controllers.ShareFileC import share_file_bp
+from controllers.SetLinkExpiryC import set_link_expiry_bp
+from controllers.ViewSharedUsersC import view_shared_users_bp
 
 app = Flask(__name__)
 app.secret_key = "temporary_secret_key"
@@ -62,12 +72,22 @@ app.register_blueprint(max_expiry_settings_bp)
 app.register_blueprint(password_policy_bp)
 app.register_blueprint(username_policy_bp)
 app.register_blueprint(auth_policy_bp)
+app.register_blueprint(register_bp)
+app.register_blueprint(password_reset_bp)
+app.register_blueprint(access_shared_file_bp)
+app.register_blueprint(expired_shared_file_bp)
+app.register_blueprint(share_file_bp)
+app.register_blueprint(set_link_expiry_bp)
+app.register_blueprint(revoke_share_link_bp)
+app.register_blueprint(view_shared_users_bp)
+app.register_blueprint(download_file_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(admin_search_bp)
 app.register_blueprint(admin_update_bp)
 app.register_blueprint(admin_view_bp)
 app.register_blueprint(admin_delete_bp)
 app.register_blueprint(admin_suspend_bp)
+app.register_blueprint(admin_unsuspend_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
