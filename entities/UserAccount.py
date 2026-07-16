@@ -638,6 +638,42 @@ class UserAccount:
         return user_count > 0
 
     @staticmethod
+    def suspendAccount(user_id: int) -> bool:
+
+        if not UserAccount.checkUserExistsById(user_id):
+            return False
+
+        account_status = UserAccount.getStatus(user_id)
+
+        if account_status == "suspended":
+            return False
+
+        UserAccount.setStatus(
+            user_id=user_id,
+            account_status="suspended"
+        )
+
+        return True
+
+    @staticmethod
+    def unsuspendAccount(user_id: int) -> bool:
+
+        if not UserAccount.checkUserExistsById(user_id):
+            return False
+
+        account_status = UserAccount.getStatus(user_id)
+
+        if account_status == "active":
+            return False
+
+        UserAccount.setStatus(
+            user_id=user_id,
+            account_status="active"
+        )
+
+        return True
+
+    @staticmethod
     def updateAccount(user_id: int,
                       username: str,
                       email: str,
