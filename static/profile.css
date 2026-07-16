@@ -1,0 +1,111 @@
+* {
+    box-sizing: border-box;
+}
+
+body.profile-page {
+    min-width: 1180px;
+    min-height: 100vh;
+    margin: 0;
+    color: #07172f;
+    font-family: Arial, Helvetica, sans-serif;
+    background:
+        linear-gradient(rgba(93, 130, 188, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(93, 130, 188, 0.08) 1px, transparent 1px),
+        radial-gradient(circle at 22% 10%, rgba(47, 109, 246, 0.16), transparent 28rem),
+        radial-gradient(circle at 86% 8%, rgba(35, 199, 189, 0.18), transparent 24rem),
+        linear-gradient(135deg, #eef5ff 0%, #f8fbff 50%, #f3f7fb 100%);
+    background-size: 66px 66px, 66px 66px, auto, auto, auto;
+}
+
+.profile-shell {
+    min-height: 100vh;
+    padding: 8px 20px;
+}
+
+.profile-panel {
+    width: 100%;
+    min-height: 440px;
+    padding: 52px 48px 46px;
+    border: 1px solid rgba(201, 216, 244, 0.92);
+    border-radius: 44px;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 24px 54px rgba(88, 115, 166, 0.16);
+}
+
+.profile-panel h1 {
+    margin: 0 0 14px;
+    color: #061027;
+    font-size: 44px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: 0;
+}
+
+.profile-subtitle {
+    margin: 0 0 38px;
+    color: #07172f;
+    font-size: 21px;
+}
+
+.profile-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 34px;
+    max-width: 1230px;
+}
+
+.profile-message {
+    max-width: 1230px;
+    margin: 0 0 24px;
+    border-radius: 16px;
+    padding: 14px 18px;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.profile-message.success {
+    color: #067647;
+    background: rgba(49, 196, 214, 0.14);
+}
+
+.profile-message.error {
+    color: #d73333;
+    background: rgba(255, 68, 68, 0.1);
+}
+
+.profile-form label {
+    color: #07172f;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.profile-form input {
+    width: 100%;
+    min-height: 68px;
+    margin-top: 12px;
+    border: 1px solid #b9cbef;
+    border-radius: 24px;
+    background: rgba(252, 254, 255, 0.9);
+    color: #07172f;
+    font-size: 20px;
+    padding: 0 24px;
+}
+
+.profile-form input::placeholder {
+    color: #07172f;
+}
+
+.save-profile-button {
+    grid-column: 1 / -1;
+    justify-self: start;
+    min-width: 171px;
+    min-height: 66px;
+    border: 0;
+    border-radius: 22px;
+    color: #061027;
+    background: linear-gradient(135deg, #35bfd1, #3674f2);
+    box-shadow: 0 18px 35px rgba(47, 109, 246, 0.22);
+    font-size: 20px;
+    font-weight: 800;
+}

@@ -33,6 +33,7 @@ from controllers.AccessSharedFileC import access_shared_file_bp
 from controllers.DownloadFileC import download_file_bp
 from controllers.ExpiredSharedFileC import expired_shared_file_bp
 from controllers.PasswordResetC import password_reset_bp
+from controllers.ProfileC import profile_bp
 from controllers.RegisterC import register_bp
 from controllers.RevokeShareLinkC import revoke_share_link_bp
 from controllers.ShareFileC import share_file_bp
@@ -74,6 +75,7 @@ app.register_blueprint(username_policy_bp)
 app.register_blueprint(auth_policy_bp)
 app.register_blueprint(register_bp)
 app.register_blueprint(password_reset_bp)
+app.register_blueprint(profile_bp)
 app.register_blueprint(access_shared_file_bp)
 app.register_blueprint(expired_shared_file_bp)
 app.register_blueprint(share_file_bp)
