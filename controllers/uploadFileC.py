@@ -6,7 +6,8 @@ from entities.File import File
 
 # Import the UploadSession entity used by resumable uploads.
 from entities.UploadSession import UploadSession
-
+from entities.Fragment import Fragment
+from entities.StorageNodeOCI import StorageNode
 
 # Create the blueprint containing the file-upload routes.
 upload_bp = Blueprint("upload_bp", __name__)
@@ -120,17 +121,14 @@ def uploadChunk():
 @upload_bp.route("/upload/complete", methods=["POST"])
 def completeUploadSession():
 
-    # Retrieve the logged-in user's ID from the session.
     owner_id = session.get("user_id")
 
-    # Reject the request if the user is not logged in.
     if owner_id is None:
         return jsonify({
             "success": False,
             "message": "Please log in before completing an upload."
         }), 401
 
-    # Retrieve the upload session and browser-provided file type.
     upload_id = request.form.get("upload_id", type=int)
     file_type = request.form.get("file_type") or "Unknown"
 
@@ -140,7 +138,7 @@ def completeUploadSession():
             "message": "Upload session could not be found."
         }), 400
 
-    # Ask the entity to convert the completed session into a file record.
+    # 1. Ask the entity to convert the completed session into a file record[cite: 6].
     file_id = UploadSession.completeUpload(
         upload_id,
         owner_id,
@@ -152,10 +150,10 @@ def completeUploadSession():
             "success": False,
             "message": "Upload could not be completed."
         }), 400
-
+   
     return jsonify({
         "success": True,
-        "message": "Upload completed successfully.",
+        "message": "Upload completed, fragmented, and distributed to OCI successfully.",
         "file_id": file_id
     })
 

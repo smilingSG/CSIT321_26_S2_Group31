@@ -17,7 +17,13 @@ from zfec import easyfec
 # Import the application's MySQL connection function.
 from db import get_db_connection
 # Import the StorageNode entity used to remove physical fragment files.
-from entities.StorageNode import StorageNode
+
+# local
+# from entities.StorageNodeLocal import StorageNode
+
+# OCI
+from entities.StorageNodeOCI import StorageNode
+
 
 # Define the folder used while fragments are awaiting node storage.
 TEMP_FRAGMENT_FOLDER: str = "temp_fragments"
@@ -152,7 +158,6 @@ class Fragment:
         cursor.execute("""
             DELETE FROM fragments
             WHERE file_id = %s
-            AND fragment_status = 'pending_storage'
         """, (file_id,))
 
         for fragment in fragment_list:
@@ -232,13 +237,15 @@ class Fragment:
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
+        # UPDATE: Added storage_nodes.node_path to the SELECT block
         cursor.execute("""
             SELECT
                 fragments.fragment_id,
                 fragments.file_id,
                 fragments.fragment_number,
                 fragments.fragment_path,
-                fragments.node_id
+                fragments.node_id,
+                storage_nodes.node_path
             FROM fragments
             INNER JOIN storage_nodes
                 ON storage_nodes.node_id = fragments.node_id
@@ -415,13 +422,17 @@ class Fragment:
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
+        # UPDATE: Joined the storage_nodes table to get the bucket name (node_path)
         cursor.execute("""
             SELECT
-                fragment_id,
-                fragment_path
+                fragments.fragment_id,
+                fragments.fragment_path,
+                storage_nodes.node_path
             FROM fragments
-            WHERE file_id = %s
-            ORDER BY fragment_number
+            LEFT JOIN storage_nodes 
+                ON fragments.node_id = storage_nodes.node_id
+            WHERE fragments.file_id = %s
+            ORDER BY fragments.fragment_number
         """, (file_id,))
 
         fragment_paths = cursor.fetchall()

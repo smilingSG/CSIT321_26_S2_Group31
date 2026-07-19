@@ -10,9 +10,14 @@ from typing import Optional
 from db import get_db_connection
 from entities.File import File
 from entities.Fragment import Fragment
-from entities.StorageNode import StorageNode
 from entities.SystemSetting import SystemSetting
 from entities.UserAccount import UserAccount
+
+# local
+# from entities.StorageNodeLocal import StorageNode
+
+# OCI
+from entities.StorageNodeOCI import StorageNode
 
 
 class ShareLink:
