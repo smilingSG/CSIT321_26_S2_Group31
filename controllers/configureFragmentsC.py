@@ -8,7 +8,12 @@ from flask import url_for
 
 # Import entities used to retrieve file details and storage node information.
 from entities.File import File
-from entities.StorageNode import StorageNode
+
+# local
+# from entities.StorageNodeLocal import StorageNode
+
+# OCI
+from entities.StorageNodeOCI import StorageNode
 
 
 # Create the blueprint containing the fragment configuration routes.
