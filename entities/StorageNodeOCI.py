@@ -1,5 +1,6 @@
 import oci
 from typing import Any, Dict, List, Optional
+from db import get_db_connection
 
 # Initialize the OCI Object Storage Client using the Instance Principal
 # This assumes your OCI instance has been granted permission to access Object Storage.
@@ -16,7 +17,48 @@ except Exception as e:
 
 
 class StorageNode:
-    # ... (getActiveStorageNodeCount and getActiveStorageNodes remain exactly the same) ...
+
+    @staticmethod
+    def getActiveStorageNodeCount() -> int:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT COUNT(*) AS active_node_count
+            FROM storage_nodes
+            WHERE node_status = 'active'
+        """)
+        result = cursor.fetchone()
+        cursor.close()
+        connection.close()
+        return result["active_node_count"] if result else 0
+
+    @staticmethod
+    def getActiveStorageNodes() -> List[Dict[str, Any]]:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT
+                storage_nodes.node_id,
+                storage_nodes.node_name,
+                storage_nodes.node_path,
+                COUNT(fragments.fragment_id) AS stored_fragment_count
+            FROM storage_nodes
+            LEFT JOIN fragments
+                ON fragments.node_id = storage_nodes.node_id
+                AND fragments.fragment_status = 'available'
+            WHERE storage_nodes.node_status = 'active'
+            GROUP BY
+                storage_nodes.node_id,
+                storage_nodes.node_name,
+                storage_nodes.node_path
+            ORDER BY
+                stored_fragment_count ASC,
+                storage_nodes.node_id ASC
+        """)
+        active_nodes = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return active_nodes
 
     @staticmethod
     def storeFragment(fragment_data: Dict[str, Any],
@@ -31,8 +73,6 @@ class StorageNode:
         # Create the object name (equivalent to the file path in the bucket)
         # e.g., "file_12/fragment_3.fec"
         object_name = f"file_{fragment_data['file_id']}/fragment_{fragment_data['fragment_number']}.fec"
-        
-        # In this setup, the database 'node_path' holds the bucket name
         bucket_name = node_path 
 
         try:
