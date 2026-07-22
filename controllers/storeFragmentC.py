@@ -108,7 +108,10 @@ def storeFragments(file_id: int):
                 raise OSError("Fragment could not be stored.")
 
             # Remember the stored path for possible failure cleanup.
-            stored_fragment_paths.append(stored_fragment_path)
+            stored_fragment_paths.append({
+                "node_path": storage_node["node_path"],
+                "fragment_path": stored_fragment_path
+            })
 
             # Update the fragment record with its node and permanent path.
             fragment_updated = Fragment.updateFragmentStorage(
@@ -127,10 +130,9 @@ def storeFragments(file_id: int):
     except (OSError, RuntimeError):
 
         # Remove fragments already copied into storage nodes.
-        for stored_fragment_path in stored_fragment_paths:
-            StorageNode.deleteStoredFragment(
-                stored_fragment_path
-            )
+        StorageNode.deleteStoredFragments(
+            stored_fragment_paths
+        )
 
         # Restore the fragment records to their temporary storage state.
         Fragment.restorePendingFragmentStorage(
