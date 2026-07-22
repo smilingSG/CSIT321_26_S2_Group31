@@ -96,16 +96,26 @@ body.profile-page {
     color: #07172f;
 }
 
-.save-profile-button {
-    grid-column: 1 / -1;
+.save-profile-button,
+.back-profile-button {
     justify-self: start;
     min-width: 171px;
     min-height: 66px;
-    border: 0;
     border-radius: 22px;
     color: #061027;
-    background: linear-gradient(135deg, #35bfd1, #3674f2);
-    box-shadow: 0 18px 35px rgba(47, 109, 246, 0.22);
     font-size: 20px;
     font-weight: 800;
+}
+
+.save-profile-button {
+    border: 0;
+    background: linear-gradient(135deg, #35bfd1, #3674f2);
+    box-shadow: 0 18px 35px rgba(47, 109, 246, 0.22);
+}
+
+.back-profile-button {
+    grid-column: 1 / -1;
+    margin-top: -20px;
+    border: 1px solid #b9cbef;
+    background: rgba(255, 255, 255, 0.72);
 }
