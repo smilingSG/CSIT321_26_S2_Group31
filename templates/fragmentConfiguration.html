@@ -304,13 +304,14 @@
                     Define total fragments `n` and required reconstruction fragments `k`.
                 </p>
 
-                {% if errorMessage %}
-                    <div class="error-message">
-                        {{ errorMessage }}
-                    </div>
-                {% endif %}
+                <div
+                    id="fragmentErrorMessage"
+                    class="error-message"
+                    {% if not errorMessage %}style="display: none;"{% endif %}>
+                    {{ errorMessage if errorMessage else "" }}
+                </div>
 
-                <form method="POST">
+                <form method="POST" id="fragmentConfigurationForm">
                     <div class="config-grid">
                         <div class="config-field">
                             <label for="total_fragments">
@@ -322,7 +323,6 @@
                                 id="total_fragments"
                                 name="total_fragments"
                                 min="2"
-                                max="20"
                                 value="{{ previewData.totalFragments if previewData.totalFragments else 5 }}"
                                 required>
                         </div>
@@ -337,7 +337,6 @@
                                 id="required_fragments"
                                 name="required_fragments"
                                 min="1"
-                                max="20"
                                 value="{{ previewData.requiredFragments if previewData.requiredFragments else 3 }}"
                                 required>
                         </div>
@@ -346,8 +345,7 @@
                     <div class="config-actions">
                         <button
                             type="submit"
-                            class="config-action-button continue-button"
-                            onclick="allowFragmentSubmit()">
+                            class="config-action-button continue-button">
                             Continue
                         </button>
 
@@ -367,12 +365,31 @@
 
 <script>
     var currentTempFileID = {{ previewData.fileID }};
+    var activeNodeCount = {{ activeNodeCount }};
     var allowSubmit = false;
 
-    function allowFragmentSubmit() {
+    document.getElementById("fragmentConfigurationForm").addEventListener("submit", function (event) {
+        var totalFragments = parseInt(document.getElementById("total_fragments").value, 10);
+        var requiredFragments = parseInt(document.getElementById("required_fragments").value, 10);
+        var errorMessage = document.getElementById("fragmentErrorMessage");
+
+        if (totalFragments > activeNodeCount) {
+            event.preventDefault();
+            errorMessage.style.display = "block";
+            errorMessage.innerText = "Total fragments cannot be greater than the current active storage nodes. Current maximum: " + activeNodeCount + ".";
+            return;
+        }
+
+        if (requiredFragments > activeNodeCount) {
+            event.preventDefault();
+            errorMessage.style.display = "block";
+            errorMessage.innerText = "Required fragments cannot be greater than the current active storage nodes. Current maximum: " + activeNodeCount + ".";
+            return;
+        }
+
         allowSubmit = true;
         currentTempFileID = null;
-    }
+    });
 
     function goBackToPreview() {
         currentTempFileID = null;
