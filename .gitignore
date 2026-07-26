@@ -1,0 +1,10 @@
+.env
+*.env
+__pycache__/
+*.pyc
+
+# Local temporary processing output
+temp_uploads/
+encrypted_temp_upload/
+fragment_temp_upload/
+reconstructed_temp_upload/
