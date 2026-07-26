@@ -158,7 +158,7 @@
         }
 
         .preview-page .preview-panel {
-            width: 540px;
+            width: 760px;
             padding: 34px;
             border-radius: 28px;
             background: rgba(255, 255, 255, 0.86);
@@ -183,8 +183,8 @@
 
         .preview-page .file-preview-card {
             display: grid;
-            grid-template-columns: 220px 1fr;
-            gap: 22px;
+            grid-template-columns: 430px 1fr;
+            gap: 24px;
             padding: 22px;
             border-radius: 24px;
             border: 1px solid #c9d8f4;
@@ -192,7 +192,7 @@
         }
 
         .preview-page .preview-placeholder {
-            height: 176px;
+            height: 360px;
             border-radius: 18px;
             border: 1px solid #cddaf2;
             background: #ffffff;
@@ -204,14 +204,14 @@
 
         .preview-page .real-file-preview {
             width: 100%;
-            height: 151px;
+            height: 330px;
             border: 0;
             display: block;
             background: #ffffff;
         }
 
         .preview-page .preview-controls {
-            height: 25px;
+            height: 30px;
             border-top: 1px solid #d7e1f3;
             display: flex;
             align-items: center;
@@ -221,25 +221,35 @@
             font-size: 12px;
         }
 
-        .preview-page .preview-deleted-state {
-            height: 176px;
+        .preview-page .preview-deleted-state,
+        .preview-page .preview-unavailable-state {
+            height: 360px;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            color: #8393b2;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            padding: 18px;
         }
 
-        .preview-page .deleted-preview-icon {
-            width: 19px;
-            height: 19px;
+        .preview-page .deleted-preview-icon,
+        .preview-page .file-preview-icon {
+            width: 24px;
+            height: 24px;
             border: 3px solid #2f6df6;
             border-radius: 2px;
             position: relative;
         }
 
-        .preview-page .deleted-preview-icon::after {
+        .preview-page .deleted-preview-icon::after,
+        .preview-page .file-preview-icon::after {
             content: "";
             position: absolute;
-            inset: 3px;
+            inset: 4px;
             border: 2px solid #2f6df6;
             border-radius: 1px;
         }
@@ -327,6 +337,9 @@
     </style>
 </head>
 
+{% set file_type = previewData.fileType|lower %}
+{% set can_inline_preview = file_type == 'application/pdf' %}
+
 <body class="preview-page">
 
 <div class="page-wrapper">
@@ -369,16 +382,23 @@
 
                 <div class="file-preview-card">
                     <div class="preview-placeholder" id="previewPlaceholder">
-                        <iframe
-                            class="real-file-preview"
-                            src="{{ url_for('preview_bp.previewUploadedFile', file_id=previewData.fileID) }}"
-                            title="Uploaded file preview">
-                        </iframe>
-                        <div class="preview-controls">
-                            <span>&lt;</span>
-                            <span>1</span>
-                            <span>&gt;</span>
-                        </div>
+                        {% if can_inline_preview %}
+                            <iframe
+                                class="real-file-preview"
+                                src="{{ url_for('preview_bp.previewUploadedFile', file_id=previewData.fileID) }}"
+                                title="Uploaded file preview">
+                            </iframe>
+                            <div class="preview-controls">
+                                <span>&lt;</span>
+                                <span>1</span>
+                                <span>&gt;</span>
+                            </div>
+                        {% else %}
+                            <div class="preview-unavailable-state">
+                                <span class="file-preview-icon"></span>
+                                <span>Preview unavailable for this file type</span>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="preview-details">
@@ -402,7 +422,11 @@
 
                         <p id="previewAvailability">
                             <strong>Preview:</strong>
-                            Local browser preview available
+                            {% if can_inline_preview %}
+                                Local browser preview available
+                            {% else %}
+                                Local browser preview unavailable
+                            {% endif %}
                         </p>
                     </div>
                 </div>

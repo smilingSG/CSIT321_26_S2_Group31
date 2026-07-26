@@ -46,10 +46,13 @@ def fragmentConfigurationPage(file_id: int):
     if preview_data is None:
         return "File record could not be found.", 404
 
+    active_node_count = StorageNode.getActiveStorageNodeCount()
+
     # Display the fragment configuration page with the file information.
     return render_template(
         "fragmentConfiguration.html",
-        previewData=preview_data
+        previewData=preview_data,
+        activeNodeCount=active_node_count
     )
 
 
@@ -97,6 +100,7 @@ def configureFragments(file_id: int):
         return render_template(
             "fragmentConfiguration.html",
             previewData=preview_data,
+            activeNodeCount=active_node_count,
             errorMessage=validation_error
         )
 
