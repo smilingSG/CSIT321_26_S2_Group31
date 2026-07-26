@@ -221,14 +221,23 @@
             font-size: 12px;
         }
 
-        .preview-page .preview-deleted-state {
+        .preview-page .preview-deleted-state,
+        .preview-page .preview-unavailable-state {
             height: 176px;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            color: #8393b2;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            padding: 18px;
         }
 
-        .preview-page .deleted-preview-icon {
+        .preview-page .deleted-preview-icon,
+        .preview-page .file-preview-icon {
             width: 19px;
             height: 19px;
             border: 3px solid #2f6df6;
@@ -236,7 +245,8 @@
             position: relative;
         }
 
-        .preview-page .deleted-preview-icon::after {
+        .preview-page .deleted-preview-icon::after,
+        .preview-page .file-preview-icon::after {
             content: "";
             position: absolute;
             inset: 3px;
@@ -327,6 +337,9 @@
     </style>
 </head>
 
+{% set file_type = previewData.fileType|lower %}
+{% set can_inline_preview = file_type == 'application/pdf' or file_type == 'text/plain' or file_type.startswith('image/') %}
+
 <body class="preview-page">
 
 <div class="page-wrapper">
@@ -369,16 +382,23 @@
 
                 <div class="file-preview-card">
                     <div class="preview-placeholder" id="previewPlaceholder">
-                        <iframe
-                            class="real-file-preview"
-                            src="{{ url_for('preview_bp.previewUploadedFile', file_id=previewData.fileID) }}"
-                            title="Uploaded file preview">
-                        </iframe>
-                        <div class="preview-controls">
-                            <span>&lt;</span>
-                            <span>1</span>
-                            <span>&gt;</span>
-                        </div>
+                        {% if can_inline_preview %}
+                            <iframe
+                                class="real-file-preview"
+                                src="{{ url_for('preview_bp.previewUploadedFile', file_id=previewData.fileID) }}"
+                                title="Uploaded file preview">
+                            </iframe>
+                            <div class="preview-controls">
+                                <span>&lt;</span>
+                                <span>1</span>
+                                <span>&gt;</span>
+                            </div>
+                        {% else %}
+                            <div class="preview-unavailable-state">
+                                <span class="file-preview-icon"></span>
+                                <span>Preview unavailable for this file type</span>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="preview-details">
@@ -402,7 +422,11 @@
 
                         <p id="previewAvailability">
                             <strong>Preview:</strong>
-                            Local browser preview available
+                            {% if can_inline_preview %}
+                                Local browser preview available
+                            {% else %}
+                                Local browser preview unavailable
+                            {% endif %}
                         </p>
                     </div>
                 </div>
