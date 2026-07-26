@@ -1,4 +1,5 @@
 # Import filesystem utilities and UUID generation for temporary files.
+import base64
 import os
 import uuid
 
@@ -15,9 +16,10 @@ from typing import List
 # Import the application's MySQL connection function.
 from db import get_db_connection
 
-# Define temporary storage folders and permitted upload extensions.
+# Define temporary storage folders, environment key name, and permitted upload extensions.
 TEMP_UPLOAD_FOLDER: str = "temp_uploads"
 ENCRYPTED_TEMP_FOLDER: str = "encrypted_temp_upload"
+MASTER_KEY_ENV_NAME: str = "LAZARUS_MASTER_KEY"
 ALLOWED_EXTENSIONS = {
     "pdf",
     "doc",
@@ -50,6 +52,69 @@ class File:
             "." in file_name
             and file_name.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
         )
+
+    # Retrieve the deployment master key used to protect per-file AES keys.
+    @staticmethod
+    def getMasterKey() -> Optional[bytes]:
+
+        master_key_text = os.environ.get(MASTER_KEY_ENV_NAME)
+
+        if master_key_text is None:
+            return None
+
+        try:
+            master_key = base64.urlsafe_b64decode(
+                master_key_text.encode("utf-8")
+            )
+        except Exception:
+            return None
+
+        if len(master_key) != 32:
+            return None
+
+        return master_key
+
+    # Encrypt a generated file key before saving it in the database.
+    @staticmethod
+    def wrapFileKey(file_key: bytes) -> Optional[bytes]:
+
+        master_key = File.getMasterKey()
+
+        if master_key is None:
+            return None
+
+        key_wrap_nonce = os.urandom(12)
+        aesgcm = AESGCM(master_key)
+
+        wrapped_file_key = aesgcm.encrypt(
+            key_wrap_nonce,
+            file_key,
+            None
+        )
+
+        return key_wrap_nonce + wrapped_file_key
+
+    # Decrypt a stored wrapped file key before file decryption.
+    @staticmethod
+    def unwrapFileKey(wrapped_file_key: bytes) -> Optional[bytes]:
+
+        master_key = File.getMasterKey()
+
+        if master_key is None or len(wrapped_file_key) <= 12:
+            return None
+
+        key_wrap_nonce = wrapped_file_key[:12]
+        encrypted_file_key = wrapped_file_key[12:]
+        aesgcm = AESGCM(master_key)
+
+        try:
+            return aesgcm.decrypt(
+                key_wrap_nonce,
+                encrypted_file_key,
+                None
+            )
+        except Exception:
+            return None
 
     # Validate and save an upload before creating its temporary database record.
     @staticmethod
@@ -648,6 +713,13 @@ class File:
         )
 
         file_key = AESGCM.generate_key(bit_length=256)
+        wrapped_file_key = File.wrapFileKey(file_key)
+
+        if wrapped_file_key is None:
+            cursor.close()
+            connection.close()
+            return False
+
         aesgcm = AESGCM(file_key)
         nonce = os.urandom(12)
 
@@ -680,7 +752,7 @@ class File:
         """, (
             encrypted_temp_path,
             nonce,
-            file_key,
+            wrapped_file_key,
             encrypted_size,
             file_id,
             owner_id
@@ -1022,7 +1094,11 @@ class File:
 
         try:
             nonce = bytes(file_record["nonce"])
-            file_key = bytes(file_record["encrypted_file_key"])
+            wrapped_file_key = bytes(file_record["encrypted_file_key"])
+            file_key = File.unwrapFileKey(wrapped_file_key)
+
+            if file_key is None:
+                return None
 
             with open(reconstructed_temp_path, "rb") as encrypted_file:
                 encrypted_data = encrypted_file.read()
@@ -1086,7 +1162,11 @@ class File:
 
         try:
             nonce = bytes(file_record["nonce"])
-            file_key = bytes(file_record["encrypted_file_key"])
+            wrapped_file_key = bytes(file_record["encrypted_file_key"])
+            file_key = File.unwrapFileKey(wrapped_file_key)
+
+            if file_key is None:
+                return None
 
             with open(reconstructed_temp_path, "rb") as encrypted_file:
                 encrypted_data = encrypted_file.read()
