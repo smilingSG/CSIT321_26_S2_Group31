@@ -158,7 +158,8 @@
         }
 
         .preview-page .preview-panel {
-            width: 760px;
+            width: 900px;
+            max-width: calc(100vw - 390px);
             padding: 34px;
             border-radius: 28px;
             background: rgba(255, 255, 255, 0.86);
@@ -183,7 +184,7 @@
 
         .preview-page .file-preview-card {
             display: grid;
-            grid-template-columns: 430px 1fr;
+            grid-template-columns: minmax(420px, 500px) minmax(0, 1fr);
             gap: 24px;
             padding: 22px;
             border-radius: 24px;
@@ -255,9 +256,12 @@
         }
 
         .preview-page .preview-details {
+            min-width: 0;
             color: #66768f;
             font-size: 15px;
             line-height: 1.45;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .preview-page .preview-details h4 {
@@ -265,10 +269,14 @@
             color: #07172f;
             font-size: 17px;
             font-weight: 900;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .preview-page .preview-details p {
             margin: 0 0 6px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .preview-page .preview-details strong {
