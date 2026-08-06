@@ -669,3 +669,52 @@ body.shared-files-page {
     line-height: 1.15;
     text-align: center;
 }
+
+.shared-files-page .shared-users-table th,
+.shared-files-page .shared-users-table td {
+    padding: 18px 16px;
+    vertical-align: top;
+}
+
+.shared-files-page .shared-users-table th:nth-child(1),
+.shared-files-page .shared-users-table td:nth-child(1) {
+    width: 15%;
+}
+
+.shared-files-page .shared-users-table th:nth-child(2),
+.shared-files-page .shared-users-table td:nth-child(2) {
+    width: 22%;
+}
+
+.shared-files-page .shared-users-table th:nth-child(3),
+.shared-files-page .shared-users-table td:nth-child(3) {
+    width: 11%;
+}
+
+.shared-files-page .shared-users-table th:nth-child(4),
+.shared-files-page .shared-users-table td:nth-child(4) {
+    width: 12%;
+}
+
+.shared-files-page .shared-users-table th:nth-child(5),
+.shared-files-page .shared-users-table td:nth-child(5) {
+    width: 9%;
+}
+
+.shared-files-page .shared-users-table th:nth-child(6),
+.shared-files-page .shared-users-table td:nth-child(6) {
+    width: 16%;
+}
+
+.shared-files-page .shared-users-table th:nth-child(7),
+.shared-files-page .shared-users-table td:nth-child(7) {
+    width: 15%;
+}
+
+.shared-files-page .shared-users-table td:nth-child(1),
+.shared-files-page .shared-users-table td:nth-child(2),
+.shared-files-page .shared-users-table td:nth-child(6),
+.shared-files-page .shared-users-table td:nth-child(7) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
