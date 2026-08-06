@@ -7,6 +7,7 @@ from flask import url_for
 
 from entities.File import File
 from entities.ShareLink import ShareLink
+from entities.SystemSetting import SystemSetting
 
 
 share_file_bp = Blueprint("share_file_bp", __name__)
@@ -49,6 +50,7 @@ def sharedFilesPage():
     success_message = None
     error_message = None
     secure_link = None
+    max_expiry_hours = SystemSetting.getMaxExpiryDuration() or 72
 
     if request.method == "GET":
         success_message = session.pop("shared_success_message", None)
@@ -64,14 +66,14 @@ def sharedFilesPage():
         is_one_time = request.form.get("is_one_time") == "on"
 
         try:
-            expiry_hours = int(request.form.get("expiry_hours", "72"))
+            expiry_hours = int(request.form.get("expiry_hours", str(max_expiry_hours)))
         except ValueError:
-            expiry_hours = 72
+            expiry_hours = max_expiry_hours
 
         if file_id <= 0 or recipient_email == "":
             error_message = "Select a file and enter a recipient email."
-        elif expiry_hours < 1 or expiry_hours > 720:
-            error_message = "Expiry must be between 1 and 720 hours."
+        elif expiry_hours < 1 or expiry_hours > max_expiry_hours:
+            error_message = "Expiry must be between 1 and " + str(max_expiry_hours) + " hours."
         else:
             secure_token, error_message = ShareFileC.createShareLink(
                 file_id=file_id,
@@ -95,6 +97,7 @@ def sharedFilesPage():
         "sharedFiles.html",
         shareableFiles=share_data["shareableFiles"],
         shareLinks=share_data["shareLinks"],
+        maxLinkExpiryHours=max_expiry_hours,
         successMessage=success_message,
         errorMessage=error_message,
         secureLink=secure_link
