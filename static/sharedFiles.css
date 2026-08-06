@@ -573,3 +573,99 @@ body.shared-files-page {
 .download-action {
     margin-top: 8px;
 }
+
+.shared-files-page .shared-panel {
+    max-width: 1360px;
+}
+
+.shared-files-page .shared-table {
+    font-size: 16px;
+}
+
+.shared-files-page .shared-table th {
+    padding: 16px 18px;
+    font-size: 16px;
+}
+
+.shared-files-page .shared-table td {
+    padding: 20px 18px;
+    vertical-align: top;
+}
+
+.shared-files-page .shared-table th:nth-child(1),
+.shared-files-page .shared-table td:nth-child(1) {
+    width: 18%;
+}
+
+.shared-files-page .shared-table th:nth-child(2),
+.shared-files-page .shared-table td:nth-child(2) {
+    width: 18%;
+}
+
+.shared-files-page .shared-table th:nth-child(3),
+.shared-files-page .shared-table td:nth-child(3) {
+    width: 13%;
+}
+
+.shared-files-page .shared-table th:nth-child(4),
+.shared-files-page .shared-table td:nth-child(4) {
+    width: 11%;
+}
+
+.shared-files-page .shared-table th:nth-child(5),
+.shared-files-page .shared-table td:nth-child(5) {
+    width: 25%;
+}
+
+.shared-files-page .shared-table th:nth-child(6),
+.shared-files-page .shared-table td:nth-child(6) {
+    width: 15%;
+}
+
+.shared-files-page .shared-table td:nth-child(1),
+.shared-files-page .shared-table td:nth-child(2),
+.shared-files-page .shared-table td:nth-child(5) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.shared-files-page .status-pill {
+    min-width: 82px;
+    min-height: 30px;
+    padding: 0 14px;
+    font-size: 14px;
+}
+
+.shared-files-page .expiry-label {
+    margin-bottom: 8px;
+    line-height: 1.25;
+}
+
+.shared-files-page .expiry-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    max-width: 260px;
+}
+
+.shared-files-page .expiry-form input {
+    width: 100%;
+    min-width: 0;
+    font-size: 12px;
+}
+
+.shared-files-page .secondary-action.small {
+    min-height: 38px;
+    padding: 0 12px;
+}
+
+.shared-files-page .danger-action,
+.shared-files-page .primary-action.small {
+    width: 132px;
+    min-height: 46px;
+    padding: 0 12px;
+    font-size: 15px;
+    line-height: 1.15;
+    text-align: center;
+}
