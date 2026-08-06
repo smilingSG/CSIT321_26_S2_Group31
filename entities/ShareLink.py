@@ -145,6 +145,11 @@ class ShareLink:
                                     is_one_time: bool,
                                     expiry_hours: int):
 
+        max_expiry_hours = SystemSetting.getMaxExpiryDuration() or 72
+
+        if expiry_hours < 1 or expiry_hours > max_expiry_hours:
+            return None, "Expiry must be between 1 and " + str(max_expiry_hours) + " hours."
+
         file_valid = File.verifyFileOwnership(
             file_id=file_id,
             owner_id=user_id
@@ -183,12 +188,15 @@ class ShareLink:
         if link_record is None:
             return False
 
+        max_expiry_hours = SystemSetting.getMaxExpiryDuration() or 72
+        renewal_expiry_hours = min(72, max_expiry_hours)
+
         ShareLink.createShareLink(
             file_id=link_record["file_id"],
             created_by=user_id,
             recipient_id=link_record["recipient_id"],
             is_one_time=bool(link_record["is_one_time"]),
-            expiry_hours=72
+            expiry_hours=renewal_expiry_hours
         )
 
         return True
