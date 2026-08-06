@@ -78,7 +78,13 @@
 
                     <label>
                         Expiry Hours
-                        <input type="number" name="expiry_hours" value="72" min="1" max="720" required>
+                        <input
+                            type="number"
+                            name="expiry_hours"
+                            value="{{ maxLinkExpiryHours }}"
+                            min="1"
+                            max="{{ maxLinkExpiryHours }}"
+                            required>
                     </label>
 
                     <label class="toggle-row">
