@@ -19,12 +19,6 @@
                 </div>
             {% endif %}
 
-            {% if success %}
-                <div class="alert alert-success" role="alert">
-                    {{ success }}
-                </div>
-            {% endif %}
-
             <form method="POST" action="{{ url_for('register_bp.register') }}">
                 <div class="mb-4">
                     <label for="username" class="form-label">Username</label>
@@ -108,22 +102,8 @@
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <label for="token" class="form-label">Verification Code / Register Link</label>
-                    <input
-                        type="text"
-                        class="form-control"
-                        id="token"
-                        name="token"
-                        value="{{ token or '' }}"
-                        placeholder=""
-                        autocomplete="one-time-code"
-                    >
-                </div>
-
                 <div class="register-actions">
-                    <button type="submit" name="action" value="send_code" class="primary-action">Send Email</button>
-                    <button type="submit" name="action" value="verify_account" class="primary-action">Verify Account</button>
+                    <button type="submit" class="primary-action">Register</button>
                     <a href="{{ url_for('login_bp.login') }}" class="secondary-action">Back</a>
                 </div>
             </form>
