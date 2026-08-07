@@ -20,14 +20,16 @@ def getPostLoginRedirect(role: str) -> str:
 class AdminDeleteC:
 
     @staticmethod
-    def deleteUser(user_id: int) -> bool:
+    def deleteUser(user_id: int,
+                   administrator_id: int) -> bool:
 
         if not UserAccount.checkUserExistsById(user_id):
             return False
 
-        UserAccount.deleteAccount(user_id)
-
-        return True
+        return UserAccount.deleteAccount(
+            user_id=user_id,
+            replacement_user_id=administrator_id
+        )
 
 
 @admin_delete_bp.route("/user-management/delete/<int:user_id>", methods=["POST"])
@@ -39,10 +41,19 @@ def deleteUser(user_id: int):
     if session.get("role") != "user_admin":
         return redirect(getPostLoginRedirect(session.get("role")))
 
-    user_deleted = AdminDeleteC.deleteUser(user_id)
+    administrator_id = session.get("user_id")
+
+    if user_id == administrator_id:
+        flash("You cannot delete your own account.", "error")
+        return redirect(url_for("admin_search_bp.userManagement"))
+
+    user_deleted = AdminDeleteC.deleteUser(
+        user_id=user_id,
+        administrator_id=administrator_id
+    )
 
     if not user_deleted:
-        flash("User not found.", "error")
+        flash("User could not be deleted.", "error")
         return redirect(url_for("admin_search_bp.userManagement"))
 
     flash("User account deleted successfully.", "success")
