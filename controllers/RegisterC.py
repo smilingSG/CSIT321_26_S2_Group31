@@ -9,6 +9,7 @@ from email.message import EmailMessage
 
 from flask import Blueprint
 from flask import current_app
+from flask import redirect
 from flask import render_template
 from flask import request
 from flask import url_for
@@ -47,8 +48,8 @@ class RegisterC:
             return False, "Username or password does not meet the current policy."
 
         verification_url = url_for(
-            "register_bp.register",
-            email=email,
+            "register_bp.verifyAccount",
+            username=username,
             token=token,
             _external=True
         )
@@ -113,11 +114,11 @@ This code expires in 30 minutes. If you did not request this, you can ignore thi
         return True, None
 
     @staticmethod
-    def verifyRegistration(email: str,
+    def verifyRegistration(username: str,
                            token: str) -> bool:
 
         return UserAccount.verifyRegistration(
-            email=email,
+            username=username,
             token=token
         )
 
@@ -126,48 +127,12 @@ This code expires in 30 minutes. If you did not request this, you can ignore thi
 def register():
 
     if request.method == "GET":
-        return render_template(
-            "register.html",
-            email=request.args.get("email", ""),
-            token=request.args.get("token", "")
-        )
+        return render_template("register.html")
 
-    action: str = request.form.get("action", "")
     username: str = request.form.get("username", "").strip()
     email: str = request.form.get("email", "").strip()
     password: str = request.form.get("password", "")
     confirm_password: str = request.form.get("confirm_password", "")
-    token: str = request.form.get("token", "").strip()
-
-    if action == "verify_account":
-        if email == "" or token == "":
-            return render_template(
-                "register.html",
-                error="Please enter your email and verification code.",
-                username=username,
-                email=email,
-                token=token
-            ), 400
-
-        account_verified = RegisterC.verifyRegistration(
-            email=email,
-            token=token
-        )
-
-        if not account_verified:
-            return render_template(
-                "register.html",
-                error="The verification code is invalid or expired.",
-                username=username,
-                email=email,
-                token=token
-            ), 400
-
-        return render_template(
-            "register.html",
-            success="Account verified and created successfully. You can now log in.",
-            email=email
-        )
 
     if username == "" or email == "" or password == "" or confirm_password == "":
         return render_template(
@@ -199,9 +164,56 @@ def register():
             email=email
         ), 400
 
-    return render_template(
-        "register.html",
-        success="A verification code has been sent to your email.",
+    return redirect(
+        url_for(
+            "register_bp.verifyAccount",
+            username=username,
+            sent="1"
+        )
+    )
+
+
+@register_bp.route("/register/verify", methods=["GET", "POST"])
+def verifyAccount():
+
+    username: str = request.values.get("username", "").strip()
+    token: str = request.values.get("token", "").strip()
+
+    if request.method == "GET":
+        return render_template(
+            "verify_registration.html",
+            username=username,
+            token=token,
+            success=(
+                "A verification code has been sent to your email."
+                if request.args.get("sent") == "1"
+                else None
+            )
+        )
+
+    if username == "" or token == "":
+        return render_template(
+            "verify_registration.html",
+            error="Please enter your username and verification code.",
+            username=username,
+            token=token
+        ), 400
+
+    account_verified = RegisterC.verifyRegistration(
         username=username,
-        email=email
+        token=token
+    )
+
+    if not account_verified:
+        return render_template(
+            "verify_registration.html",
+            error="The username or verification code is invalid or expired.",
+            username=username,
+            token=token
+        ), 400
+
+    return render_template(
+        "verify_registration.html",
+        success="Account verified and created successfully. You can now log in.",
+        verified=True
     )
