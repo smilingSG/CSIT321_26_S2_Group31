@@ -160,11 +160,26 @@ VALUES
 INSERT INTO storage_nodes
 (node_name, node_path, node_status)
 VALUES
-('Node 1', 'storage_nodes/node1/', 'active'),
-('Node 2', 'storage_nodes/node2/', 'active'),
-('Node 3', 'storage_nodes/node3/', 'active'),
-('Node 4', 'storage_nodes/node4/', 'active'),
-('Node 5', 'storage_nodes/node5/', 'active');
+('Node 1', 'lazarus-node-01', 'active'),
+('Node 2', 'lazarus-node-02', 'active'),
+('Node 3', 'lazarus-node-03', 'active'),
+('Node 4', 'lazarus-node-04', 'active'),
+('Node 5', 'lazarus-node-05', 'active'),
+('Node 6', 'lazarus-node-06', 'active'),
+('Node 7', 'lazarus-node-07', 'active'),
+('Node 8', 'lazarus-node-08', 'active'),
+('Node 9', 'lazarus-node-09', 'active'),
+('Node 10', 'lazarus-node-10', 'active'),
+('Node 11', 'lazarus-node-11', 'active'),
+('Node 12', 'lazarus-node-12', 'active'),
+('Node 13', 'lazarus-node-13', 'active'),
+('Node 14', 'lazarus-node-14', 'active'),
+('Node 15', 'lazarus-node-15', 'active'),
+('Node 16', 'lazarus-node-16', 'active'),
+('Node 17', 'lazarus-node-17', 'active'),
+('Node 18', 'lazarus-node-18', 'active'),
+('Node 19', 'lazarus-node-19', 'active'),
+('Node 20', 'lazarus-node-20', 'active');
 
 INSERT INTO system_settings
 (setting_name, setting_value, updated_by)
