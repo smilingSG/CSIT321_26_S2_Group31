@@ -49,6 +49,17 @@ def startUploadSession():
             "message": "Upload details are incomplete."
         }), 400
 
+    # Validate the selected file type before creating an upload session.
+    is_allowed_file_type = File.isAllowedFileType(
+        file_name
+    )
+
+    if not is_allowed_file_type:
+        return jsonify({
+            "success": False,
+            "message": "File type is not allowed."
+        }), 400
+
     # Ask the entity to create the upload session and empty temporary file.
     upload_session = UploadSession.startUpload(
         owner_id,
@@ -59,7 +70,7 @@ def startUploadSession():
     if upload_session is None:
         return jsonify({
             "success": False,
-            "message": "File type is not allowed."
+            "message": "Upload session could not be created."
         }), 400
 
     return jsonify({
