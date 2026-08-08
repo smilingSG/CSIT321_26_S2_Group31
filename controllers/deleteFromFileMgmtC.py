@@ -7,6 +7,7 @@ from flask import session
 from entities.File import File
 from entities.Fragment import Fragment
 from entities.ShareLink import ShareLink
+from entities.StorageNodeOCI import StorageNode
 from entities.UploadSession import UploadSession
 
 
@@ -46,17 +47,24 @@ def deleteFromFileMgmt(file_id: int):
             "message": "Unable to delete file."
         }), 404
 
-    # Delete related records before deleting the main file record.
+    # Retrieve stored fragment paths before database records are removed.
+    fragment_paths = Fragment.getStoredFragmentPaths(file_id)
+
+    # Delete related records and stored objects before deleting the main file record.
     share_links_deleted = ShareLink.deleteShareLinks(file_id)
     upload_sessions_deleted = UploadSession.deleteUploadSessions(file_id)
-    fragments_deleted = Fragment.deleteFragments(file_id)
+    stored_fragments_deleted = StorageNode.deleteStoredFragments(fragment_paths)
+    fragments_deleted = False
     file_record_deleted = False
 
     if (
         share_links_deleted
         and upload_sessions_deleted
-        and fragments_deleted
+        and stored_fragments_deleted
     ):
+        fragments_deleted = Fragment.deleteFragments(file_id)
+
+    if fragments_deleted:
         file_record_deleted = File.deleteFileRecord(
             file_id,
             owner_id
