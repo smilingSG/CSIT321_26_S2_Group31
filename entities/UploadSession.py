@@ -13,9 +13,6 @@ from typing import Any
 # Import the application's MySQL connection function.
 from db import get_db_connection
 
-# Import the File entity so upload sessions reuse the same file type rules.
-from entities.File import File
-
 
 # Define the folder used to store temporary upload-session files.
 TEMP_UPLOAD_FOLDER: str = "temp_uploads"
@@ -34,10 +31,6 @@ class UploadSession:
                     total_size: int) -> Optional[Dict[str, Any]]:
 
         original_filename: str = secure_filename(file_name)
-
-        if not File.isAllowedFileType(original_filename):
-            return None
-
         file_extension: str = os.path.splitext(original_filename)[1]
         stored_filename: str = str(uuid.uuid4()) + file_extension
         temp_upload_path: str = os.path.join(
