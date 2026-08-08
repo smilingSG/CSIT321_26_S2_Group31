@@ -15,7 +15,8 @@ class UserAccount:
 
     @staticmethod
     def authenticate(login_credential: str,
-                     password: str) -> Optional[Dict[str, Any]]:
+                     password: str,
+                     max_login_attempts: int) -> Optional[Dict[str, Any]]:
 
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -63,7 +64,6 @@ class UserAccount:
             password.encode("utf-8"),
             stored_password_hash.encode("utf-8")
         ):
-            max_login_attempts = SystemSetting.getMaxLoginAttempts()
             failed_attempts = user_record["failed_login_attempts"] + 1
 
             UserAccount.recordFailedLogin(

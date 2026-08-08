@@ -9,6 +9,7 @@ from flask import request
 from flask import session
 from flask import url_for
 
+from entities.SystemSetting import SystemSetting
 from entities.UserAccount import UserAccount
 
 login_bp = Blueprint("login_bp", __name__)
@@ -32,9 +33,12 @@ class LoginC:
               password: str,
               selected_role: str) -> Optional[Dict[str, Any]]:
 
+        max_login_attempts = SystemSetting.getMaxLoginAttempts()
+
         user_account = UserAccount.authenticate(
             login_credential=login_credential,
-            password=password
+            password=password,
+            max_login_attempts=max_login_attempts
         )
 
         if user_account is None:
@@ -47,6 +51,7 @@ class LoginC:
             return None
 
         return user_account
+
 
 @login_bp.route("/login", methods=["GET", "POST"])
 def login():
