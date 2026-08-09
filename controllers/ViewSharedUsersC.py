@@ -5,6 +5,7 @@ from flask import session
 from flask import url_for
 
 from entities.ShareLink import ShareLink
+from entities.File import File
 
 
 view_shared_users_bp = Blueprint("view_shared_users_bp", __name__)
@@ -16,10 +17,9 @@ class ViewSharedUsersC:
     def viewSharedUsers(file_id: int,
                         user_id: int):
 
-        return ShareLink.viewSharedUsersForOwnedFile(
-            file_id=file_id,
-            user_id=user_id
-        )
+        if not File.verifyFileOwnership(file_id=file_id, owner_id=user_id):
+            return None, "Unable to view shared users for this file."
+        return ShareLink.getSharedUsers(file_id), None
 
 
 @view_shared_users_bp.route("/shared/users/<int:file_id>", methods=["GET"])

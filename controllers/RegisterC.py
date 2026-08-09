@@ -15,6 +15,7 @@ from flask import request
 from flask import url_for
 
 from entities.UserAccount import UserAccount
+from entities.SystemSetting import SystemSetting
 
 register_bp = Blueprint("register_bp", __name__)
 
@@ -31,6 +32,10 @@ class RegisterC:
             email=email
         ):
             return False, "Account already exists."
+
+        if (not SystemSetting.validateUsernameAgainstPolicy(username)
+                or not SystemSetting.validatePasswordAgainstPolicy(password)):
+            return False, "Username or password does not meet the current policy."
 
         token = secrets.token_urlsafe(32)
         expires_at = datetime.now() + timedelta(minutes=30)

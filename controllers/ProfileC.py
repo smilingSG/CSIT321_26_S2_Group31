@@ -6,6 +6,7 @@ from flask import session
 from flask import url_for
 
 from entities.UserAccount import UserAccount
+from entities.SystemSetting import SystemSetting
 
 
 profile_bp = Blueprint("profile_bp", __name__)
@@ -24,6 +25,16 @@ class ProfileC:
                       new_password: str,
                       confirm_password: str):
 
+        display_name = display_name.strip()
+        if display_name == "":
+            return False, "Display name is required."
+        if not SystemSetting.validateUsernameAgainstPolicy(display_name):
+            return False, "Display name does not meet the current username policy."
+        if new_password != "" or confirm_password != "":
+            if new_password != confirm_password:
+                return False, "Passwords do not match."
+            if not SystemSetting.validatePasswordAgainstPolicy(new_password):
+                return False, "Password does not meet the current password policy."
         return UserAccount.updateProfile(
             user_id=user_id,
             display_name=display_name,

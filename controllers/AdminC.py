@@ -9,6 +9,7 @@ from flask import session
 from flask import url_for
 
 from entities.UserAccount import UserAccount
+from entities.SystemSetting import SystemSetting
 
 admin_bp = Blueprint("admin_bp", __name__)
 
@@ -34,6 +35,10 @@ class AdminC:
             email=email
         ):
             return "Account exists."
+
+        if (not SystemSetting.validateUsernameAgainstPolicy(username)
+                or not SystemSetting.validatePasswordAgainstPolicy(password)):
+            return "Username or password does not meet the current account policy."
 
         user_id = UserAccount.createAccount(
             username=username,

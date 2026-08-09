@@ -12,6 +12,7 @@ from flask import render_template
 from flask import request
 from flask import url_for
 
+from entities.SystemSetting import SystemSetting
 from entities.UserAccount import UserAccount
 
 password_reset_bp = Blueprint("password_reset_bp", __name__)
@@ -105,13 +106,18 @@ This code expires in 30 minutes. If you did not request this, you can ignore thi
     @staticmethod
     def updatePassword(email: str,
                        token: str,
-                       new_password: str) -> bool:
+                       new_password: str) -> tuple[bool, Optional[str]]:
 
-        return UserAccount.resetPassword(
+        if not SystemSetting.validatePasswordAgainstPolicy(new_password):
+            return False, "Password does not meet the current password policy."
+
+        password_updated = UserAccount.resetPassword(
             email=email,
             token=token,
             new_password=new_password
         )
+
+        return password_updated, None
 
 
 @password_reset_bp.route("/reset-password", methods=["GET", "POST"])
@@ -162,15 +168,7 @@ def resetPassword():
             token=token
         ), 400
 
-    if len(new_password) < 8:
-        return render_template(
-            "reset_password.html",
-            error="Password must be at least 8 characters long.",
-            email=email,
-            token=token
-        ), 400
-
-    password_updated = PasswordResetC.updatePassword(
+    password_updated, password_error = PasswordResetC.updatePassword(
         email=email,
         token=token,
         new_password=new_password
@@ -179,7 +177,7 @@ def resetPassword():
     if not password_updated:
         return render_template(
             "reset_password.html",
-            error="The verification code is invalid or expired.",
+            error=password_error or "The verification code is invalid or expired.",
             email=email,
             token=token
         ), 400
