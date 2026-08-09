@@ -11,6 +11,7 @@ from controllers.LoginC import login_bp
 from controllers.UserManagementC import user_management_bp
 from controllers.dashboardC import dashboard_bp
 from controllers.uploadFileC import upload_bp
+from controllers.cancelUploadC import cancel_upload_bp
 from controllers.PauseUploadC import pause_upload_bp
 from controllers.ResumeUploadC import resume_upload_bp
 from controllers.previewUploadedFileC import preview_bp
@@ -56,6 +57,7 @@ app.register_blueprint(login_bp)
 app.register_blueprint(user_management_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(upload_bp)
+app.register_blueprint(cancel_upload_bp)
 app.register_blueprint(pause_upload_bp)
 app.register_blueprint(resume_upload_bp)
 app.register_blueprint(preview_bp)
