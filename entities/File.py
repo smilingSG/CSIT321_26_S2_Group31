@@ -468,7 +468,7 @@ class File:
 
         return count > 0
 
-    # Rename a processed file after checking that the new name is not in use.
+    # Rename a processed file without allowing its extension to change.
     @staticmethod
     def updateName(owner_id: int,
                    file_id: int,
@@ -481,6 +481,36 @@ class File:
 
         if not File.isAllowedFileType(new_name):
             return "File name must keep an allowed file extension."
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT file_name
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if file_record is None:
+            return "Unable to rename file."
+
+        original_extension = os.path.splitext(
+            file_record["file_name"]
+        )[1].lower()
+        new_extension = os.path.splitext(new_name)[1].lower()
+
+        if original_extension != new_extension:
+            return "File extension cannot be changed."
 
         if File.checkNameExists(owner_id, file_id, new_name):
             return "Name in use."
