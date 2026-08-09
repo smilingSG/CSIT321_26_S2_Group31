@@ -8,6 +8,7 @@ from flask import url_for
 from entities.File import File
 from entities.ShareLink import ShareLink
 from entities.SystemSetting import SystemSetting
+from entities.UserAccount import UserAccount
 
 
 share_file_bp = Blueprint("share_file_bp", __name__)
@@ -22,13 +23,41 @@ class ShareFileC:
                         is_one_time: bool,
                         expiry_hours: int):
 
-        return ShareLink.createShareLinkForRecipient(
+        max_expiry_hours = SystemSetting.getMaxExpiryDuration() or 72
+        if expiry_hours < 1 or expiry_hours > max_expiry_hours:
+            return None, "Expiry must be between 1 and " + str(max_expiry_hours) + " hours."
+
+        if not File.verifyFileOwnership(file_id=file_id, owner_id=user_id):
+            return None, "Unable to create secure link."
+
+        recipient = UserAccount.getByEmail(recipient_email)
+        if recipient is None or recipient["account_status"] != "active":
+            return None, "Recipient account could not be found."
+        if recipient["user_id"] == user_id:
+            return None, "Select another user as the recipient."
+
+        secure_token = ShareLink.createShareLink(
             file_id=file_id,
-            recipient_email=recipient_email,
-            user_id=user_id,
+            created_by=user_id,
+            recipient_id=recipient["user_id"],
             is_one_time=is_one_time,
             expiry_hours=expiry_hours
         )
+        return secure_token, None
+
+    @staticmethod
+    def regenerateShareLink(share_id: int, user_id: int) -> bool:
+        link_record = ShareLink.getLinkForRenewal(share_id, user_id)
+        if link_record is None:
+            return False
+        expiry_hours = min(72, SystemSetting.getMaxExpiryDuration() or 72)
+        ShareLink.createShareLink(
+            file_id=link_record["file_id"], created_by=user_id,
+            recipient_id=link_record["recipient_id"],
+            is_one_time=bool(link_record["is_one_time"]),
+            expiry_hours=expiry_hours
+        )
+        return True
 
     @staticmethod
     def getShareData(user_id: int):
@@ -112,7 +141,7 @@ def regenerateSharedLink(share_id: int):
     if user_id is None:
         return redirect(url_for("login_bp.login"))
 
-    ShareLink.regenerateShareLink(
+    ShareFileC.regenerateShareLink(
         share_id=share_id,
         user_id=user_id
     )

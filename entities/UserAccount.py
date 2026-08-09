@@ -8,7 +8,6 @@ import hashlib
 from datetime import datetime
 
 from db import get_db_connection
-from entities.SystemSetting import SystemSetting
 
 
 class UserAccount:
@@ -232,9 +231,6 @@ class UserAccount:
                       token: str,
                       new_password: str) -> bool:
 
-        if not SystemSetting.validatePasswordAgainstPolicy(new_password):
-            return False
-
         UserAccount.ensurePasswordResetTable()
 
         token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
@@ -326,12 +322,6 @@ class UserAccount:
                                        role: str,
                                        token: str,
                                        expires_at: datetime) -> bool:
-
-        if not SystemSetting.validateUsernameAgainstPolicy(username):
-            return False
-
-        if not SystemSetting.validatePasswordAgainstPolicy(password):
-            return False
 
         UserAccount.ensureRegistrationVerificationTable()
 
@@ -550,12 +540,6 @@ class UserAccount:
                       password: str,
                       role: str) -> Optional[int]:
 
-        if not SystemSetting.validateUsernameAgainstPolicy(username):
-            return None
-
-        if not SystemSetting.validatePasswordAgainstPolicy(password):
-            return None
-
         password_hash = bcrypt.hashpw(
             password.encode("utf-8"),
             bcrypt.gensalt()
@@ -713,9 +697,6 @@ class UserAccount:
         if display_name == "":
             return False, "Display name is required."
 
-        if not SystemSetting.validateUsernameAgainstPolicy(display_name):
-            return False, "Display name does not meet the current username policy."
-
         password_change_requested = (
             new_password != ""
             or confirm_password != ""
@@ -724,9 +705,6 @@ class UserAccount:
         if password_change_requested:
             if new_password != confirm_password:
                 return False, "Passwords do not match."
-
-            if not SystemSetting.validatePasswordAgainstPolicy(new_password):
-                return False, "Password does not meet the current password policy."
 
         connection = get_db_connection()
         cursor = connection.cursor()
