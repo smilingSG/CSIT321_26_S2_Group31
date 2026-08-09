@@ -85,38 +85,48 @@ def storeFragments(file_id: int):
             "There are not enough active storage nodes."
         )
 
-    # Select one different active storage node for each fragment.
-    selected_nodes = active_node_list[:len(fragment_list)]
-
     # Track stored files so they can be removed if part of the operation fails.
     stored_fragment_paths = []
 
-    try:
-        # Pair every fragment with one selected storage node.
-        for fragment_data, storage_node in zip(
-            fragment_list,
-            selected_nodes
-        ):
-            # Copy the temporary fragment into the selected node folder.
-            stored_fragment_path = StorageNode.storeFragment(
-                fragment_data,
-                storage_node["node_path"]
-            )
+    # Move through the least-used node list once, skipping nodes that fail.
+    next_node_index = 0
 
-            # Stop processing if the physical fragment could not be stored.
-            if stored_fragment_path is None:
+    try:
+        # Store every fragment on a different active storage node.
+        for fragment_data in fragment_list:
+            selected_storage_node = None
+            stored_fragment_path = None
+
+            # Try the next least-used node until this fragment is stored.
+            while (
+                stored_fragment_path is None
+                and next_node_index < len(active_node_list)
+            ):
+                storage_node = active_node_list[next_node_index]
+                next_node_index += 1
+
+                stored_fragment_path = StorageNode.storeFragment(
+                    fragment_data,
+                    storage_node["node_path"]
+                )
+
+                if stored_fragment_path is not None:
+                    selected_storage_node = storage_node
+
+            # Stop processing if no remaining active node can store this fragment.
+            if stored_fragment_path is None or selected_storage_node is None:
                 raise OSError("Fragment could not be stored.")
 
             # Remember the stored path for possible failure cleanup.
             stored_fragment_paths.append({
-                "node_path": storage_node["node_path"],
+                "node_path": selected_storage_node["node_path"],
                 "fragment_path": stored_fragment_path
             })
 
             # Update the fragment record with its node and permanent path.
             fragment_updated = Fragment.updateFragmentStorage(
                 fragment_data["fragment_id"],
-                storage_node["node_id"],
+                selected_storage_node["node_id"],
                 stored_fragment_path
             )
 
