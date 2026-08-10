@@ -1,6 +1,5 @@
 import secrets
 from datetime import datetime
-from datetime import timedelta
 from typing import Any
 from typing import Dict
 from typing import List
@@ -43,10 +42,9 @@ class ShareLink:
                         created_by: int,
                         recipient_id: int,
                         is_one_time: bool,
-                        expiry_hours: int) -> str:
+        expiry_hours: int) -> str:
 
         share_token = secrets.token_urlsafe(32)
-        expiry_datetime = datetime.now() + timedelta(hours=expiry_hours)
 
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -62,14 +60,18 @@ class ShareLink:
                 expiry_datetime,
                 link_status
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (
+                %s, %s, %s, %s, %s,
+                DATE_ADD(NOW(), INTERVAL %s HOUR),
+                %s
+            )
         """, (
             file_id,
             created_by,
             recipient_id,
             share_token,
             is_one_time,
-            expiry_datetime,
+            expiry_hours,
             "active"
         ))
 
@@ -309,7 +311,8 @@ class ShareLink:
 
     @staticmethod
     def updateExpiryDateTime(share_id: int,
-                             expiry_datetime: datetime) -> bool:
+                             expiry_datetime: datetime,
+                             max_expiry_hours: int) -> bool:
 
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -321,9 +324,14 @@ class ShareLink:
                 link_status = 'active'
             WHERE share_id = %s
             AND link_status = 'active'
+            AND %s > NOW()
+            AND %s <= DATE_ADD(NOW(), INTERVAL %s HOUR)
         """, (
             expiry_datetime,
-            share_id
+            share_id,
+            expiry_datetime,
+            expiry_datetime,
+            max_expiry_hours
         ))
 
         updated = cursor.rowcount == 1

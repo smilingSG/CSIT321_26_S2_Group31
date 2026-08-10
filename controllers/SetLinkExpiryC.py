@@ -3,6 +3,7 @@ from flask import redirect
 from flask import request
 from flask import session
 from flask import url_for
+from datetime import datetime
 
 from entities.ShareLink import ShareLink
 from entities.SystemSetting import SystemSetting
@@ -24,11 +25,12 @@ class SetLinkExpiryC:
             expiry_datetime = datetime.strptime(expiry_datetime_value, "%Y-%m-%dT%H:%M")
         except (TypeError, ValueError):
             return False
-        current_time = datetime.now()
-        max_expiry = current_time + timedelta(hours=SystemSetting.getMaxExpiryDuration() or 72)
-        if expiry_datetime <= current_time or expiry_datetime > max_expiry:
-            return False
-        return ShareLink.updateExpiryDateTime(share_id, expiry_datetime)
+        max_expiry_hours = SystemSetting.getMaxExpiryDuration() or 72
+        return ShareLink.updateExpiryDateTime(
+            share_id=share_id,
+            expiry_datetime=expiry_datetime,
+            max_expiry_hours=max_expiry_hours
+        )
 
 
 @set_link_expiry_bp.route("/shared/expiry/<int:share_id>", methods=["POST"])
@@ -53,4 +55,3 @@ def setLinkExpiry(share_id: int):
         session["shared_error_message"] = "Unable to set expiry."
 
     return redirect(url_for("share_file_bp.sharedFilesPage"))
-from datetime import datetime, timedelta
