@@ -3,8 +3,6 @@ from typing import Optional
 import os
 import secrets
 import smtplib
-from datetime import datetime
-from datetime import timedelta
 from email.message import EmailMessage
 
 from flask import Blueprint
@@ -38,15 +36,12 @@ class RegisterC:
             return False, "Username or password does not meet the current policy."
 
         token = secrets.token_urlsafe(32)
-        expires_at = datetime.now() + timedelta(minutes=30)
-
         verification_created = UserAccount.createRegistrationVerification(
             username=username,
             email=email,
             password=password,
             role="user",
-            token=token,
-            expires_at=expires_at
+            token=token
         )
 
         if not verification_created:
@@ -185,6 +180,19 @@ def verifyAccount():
     token: str = request.values.get("token", "").strip()
 
     if request.method == "GET":
+        if token and (
+            not username
+            or not UserAccount.isRegistrationVerificationValid(
+                username=username,
+                token=token
+            )
+        ):
+            return render_template(
+                "verify_registration.html",
+                error="The username or verification code is invalid or expired.",
+                username=username
+            ), 400
+
         return render_template(
             "verify_registration.html",
             username=username,
