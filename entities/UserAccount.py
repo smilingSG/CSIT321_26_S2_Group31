@@ -320,8 +320,7 @@ class UserAccount:
                                        email: str,
                                        password: str,
                                        role: str,
-                                       token: str,
-                                       expires_at: datetime) -> bool:
+                                       token: str) -> bool:
 
         UserAccount.ensureRegistrationVerificationTable()
 
@@ -351,14 +350,13 @@ class UserAccount:
                 token_hash,
                 expires_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, DATE_ADD(NOW(), INTERVAL 30 MINUTE))
         """, (
             username,
             email,
             password_hash,
             role,
-            token_hash,
-            expires_at
+            token_hash
         ))
 
         connection.commit()
@@ -367,6 +365,37 @@ class UserAccount:
         connection.close()
 
         return True
+
+    @staticmethod
+    def isRegistrationVerificationValid(username: str,
+                                        token: str) -> bool:
+
+        UserAccount.ensureRegistrationVerificationTable()
+
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT 1
+            FROM registration_verification_tokens
+            WHERE username = %s
+            AND token_hash = %s
+            AND used_at IS NULL
+            AND expires_at > NOW()
+            LIMIT 1
+        """, (
+            username,
+            token_hash
+        ))
+
+        is_valid = cursor.fetchone() is not None
+
+        cursor.close()
+        connection.close()
+
+        return is_valid
 
     @staticmethod
     def verifyRegistration(username: str,
