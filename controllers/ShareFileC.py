@@ -1,4 +1,9 @@
+import os
+import smtplib
+from email.message import EmailMessage
+
 from flask import Blueprint
+from flask import current_app
 from flask import redirect
 from flask import render_template
 from flask import request
@@ -15,6 +20,60 @@ share_file_bp = Blueprint("share_file_bp", __name__)
 
 
 class ShareFileC:
+
+    @staticmethod
+    def sendShareLinkEmail(to_email: str,
+                           recipient_name: str,
+                           sender_name: str,
+                           secure_link: str,
+                           expiry_hours: int,
+                           is_one_time: bool):
+
+        smtp_host = os.environ.get("SMTP_HOST")
+        smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+        smtp_username = os.environ.get("SMTP_USERNAME")
+        smtp_password = os.environ.get("SMTP_PASSWORD")
+        smtp_sender = os.environ.get("SMTP_FROM", smtp_username)
+        smtp_use_tls = os.environ.get("SMTP_USE_TLS", "true").lower() == "true"
+
+        if not smtp_host or not smtp_sender:
+            current_app.logger.warning(
+                "Share-link email is not configured for recipient %s.",
+                to_email
+            )
+            return False, "Email service is not configured. Copy the secure link and send it to the recipient manually."
+
+        link_type = "This is a one-time link and will stop working after it is used." if is_one_time else "You may use this link until it expires."
+        message = EmailMessage()
+        message["Subject"] = "A file has been shared with you on Lazarus"
+        message["From"] = smtp_sender
+        message["To"] = to_email
+        message.set_content(f"""
+Hi {recipient_name},
+
+{sender_name} has shared a file with you.
+
+Open the shared file:
+{secure_link}
+
+{link_type}
+The link expires in {expiry_hours} hour(s).
+
+You must sign in using this email address to access the file. If you were not expecting this message, you can ignore it.
+""".strip())
+
+        try:
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                if smtp_use_tls:
+                    server.starttls()
+                if smtp_username and smtp_password:
+                    server.login(smtp_username, smtp_password)
+                server.send_message(message)
+        except (OSError, smtplib.SMTPException) as exc:
+            current_app.logger.warning("Share-link email failed: %s", exc)
+            return False, "The secure link was created, but the email could not be sent. Copy the link and send it to the recipient manually."
+
+        return True, None
 
     @staticmethod
     def createShareLink(file_id: int,
@@ -118,7 +177,21 @@ def sharedFilesPage():
                     share_token=secure_token,
                     _external=True
                 )
-                success_message = "Secure link created."
+                recipient = UserAccount.getByEmail(recipient_email)
+                email_sent, email_error = ShareFileC.sendShareLinkEmail(
+                    to_email=recipient_email,
+                    recipient_name=recipient.get("username", "there"),
+                    sender_name=session.get("username", "A Lazarus user"),
+                    secure_link=secure_link,
+                    expiry_hours=expiry_hours,
+                    is_one_time=is_one_time
+                )
+
+                if email_sent:
+                    success_message = "Secure link created and emailed to the recipient."
+                else:
+                    success_message = "Secure link created."
+                    error_message = email_error
 
     share_data = ShareFileC.getShareData(user_id)
 
