@@ -4,6 +4,8 @@ import os
 import json
 # Import directory cleanup utilities.
 import shutil
+# Import UUID support for unique reconstruction temporary filenames.
+import uuid
 
 # Import type hints used by fragment records.
 from typing import Dict
@@ -304,7 +306,8 @@ class Fragment:
 
             reconstructed_path = os.path.join(
                 RECONSTRUCTED_TEMP_FOLDER,
-                "file_" + str(file_id) + "_reconstructed.enc"
+                "file_" + str(file_id) + "_" + str(uuid.uuid4()) +
+                "_reconstructed.enc"
             )
 
             with open(reconstructed_path, "wb") as reconstructed_file:
