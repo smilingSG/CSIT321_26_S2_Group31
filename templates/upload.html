@@ -136,6 +136,8 @@
         var uploadedBytes = 0;
         var uploadCompleted = false;
         var uploadPaused = false;
+        var allowUploadPageExit = false;
+        var uploadExitCleanupSent = false;
 
         chooseFileButton.addEventListener("click", function (event) {
             event.stopPropagation();
@@ -179,6 +181,7 @@
 
         completeUploadBtn.addEventListener("click", function () {
             if (uploadCompleted && currentTempFileID !== null) {
+                allowUploadPageExit = true;
                 window.location.href = "/upload/preview/" + currentTempFileID;
             }
         });
@@ -191,6 +194,8 @@
             uploadedBytes = 0;
             uploadCompleted = false;
             uploadPaused = false;
+            allowUploadPageExit = false;
+            uploadExitCleanupSent = false;
 
             completeUploadBtn.disabled = true;
             pauseUploadBtn.disabled = true;
@@ -480,6 +485,41 @@
             xhr.open("POST", "/upload/cancel-session/" + uploadID, true);
             xhr.send();
         }
+
+        function sendExitCleanupRequest(cleanupURL) {
+            if (navigator.sendBeacon) {
+                var emptyPayload = new Blob([], {
+                    type: "application/x-www-form-urlencoded"
+                });
+
+                navigator.sendBeacon(cleanupURL, emptyPayload);
+                return;
+            }
+
+            fetch(cleanupURL, {
+                method: "POST",
+                keepalive: true
+            });
+        }
+
+        function cleanupUploadOnPageExit() {
+            if (allowUploadPageExit || uploadExitCleanupSent) {
+                return;
+            }
+
+            if (currentTempFileID !== null) {
+                uploadExitCleanupSent = true;
+                sendExitCleanupRequest("/upload/cancel/" + currentTempFileID);
+                return;
+            }
+
+            if (currentUploadID !== null && !uploadCompleted) {
+                uploadExitCleanupSent = true;
+                sendExitCleanupRequest("/upload/cancel-session/" + currentUploadID);
+            }
+        }
+
+        window.addEventListener("pagehide", cleanupUploadOnPageExit);
 
         function clearUploadDisplay() {
             fileInput.value = "";

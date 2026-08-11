@@ -475,6 +475,8 @@
 <script>
     var currentTempFileID = {{ previewData.fileID }};
     var fileDeleted = false;
+    var allowPreviewPageExit = false;
+    var previewExitCleanupSent = false;
 
     function continueToFragmentConfiguration() {
 
@@ -483,6 +485,7 @@
         }
 
         currentTempFileID = null;
+        allowPreviewPageExit = true;
         window.location.href = "/upload/fragments/{{ previewData.fileID }}";
     }
 
@@ -496,6 +499,7 @@
         xhr.onload = function () {
             if (xhr.status === 200) {
                 currentTempFileID = null;
+                allowPreviewPageExit = true;
                 window.location.href = targetURL;
             } else {
                 document.getElementById("pageMessage").innerText =
@@ -582,6 +586,38 @@
         xhr.open("POST", "/upload/cancel/" + fileID, true);
         xhr.send();
     }
+
+    function sendPreviewExitCleanupRequest(cleanupURL) {
+        if (navigator.sendBeacon) {
+            var emptyPayload = new Blob([], {
+                type: "application/x-www-form-urlencoded"
+            });
+
+            navigator.sendBeacon(cleanupURL, emptyPayload);
+            return;
+        }
+
+        fetch(cleanupURL, {
+            method: "POST",
+            keepalive: true
+        });
+    }
+
+    function cleanupPreviewOnPageExit() {
+        if (
+            allowPreviewPageExit
+            || previewExitCleanupSent
+            || fileDeleted === true
+            || currentTempFileID === null
+        ) {
+            return;
+        }
+
+        previewExitCleanupSent = true;
+        sendPreviewExitCleanupRequest("/upload/cancel/" + currentTempFileID);
+    }
+
+    window.addEventListener("pagehide", cleanupPreviewOnPageExit);
 </script>
 
 </body>
