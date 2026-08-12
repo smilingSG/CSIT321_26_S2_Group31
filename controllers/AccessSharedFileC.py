@@ -7,6 +7,8 @@ from flask import url_for
 
 from entities.ShareLink import ShareLink
 from entities.File import File
+from entities.Fragment import Fragment
+from entities.StorageNodeOCI import StorageNode
 
 
 access_shared_file_bp = Blueprint("access_shared_file_bp", __name__)
@@ -56,6 +58,30 @@ class AccessSharedFileC:
         file_record = File.getSharedDownloadDetails(link_record["file_id"])
         if file_record is None:
             return None, "Shared file fragments could not be found.", "no_fragments"
+
+        fragment_paths = Fragment.getAvailableFragments(
+            link_record["file_id"]
+        )
+        available_fragments = StorageNode.retrieveFragments(fragment_paths)
+
+        recoverable_file = Fragment.reconstructAndProcessFragments(
+            available_fragments,
+            file_record["required_fragments"],
+            file_record["total_fragments"],
+            file_record["encrypted_size"],
+            processor=lambda encrypted_data: File.decryptReconstructedData(
+                file_record,
+                encrypted_data
+            )
+        )
+
+        if recoverable_file is None:
+            return (
+                None,
+                "No valid fragment combination is currently available.",
+                "no_fragments"
+            )
+
         return link_record, None, "valid"
 
 
