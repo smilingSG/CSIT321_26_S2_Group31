@@ -1084,6 +1084,57 @@ class File:
 
         return updated
 
+    # Authenticate reconstructed ciphertext before accepting a fragment set.
+    @staticmethod
+    def validateReconstructedFile(file_id: int,
+                                  reconstructed_temp_path: str,
+                                  owner_id: Optional[int] = None) -> bool:
+        """Authenticate reconstructed ciphertext without deleting it."""
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        query = """
+            SELECT nonce, encrypted_file_key
+            FROM files
+            WHERE file_id = %s
+            AND file_status = 'processed'
+        """
+        parameters = [file_id]
+
+        if owner_id is not None:
+            query += " AND owner_id = %s"
+            parameters.append(owner_id)
+
+        cursor.execute(query, tuple(parameters))
+        file_record = cursor.fetchone()
+        cursor.close()
+        connection.close()
+
+        if file_record is None or not reconstructed_temp_path:
+            return False
+        if not os.path.exists(reconstructed_temp_path):
+            return False
+
+        try:
+            file_key = File.unwrapFileKey(
+                bytes(file_record["encrypted_file_key"])
+            )
+            if file_key is None:
+                return False
+
+            with open(reconstructed_temp_path, "rb") as encrypted_file:
+                encrypted_data = encrypted_file.read()
+
+            AESGCM(file_key).decrypt(
+                bytes(file_record["nonce"]),
+                encrypted_data,
+                None
+            )
+            return True
+        except Exception:
+            return False
+
     # Decrypt a reconstructed encrypted file using the file's AES-GCM metadata.
     @staticmethod
     def decryptFile(file_id: int,

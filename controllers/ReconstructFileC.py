@@ -94,13 +94,18 @@ def reconstructFile(file_id: int):
         available_fragments,
         required_fragments,
         total_fragments,
-        encrypted_size
+        encrypted_size,
+        validator=lambda path: File.validateReconstructedFile(
+            file_id,
+            path,
+            owner_id
+        )
     )
 
     if reconstructed_path is None:
         return jsonify({
             "success": False,
-            "message": "Unable to reconstruct file. Not enough fragments are currently available."
+            "message": "Unable to reconstruct file. There are not enough valid fragments available."
         }), 400
 
     # Keep the reconstructed encrypted file path for the next processing step.

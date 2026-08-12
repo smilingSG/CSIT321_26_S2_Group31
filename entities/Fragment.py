@@ -6,12 +6,14 @@ import json
 import shutil
 # Import UUID support for unique reconstruction temporary filenames.
 import uuid
+from itertools import combinations
 
 # Import type hints used by fragment records.
 from typing import Dict
 from typing import Any
 from typing import List
 from typing import Optional
+from typing import Callable
 
 # Import zfec's erasure-coding interface.
 from zfec import easyfec
@@ -262,62 +264,86 @@ class Fragment:
                              available_fragments: List[Dict[str, Any]],
                              required_fragments: int,
                              total_fragments: int,
-                             encrypted_size: int) -> Optional[str]:
+                             encrypted_size: int,
+                             validator: Optional[Callable[[str], bool]] = None
+                             ) -> Optional[str]:
 
         if len(available_fragments) < required_fragments:
             return None
 
-        selected_fragments = available_fragments[:required_fragments]
-
-        fragment_bytes = [
-            fragment["fragment_bytes"]
-            for fragment in selected_fragments
-        ]
-
-        share_numbers = [
-            fragment["share_number"]
-            for fragment in selected_fragments
-        ]
-
-        try:
-            decoder = easyfec.Decoder(
-                required_fragments,
-                total_fragments
-            )
-
-            padding_size = (
-                required_fragments - (encrypted_size % required_fragments)
-            ) % required_fragments
-
+        # A zfec decode can succeed even when one input fragment is corrupted.
+        # Try every k-of-n combination and let authenticated decryption validate
+        # the reconstructed ciphertext when a validator is supplied.
+        for selected_fragments in combinations(
+            available_fragments,
+            required_fragments
+        ):
+            reconstructed_path = None
             try:
-                reconstructed_data = decoder.decode(
-                    fragment_bytes,
-                    share_numbers,
-                    padding_size
+                fragment_bytes = [
+                    fragment["fragment_bytes"]
+                    for fragment in selected_fragments
+                ]
+                share_numbers = [
+                    fragment["share_number"]
+                    for fragment in selected_fragments
+                ]
+
+                # Duplicate shares cannot form a valid reconstruction set.
+                if len(set(share_numbers)) != required_fragments:
+                    continue
+
+                decoder = easyfec.Decoder(
+                    required_fragments,
+                    total_fragments
                 )
-            except TypeError:
-                reconstructed_data = decoder.decode(
-                    fragment_bytes,
-                    share_numbers
+
+                padding_size = (
+                    required_fragments - (encrypted_size % required_fragments)
+                ) % required_fragments
+
+                try:
+                    reconstructed_data = decoder.decode(
+                        fragment_bytes,
+                        share_numbers,
+                        padding_size
+                    )
+                except TypeError:
+                    reconstructed_data = decoder.decode(
+                        fragment_bytes,
+                        share_numbers
+                    )
+
+                reconstructed_data = reconstructed_data[:encrypted_size]
+
+                reconstructed_path = os.path.join(
+                    RECONSTRUCTED_TEMP_FOLDER,
+                    "file_" + str(file_id) + "_" + str(uuid.uuid4()) +
+                    "_reconstructed.enc"
                 )
 
-            # Trim any erasure-coding padding back to the original encrypted size.
-            reconstructed_data = reconstructed_data[:encrypted_size]
+                with open(reconstructed_path, "wb") as reconstructed_file:
+                    reconstructed_file.write(reconstructed_data)
 
-            reconstructed_path = os.path.join(
-                RECONSTRUCTED_TEMP_FOLDER,
-                "file_" + str(file_id) + "_" + str(uuid.uuid4()) +
-                "_reconstructed.enc"
-            )
+                if validator is None or validator(reconstructed_path):
+                    return reconstructed_path
 
-            with open(reconstructed_path, "wb") as reconstructed_file:
-                reconstructed_file.write(reconstructed_data)
+                if os.path.exists(reconstructed_path):
+                    os.remove(reconstructed_path)
 
-            return reconstructed_path
+            # A bad combination must not prevent the remaining combinations
+            # from being attempted.
+            except Exception:
+                if (
+                    reconstructed_path is not None
+                    and os.path.exists(reconstructed_path)
+                ):
+                    try:
+                        os.remove(reconstructed_path)
+                    except OSError:
+                        pass
 
-        # Failed decoding means the selected fragments could not reconstruct data.
-        except Exception:
-            return None
+        return None
 
     # Assign a stored fragment to its node and mark it as available.
     @staticmethod
