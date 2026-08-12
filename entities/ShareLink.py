@@ -352,12 +352,16 @@ class ShareLink:
 
         cursor.execute("""
             SELECT
-                file_id,
-                recipient_id,
-                is_one_time
+                share_links.file_id,
+                share_links.recipient_id,
+                share_links.is_one_time,
+                recipient.username AS recipient_username,
+                recipient.email AS recipient_email
             FROM share_links
+            INNER JOIN users AS recipient
+                ON recipient.user_id = share_links.recipient_id
             WHERE share_id = %s
-            AND created_by = %s
+            AND share_links.created_by = %s
         """, (
             share_id,
             created_by
@@ -369,6 +373,38 @@ class ShareLink:
         connection.close()
 
         return link_record
+
+    @staticmethod
+    def regenerateShareLink(share_id: int,
+                            created_by: int,
+                            expiry_hours: int) -> Optional[str]:
+
+        share_token = secrets.token_urlsafe(32)
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE share_links
+            SET
+                share_token = %s,
+                expiry_datetime = DATE_ADD(NOW(), INTERVAL %s HOUR),
+                link_status = 'active'
+            WHERE share_id = %s
+            AND created_by = %s
+            AND link_status <> 'active'
+        """, (
+            share_token,
+            expiry_hours,
+            share_id,
+            created_by
+        ))
+
+        regenerated = cursor.rowcount == 1
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+        return share_token if regenerated else None
 
     @staticmethod
     def markUsed(share_id: int) -> bool:

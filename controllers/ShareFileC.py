@@ -105,18 +105,30 @@ You must sign in using this email address to access the file. If you were not ex
         return secure_token, None
 
     @staticmethod
-    def regenerateShareLink(share_id: int, user_id: int) -> bool:
-        link_record = ShareLink.getLinkForRenewal(share_id, user_id)
+    def regenerateShareLink(share_id: int, user_id: int):
+        link_record = ShareLink.getLinkForRenewal(
+            share_id=share_id,
+            created_by=user_id
+        )
         if link_record is None:
-            return False
+            return None
+
         expiry_hours = min(72, SystemSetting.getMaxExpiryDuration() or 72)
-        ShareLink.createShareLink(
-            file_id=link_record["file_id"], created_by=user_id,
-            recipient_id=link_record["recipient_id"],
-            is_one_time=bool(link_record["is_one_time"]),
+        secure_token = ShareLink.regenerateShareLink(
+            share_id=share_id,
+            created_by=user_id,
             expiry_hours=expiry_hours
         )
-        return True
+        if secure_token is None:
+            return None
+
+        return {
+            "secure_token": secure_token,
+            "recipient_email": link_record["recipient_email"],
+            "recipient_name": link_record["recipient_username"],
+            "is_one_time": bool(link_record["is_one_time"]),
+            "expiry_hours": expiry_hours
+        }
 
     @staticmethod
     def getShareData(user_id: int):
@@ -143,6 +155,7 @@ def sharedFilesPage():
     if request.method == "GET":
         success_message = session.pop("shared_success_message", None)
         error_message = session.pop("shared_error_message", None)
+        secure_link = session.pop("shared_secure_link", None)
 
     if request.method == "POST":
         try:
@@ -214,9 +227,35 @@ def regenerateSharedLink(share_id: int):
     if user_id is None:
         return redirect(url_for("login_bp.login"))
 
-    ShareFileC.regenerateShareLink(
+    regenerated_link = ShareFileC.regenerateShareLink(
         share_id=share_id,
         user_id=user_id
     )
+
+    if regenerated_link is None:
+        session["shared_error_message"] = "Unable to generate a new link."
+        return redirect(url_for("share_file_bp.sharedFilesPage"))
+
+    secure_link = url_for(
+        "access_shared_file_bp.viewSharedFile",
+        share_token=regenerated_link["secure_token"],
+        _external=True
+    )
+    session["shared_secure_link"] = secure_link
+
+    email_sent, email_error = ShareFileC.sendShareLinkEmail(
+        to_email=regenerated_link["recipient_email"],
+        recipient_name=regenerated_link["recipient_name"],
+        sender_name=session.get("username", "A Lazarus user"),
+        secure_link=secure_link,
+        expiry_hours=regenerated_link["expiry_hours"],
+        is_one_time=regenerated_link["is_one_time"]
+    )
+
+    if email_sent:
+        session["shared_success_message"] = "New link generated and emailed to the recipient."
+    else:
+        session["shared_success_message"] = "New link generated."
+        session["shared_error_message"] = email_error
 
     return redirect(url_for("share_file_bp.sharedFilesPage"))
