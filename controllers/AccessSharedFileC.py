@@ -1,3 +1,5 @@
+import os
+
 from flask import Blueprint
 from flask import redirect
 from flask import render_template
@@ -63,7 +65,10 @@ class AccessSharedFileC:
         reconstructed_path = Fragment.reconstructFragments(
             link_record["file_id"], fragments,
             file_record["required_fragments"], file_record["total_fragments"],
-            file_record["encrypted_size"]
+            file_record["encrypted_size"],
+            validator=lambda path: File.validateReconstructedFile(
+                link_record["file_id"], path
+            )
         )
         if reconstructed_path is None:
             return None, "Shared file fragments could not be reconstructed.", "no_fragments"
