@@ -1208,6 +1208,74 @@ class File:
                 except OSError:
                     pass
 
+    # Decrypt reconstructed bytes already held in memory.
+    @staticmethod
+    def decryptReconstructedData(
+        file_record: Dict[str, Any],
+        encrypted_data: bytes
+    ) -> Optional[Dict[str, Any]]:
+
+        try:
+            file_key = File.unwrapFileKey(
+                bytes(file_record["encrypted_file_key"])
+            )
+
+            if file_key is None:
+                return None
+
+            original_data = AESGCM(file_key).decrypt(
+                bytes(file_record["nonce"]),
+                encrypted_data,
+                None
+            )
+
+            return {
+                "fileName": file_record["file_name"],
+                "fileType": (
+                    file_record["file_type"]
+                    or "application/octet-stream"
+                ),
+                "fileBytes": original_data
+            }
+
+        except Exception:
+            return None
+
+    # Retrieve all metadata needed for an owner's combined recovery download.
+    @staticmethod
+    def getOwnerDownloadDetails(
+        file_id: int,
+        owner_id: int
+    ) -> Optional[Dict[str, Any]]:
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                file_id,
+                file_name,
+                file_type,
+                nonce,
+                encrypted_file_key,
+                encrypted_size,
+                total_fragments,
+                required_fragments
+            FROM files
+            WHERE file_id = %s
+            AND owner_id = %s
+            AND file_status = 'processed'
+        """, (
+            file_id,
+            owner_id
+        ))
+
+        file_record = cursor.fetchone()
+        cursor.close()
+        connection.close()
+
+        return file_record
+
     # Decrypt a reconstructed shared file without requiring owner identity.
     @staticmethod
     def decryptSharedFile(file_id: int,

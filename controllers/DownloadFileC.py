@@ -38,19 +38,17 @@ class DownloadFileC:
             return None, "Shared file could not be found."
         paths = Fragment.getAvailableFragments(link_record["file_id"])
         fragments = StorageNode.retrieveFragments(paths)
-        reconstructed_path = Fragment.reconstructFragments(
-            link_record["file_id"], fragments,
+        original_file = Fragment.reconstructAndProcessFragments(
+            fragments,
             file_record["required_fragments"], file_record["total_fragments"],
             file_record["encrypted_size"],
-            validator=lambda path: File.validateReconstructedFile(
-                link_record["file_id"], path
+            processor=lambda encrypted_data: File.decryptReconstructedData(
+                file_record,
+                encrypted_data
             )
         )
-        if reconstructed_path is None:
-            return None, "Shared file fragments could not be reconstructed."
-        original_file = File.decryptSharedFile(link_record["file_id"], reconstructed_path)
         if original_file is None:
-            return None, "Shared file could not be decrypted."
+            return None, "Shared file fragments could not be reconstructed."
         if link_record["is_one_time"] and not ShareLink.markLinkAsUsed(share_token):
             return None, "Access denied or link invalid."
         return original_file, None

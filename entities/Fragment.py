@@ -345,6 +345,66 @@ class Fragment:
 
         return None
 
+    # Reconstruct and process each k-of-n candidate until one is accepted.
+    @staticmethod
+    def reconstructAndProcessFragments(
+        available_fragments: List[Dict[str, Any]],
+        required_fragments: int,
+        total_fragments: int,
+        encrypted_size: int,
+        processor: Callable[[bytes], Optional[Any]]
+    ) -> Optional[Any]:
+
+        if len(available_fragments) < required_fragments:
+            return None
+
+        for selected_fragments in combinations(
+            available_fragments,
+            required_fragments
+        ):
+            try:
+                share_numbers = [
+                    fragment["share_number"]
+                    for fragment in selected_fragments
+                ]
+
+                if len(set(share_numbers)) != required_fragments:
+                    continue
+
+                decoder = easyfec.Decoder(
+                    required_fragments,
+                    total_fragments
+                )
+                fragment_bytes = [
+                    fragment["fragment_bytes"]
+                    for fragment in selected_fragments
+                ]
+                padding_size = (
+                    required_fragments - (encrypted_size % required_fragments)
+                ) % required_fragments
+
+                try:
+                    reconstructed_data = decoder.decode(
+                        fragment_bytes,
+                        share_numbers,
+                        padding_size
+                    )
+                except TypeError:
+                    reconstructed_data = decoder.decode(
+                        fragment_bytes,
+                        share_numbers
+                    )
+
+                result = processor(reconstructed_data[:encrypted_size])
+
+                if result is not None:
+                    return result
+
+            except Exception:
+                continue
+
+        return None
+
     # Assign a stored fragment to its node and mark it as available.
     @staticmethod
     def updateFragmentStorage(fragment_id: int,
