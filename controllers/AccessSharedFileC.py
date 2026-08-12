@@ -1,5 +1,3 @@
-import os
-
 from flask import Blueprint
 from flask import redirect
 from flask import render_template
@@ -9,8 +7,6 @@ from flask import url_for
 
 from entities.ShareLink import ShareLink
 from entities.File import File
-from entities.Fragment import Fragment
-from entities.StorageNodeOCI import StorageNode
 
 
 access_shared_file_bp = Blueprint("access_shared_file_bp", __name__)
@@ -60,23 +56,6 @@ class AccessSharedFileC:
         file_record = File.getSharedDownloadDetails(link_record["file_id"])
         if file_record is None:
             return None, "Shared file fragments could not be found.", "no_fragments"
-        paths = Fragment.getAvailableFragments(link_record["file_id"])
-        fragments = StorageNode.retrieveFragments(paths)
-        reconstructed_path = Fragment.reconstructFragments(
-            link_record["file_id"], fragments,
-            file_record["required_fragments"], file_record["total_fragments"],
-            file_record["encrypted_size"],
-            validator=lambda path: File.validateReconstructedFile(
-                link_record["file_id"], path
-            )
-        )
-        if reconstructed_path is None:
-            return None, "Shared file fragments could not be reconstructed.", "no_fragments"
-        if os.path.exists(reconstructed_path):
-            try:
-                os.remove(reconstructed_path)
-            except OSError:
-                pass
         return link_record, None, "valid"
 
 

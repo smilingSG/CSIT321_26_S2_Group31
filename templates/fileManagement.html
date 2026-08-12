@@ -711,8 +711,6 @@
 <script>
     var selectedRenameFileID = null;
     var selectedDeleteFileID = null;
-    var downloadInProgress = false;
-    var reconstructionCleanupURL = "{{ url_for('reconstruct_file_bp.cleanupReconstruction') }}";
 
     function showPageMessage(message, messageType) {
         var pageMessage = document.getElementById("pageMessage");
@@ -720,24 +718,6 @@
         pageMessage.className = "page-message is-visible " + messageType;
         pageMessage.innerText = message;
     }
-
-    function cleanupReconstructedTempFile() {
-        if (downloadInProgress) {
-            return;
-        }
-
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon(reconstructionCleanupURL, new Blob([], { type: "text/plain" }));
-            return;
-        }
-
-        fetch(reconstructionCleanupURL, {
-            method: "POST",
-            keepalive: true
-        });
-    }
-
-    window.addEventListener("pagehide", cleanupReconstructedTempFile);
 
     function getDownloadFileName(xhr) {
         var disposition = xhr.getResponseHeader("Content-Disposition");
@@ -755,9 +735,8 @@
         return filenameMatch[1];
     }
 
-    function decryptFile(fileID) {
-        showPageMessage("Decrypting file...", "success");
-        downloadInProgress = true;
+    function reconstructFile(fileID) {
+        showPageMessage("Recovering file...", "success");
 
         var xhr = new XMLHttpRequest();
         xhr.responseType = "blob";
@@ -774,8 +753,7 @@
                 document.body.removeChild(downloadLink);
                 window.URL.revokeObjectURL(blobURL);
 
-                downloadInProgress = false;
-                showPageMessage("File decrypted and downloaded successfully.", "success");
+                showPageMessage("File recovered and downloaded successfully.", "success");
                 return;
             }
 
@@ -788,11 +766,10 @@
                     response = JSON.parse(reader.result);
                 } catch (e) {
                     response = {
-                        message: "Decryption failed. Please try again."
+                        message: "File recovery failed. Please try again."
                     };
                 }
 
-                downloadInProgress = false;
                 showPageMessage(response.message, "error");
             };
 
@@ -800,45 +777,10 @@
         };
 
         xhr.onerror = function () {
-            downloadInProgress = false;
-            showPageMessage("Decryption failed. Please try again.", "error");
+            showPageMessage("File recovery failed. Please try again.", "error");
         };
 
-        xhr.open("GET", "/files/decrypt/" + fileID, true);
-        xhr.send();
-    }
-
-    function reconstructFile(fileID) {
-        showPageMessage("Reconstructing encrypted file...", "success");
-
-        var xhr = new XMLHttpRequest();
-
-        xhr.onload = function () {
-            var response = null;
-
-            try {
-                response = JSON.parse(xhr.responseText);
-            } catch (e) {
-                response = {
-                    success: false,
-                    message: "Unable to reconstruct file. Please try again."
-                };
-            }
-
-            if (xhr.status === 200 && response.success) {
-                showPageMessage("Reconstruction complete. Download starting...", "success");
-                decryptFile(fileID);
-                return;
-            }
-
-            showPageMessage(response.message, "error");
-        };
-
-        xhr.onerror = function () {
-            showPageMessage("Unable to reconstruct file. Please try again.", "error");
-        };
-
-        xhr.open("GET", "/files/reconstruct/" + fileID, true);
+        xhr.open("GET", "/files/download/" + fileID, true);
         xhr.send();
     }
 
