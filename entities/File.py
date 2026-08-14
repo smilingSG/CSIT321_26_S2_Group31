@@ -1399,3 +1399,59 @@ class File:
         connection.close()
 
         return deleted
+
+    @staticmethod
+    def getFileIdsByOwner(owner_id: int) -> list:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT file_id
+            FROM files
+            WHERE owner_id = %s
+            ORDER BY file_id
+        """, (owner_id,))
+        file_ids = [record[0] for record in cursor.fetchall()]
+        cursor.close()
+        connection.close()
+        return file_ids
+
+    @staticmethod
+    def deleteFilesByOwner(owner_id: int) -> bool:
+        connection = None
+        cursor = None
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT temp_upload_path, encrypted_temp_path
+                FROM files
+                WHERE owner_id = %s
+            """, (owner_id,))
+            temporary_paths = []
+            for record in cursor.fetchall():
+                temporary_paths.extend([
+                    record["temp_upload_path"],
+                    record["encrypted_temp_path"]
+                ])
+            cursor.execute("""
+                DELETE FROM files
+                WHERE owner_id = %s
+            """, (owner_id,))
+            connection.commit()
+
+            for temporary_path in set(temporary_paths):
+                if temporary_path is None:
+                    continue
+                try:
+                    if os.path.isfile(temporary_path):
+                        os.remove(temporary_path)
+                except OSError:
+                    pass
+            return True
+        except Exception:
+            return False
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if connection is not None:
+                connection.close()

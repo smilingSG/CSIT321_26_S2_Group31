@@ -8,6 +8,29 @@ from db import get_db_connection
 class SystemSetting:
 
     @staticmethod
+    def reassignUpdatedBy(user_id: int,
+                          replacement_user_id: int) -> bool:
+        connection = None
+        cursor = None
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            cursor.execute("""
+                UPDATE system_settings
+                SET updated_by = %s
+                WHERE updated_by = %s
+            """, (replacement_user_id, user_id))
+            connection.commit()
+            return True
+        except Exception:
+            return False
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if connection is not None:
+                connection.close()
+
+    @staticmethod
     def getSecuritySettings() -> Dict[str, Any]:
 
         connection = get_db_connection()

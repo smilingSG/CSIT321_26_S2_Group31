@@ -522,6 +522,69 @@ class Fragment:
 
         return fragment_paths
 
+    @staticmethod
+    def getStoredFragmentPathsByFileIds(
+        file_ids: List[int]
+    ) -> List[Dict[str, Any]]:
+        if not file_ids:
+            return []
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        placeholders = ", ".join(["%s"] * len(file_ids))
+        cursor.execute(f"""
+            SELECT fragment_id, fragment_path, node_id
+            FROM fragments
+            WHERE file_id IN ({placeholders})
+            ORDER BY file_id, fragment_number
+        """, tuple(file_ids))
+        fragment_paths = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return fragment_paths
+
+    @staticmethod
+    def deleteFragmentsByFileIds(file_ids: List[int]) -> bool:
+        if not file_ids:
+            return True
+
+        connection = None
+        cursor = None
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor(dictionary=True)
+            placeholders = ", ".join(["%s"] * len(file_ids))
+            cursor.execute(f"""
+                SELECT fragment_path, node_id
+                FROM fragments
+                WHERE file_id IN ({placeholders})
+            """, tuple(file_ids))
+            local_fragment_paths = [
+                record["fragment_path"]
+                for record in cursor.fetchall()
+                if record["node_id"] is None
+            ]
+            cursor.execute(f"""
+                DELETE FROM fragments
+                WHERE file_id IN ({placeholders})
+            """, tuple(file_ids))
+            connection.commit()
+
+            for fragment_path in set(local_fragment_paths):
+                try:
+                    if os.path.isfile(fragment_path):
+                        os.remove(fragment_path)
+                except OSError:
+                    pass
+            return True
+        except Exception:
+            return False
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if connection is not None:
+                connection.close()
+
     # Delete fragment database records for a processed file.
     @staticmethod
     def deleteFragments(file_id: int) -> bool:
