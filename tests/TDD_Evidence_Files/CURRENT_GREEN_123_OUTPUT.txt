@@ -1,0 +1,231 @@
+test_us01_main_user_can_login_and_access_dashboard (test_user_stories.UserStoryRouteTests.test_us01_main_user_can_login_and_access_dashboard) ... ok
+test_us01_validation_empty_login_fields_are_rejected (test_user_stories.DetailedUserStoryCases.test_us01_validation_empty_login_fields_are_rejected)
+US1 validation: empty login fields are rejected. ... ok
+test_us01_alternate_locked_user_is_denied_login (test_user_stories.DetailedUserStoryCases.test_us01_alternate_locked_user_is_denied_login)
+US1 alternate: locked user is denied login. ... ok
+test_us02_main_admin_can_login_and_access_admin_dashboard (test_user_stories.UserStoryRouteTests.test_us02_main_admin_can_login_and_access_admin_dashboard) ... ok
+test_us02_validation_wrong_role_is_rejected (test_user_stories.DetailedUserStoryCases.test_us02_validation_wrong_role_is_rejected)
+US2 validation: wrong role is rejected. ... ok
+test_us02_alternate_admin_can_open_login_page_before_signing_in (test_user_stories.DetailedUserStoryCases.test_us02_alternate_admin_can_open_login_page_before_signing_in)
+US2 alternate: admin can open login page before signing in. ... ok
+test_us03_main_system_admin_can_login_and_access_settings (test_user_stories.UserStoryRouteTests.test_us03_main_system_admin_can_login_and_access_settings) ... ok
+test_us03_validation_wrong_role_cannot_login_as_system_admin (test_user_stories.DetailedUserStoryCases.test_us03_validation_wrong_role_cannot_login_as_system_admin)
+US3 validation: a non-system-admin account cannot use the system-admin role. ... ok
+test_us03_alternate_suspended_system_admin_is_denied_login (test_user_stories.DetailedUserStoryCases.test_us03_alternate_suspended_system_admin_is_denied_login)
+US3 alternate: a suspended system admin cannot log in. ... ok
+test_us04_main_user_logs_out (test_user_stories.DetailedUserStoryCases.test_us04_main_user_logs_out)
+US4 main: user securely ends an authenticated session. ... ok
+test_us04_validation_logout_without_a_session_remains_safe (test_user_stories.DetailedUserStoryCases.test_us04_validation_logout_without_a_session_remains_safe)
+US4 validation: user logout without a session remains safe. ... ok
+test_us04_alternate_logout_removes_an_existing_user_session (test_user_stories.DetailedUserStoryCases.test_us04_alternate_logout_removes_an_existing_user_session)
+US4 alternate: logout removes an existing user session. ... ok
+test_us05_main_user_admin_logs_out (test_user_stories.DetailedUserStoryCases.test_us05_main_user_admin_logs_out)
+US5 main: user admin securely ends an authenticated session. ... ok
+test_us05_validation_user_admin_logout_clears_the_complete_session (test_user_stories.DetailedUserStoryCases.test_us05_validation_user_admin_logout_clears_the_complete_session)
+US5 validation: user-admin logout removes all identity values. ... ok
+test_us05_alternate_user_admin_logout_without_a_session_is_safe (test_user_stories.DetailedUserStoryCases.test_us05_alternate_user_admin_logout_without_a_session_is_safe)
+US5 alternate: repeated user-admin logout remains safe. ... ok
+test_us06_main_system_admin_logs_out (test_user_stories.DetailedUserStoryCases.test_us06_main_system_admin_logs_out)
+US6 main: system admin securely ends an authenticated session. ... ok
+test_us06_validation_system_admin_logout_clears_the_complete_session (test_user_stories.DetailedUserStoryCases.test_us06_validation_system_admin_logout_clears_the_complete_session)
+US6 validation: system-admin logout removes all identity values. ... ok
+test_us06_alternate_system_admin_logout_ignores_a_next_query_safely (test_user_stories.DetailedUserStoryCases.test_us06_alternate_system_admin_logout_ignores_a_next_query_safely)
+US6 alternate: system-admin logout still returns to login. ... ok
+test_us07_main_user_can_start_an_upload_session (test_user_stories.UserStoryRouteTests.test_us07_main_user_can_start_an_upload_session) ... ok
+test_us07_validation_missing_upload_details_are_rejected (test_user_stories.DetailedUserStoryCases.test_us07_validation_missing_upload_details_are_rejected)
+US7 validation: missing upload details are rejected. ... ok
+test_us07_alternate_disallowed_file_type_is_rejected (test_user_stories.DetailedUserStoryCases.test_us07_alternate_disallowed_file_type_is_rejected)
+US7 alternate: disallowed file type is rejected. ... ok
+test_us08_main_user_can_pause_an_upload_session (test_user_stories.UserStoryRouteTests.test_us08_main_user_can_pause_an_upload_session) ... ok
+test_us08_validation_missing_paused_upload_id_is_rejected (test_user_stories.DetailedUserStoryCases.test_us08_validation_missing_paused_upload_id_is_rejected)
+US8 validation: missing paused upload id is rejected. ... ok
+test_us08_alternate_pause_entity_failure_is_reported (test_user_stories.DetailedUserStoryCases.test_us08_alternate_pause_entity_failure_is_reported)
+US8 alternate: pause entity failure is reported. ... ok
+test_us09_main_user_can_resume_an_upload_session (test_user_stories.UserStoryRouteTests.test_us09_main_user_can_resume_an_upload_session) ... ok
+test_us09_validation_missing_resumed_upload_id_is_rejected (test_user_stories.DetailedUserStoryCases.test_us09_validation_missing_resumed_upload_id_is_rejected)
+US9 validation: missing resumed upload id is rejected. ... ok
+test_us09_alternate_resume_reports_missing_saved_progress (test_user_stories.DetailedUserStoryCases.test_us09_alternate_resume_reports_missing_saved_progress)
+US9 alternate: resume reports missing saved progress. ... ok
+test_us10_main_user_can_cancel_a_temp_upload (test_user_stories.UserStoryRouteTests.test_us10_main_user_can_cancel_a_temp_upload) ... ok
+test_us10_validation_unknown_temporary_upload_is_rejected (test_user_stories.DetailedUserStoryCases.test_us10_validation_unknown_temporary_upload_is_rejected)
+US10 validation: unknown temporary upload is rejected. ... ok
+test_us10_alternate_temporary_file_deletion_failure_is_reported (test_user_stories.DetailedUserStoryCases.test_us10_alternate_temporary_file_deletion_failure_is_reported)
+US10 alternate: temporary file deletion failure is reported. ... ok
+test_us11_main_user_can_rename_a_managed_file (test_user_stories.UserStoryRouteTests.test_us11_main_user_can_rename_a_managed_file) ... ok
+test_us11_validation_missing_rename_value_is_rejected (test_user_stories.DetailedUserStoryCases.test_us11_validation_missing_rename_value_is_rejected)
+US11 validation: missing rename value is rejected. ... ok
+test_us11_alternate_duplicate_rename_is_rejected (test_user_stories.DetailedUserStoryCases.test_us11_alternate_duplicate_rename_is_rejected)
+US11 alternate: duplicate rename is rejected. ... ok
+test_us12_main_user_can_search_for_a_managed_file (test_user_stories.UserStoryRouteTests.test_us12_main_user_can_search_for_a_managed_file) ... ok
+test_us12_validation_empty_search_is_handled (test_user_stories.DetailedUserStoryCases.test_us12_validation_empty_search_is_handled)
+US12 validation: empty search is handled. ... ok
+test_us12_alternate_search_with_no_match_displays_empty_results (test_user_stories.DetailedUserStoryCases.test_us12_alternate_search_with_no_match_displays_empty_results)
+US12 alternate: search with no match displays empty results. ... ok
+test_us13_main_user_deletes_a_stored_file (test_user_stories.DetailedUserStoryCases.test_us13_main_user_deletes_a_stored_file)
+US13 main: user deletes a stored file and its related records. ... ok
+test_us13_validation_unknown_stored_file_cannot_be_deleted (test_user_stories.DetailedUserStoryCases.test_us13_validation_unknown_stored_file_cannot_be_deleted)
+US13 validation: an unknown stored file is rejected. ... ok
+test_us13_alternate_cleanup_failure_prevents_stored_file_deletion (test_user_stories.DetailedUserStoryCases.test_us13_alternate_cleanup_failure_prevents_stored_file_deletion)
+US13 alternate: related-record cleanup failure prevents deletion. ... ok
+test_us14_main_registration_request_succeeds (test_user_stories.DetailedUserStoryCases.test_us14_main_registration_request_succeeds)
+US14 main: registration request succeeds. ... ok
+test_us14_validation_mismatched_registration_passwords_are_rejected (test_user_stories.DetailedUserStoryCases.test_us14_validation_mismatched_registration_passwords_are_rejected)
+US14 validation: mismatched registration passwords are rejected. ... ok
+test_us14_alternate_valid_verification_code_creates_account (test_user_stories.DetailedUserStoryCases.test_us14_alternate_valid_verification_code_creates_account)
+US14 alternate: valid verification code creates account. ... ok
+test_us15_main_password_resets_with_a_valid_code (test_user_stories.DetailedUserStoryCases.test_us15_main_password_resets_with_a_valid_code)
+US15 main: password resets with a valid code. ... ok
+test_us15_validation_short_reset_password_is_rejected (test_user_stories.DetailedUserStoryCases.test_us15_validation_short_reset_password_is_rejected)
+US15 validation: short reset password is rejected. ... ok
+test_us15_alternate_reset_request_does_not_reveal_unknown_email (test_user_stories.DetailedUserStoryCases.test_us15_alternate_reset_request_does_not_reveal_unknown_email)
+US15 alternate: reset request does not reveal unknown email. ... ok
+test_us16_main_admin_can_create_new_user_accounts (test_user_stories.UserStoryRouteTests.test_us16_main_admin_can_create_new_user_accounts) ... ok
+test_us16_validation_admin_account_creation_requires_all_fields (test_user_stories.DetailedUserStoryCases.test_us16_validation_admin_account_creation_requires_all_fields)
+US16 validation: admin account creation requires all fields. ... ok
+test_us16_alternate_duplicate_admin_created_account_is_rejected (test_user_stories.DetailedUserStoryCases.test_us16_alternate_duplicate_admin_created_account_is_rejected)
+US16 alternate: duplicate admin-created account is rejected. ... ok
+test_us17_main_admin_can_view_and_search_user_accounts (test_user_stories.UserStoryRouteTests.test_us17_main_admin_can_view_and_search_user_accounts) ... ok
+test_us17_validation_ordinary_user_cannot_view_account_management (test_user_stories.DetailedUserStoryCases.test_us17_validation_ordinary_user_cannot_view_account_management)
+US17 validation: ordinary user cannot view account management. ... ok
+test_us17_alternate_admin_views_one_account_in_detail (test_user_stories.DetailedUserStoryCases.test_us17_alternate_admin_views_one_account_in_detail)
+US17 alternate: admin views one account in detail. ... ok
+test_us18_main_admin_can_update_user_account_details (test_user_stories.UserStoryRouteTests.test_us18_main_admin_can_update_user_account_details) ... ok
+test_us18_validation_invalid_update_details_are_rejected (test_user_stories.DetailedUserStoryCases.test_us18_validation_invalid_update_details_are_rejected)
+US18 validation: invalid update details are rejected. ... ok
+test_us18_alternate_update_of_missing_account_redirects_safely (test_user_stories.DetailedUserStoryCases.test_us18_alternate_update_of_missing_account_redirects_safely)
+US18 alternate: update of missing account redirects safely. ... ok
+test_us19_main_admin_deletes_an_existing_account (test_user_stories.DetailedUserStoryCases.test_us19_main_admin_deletes_an_existing_account)
+US19 main: admin deletes an existing account. ... ok
+test_us19_validation_nonexistent_account_cannot_be_deleted (test_user_stories.DetailedUserStoryCases.test_us19_validation_nonexistent_account_cannot_be_deleted)
+US19 validation: nonexistent account cannot be deleted. ... ok
+test_us19_alternate_ordinary_user_cannot_delete_accounts (test_user_stories.DetailedUserStoryCases.test_us19_alternate_ordinary_user_cannot_delete_accounts)
+US19 alternate: ordinary user cannot delete accounts. ... ok
+test_us20_main_admin_searches_for_a_matching_account (test_user_stories.DetailedUserStoryCases.test_us20_main_admin_searches_for_a_matching_account)
+US20 main: admin searches for a matching account. ... ok
+test_us20_validation_search_with_no_matches_is_handled (test_user_stories.DetailedUserStoryCases.test_us20_validation_search_with_no_matches_is_handled)
+US20 validation: search with no matches is handled. ... ok
+test_us20_alternate_blank_search_lists_all_accounts (test_user_stories.DetailedUserStoryCases.test_us20_alternate_blank_search_lists_all_accounts)
+US20 alternate: blank search lists all accounts. ... ok
+test_us21_main_admin_can_suspend_and_unsuspend_user_accounts (test_user_stories.UserStoryRouteTests.test_us21_main_admin_can_suspend_and_unsuspend_user_accounts) ... ok
+test_us21_validation_already_suspended_account_is_rejected (test_user_stories.DetailedUserStoryCases.test_us21_validation_already_suspended_account_is_rejected)
+US21 validation: already suspended account is rejected. ... ok
+test_us21_alternate_ordinary_user_cannot_suspend_accounts (test_user_stories.DetailedUserStoryCases.test_us21_alternate_ordinary_user_cannot_suspend_accounts)
+US21 alternate: ordinary user cannot suspend accounts. ... ok
+test_us22_main_admin_unsuspends_an_account (test_user_stories.DetailedUserStoryCases.test_us22_main_admin_unsuspends_an_account)
+US22 main: admin unsuspends an account. ... ok
+test_us22_validation_already_active_account_cannot_be_unsuspended (test_user_stories.DetailedUserStoryCases.test_us22_validation_already_active_account_cannot_be_unsuspended)
+US22 validation: already active account cannot be unsuspended. ... ok
+test_us22_alternate_ordinary_user_cannot_unsuspend_accounts (test_user_stories.DetailedUserStoryCases.test_us22_alternate_ordinary_user_cannot_unsuspend_accounts)
+US22 alternate: ordinary user cannot unsuspend accounts. ... ok
+test_us23_main_uploaded_file_is_encrypted_before_splitting (test_user_stories.UserStoryRouteTests.test_us23_main_uploaded_file_is_encrypted_before_splitting) ... ok
+test_us23_validation_failed_encryption_stops_processing (test_user_stories.DetailedUserStoryCases.test_us23_validation_failed_encryption_stops_processing)
+US23 validation: failed encryption stops processing. ... ok
+test_us23_alternate_missing_processing_summary_is_reported (test_user_stories.DetailedUserStoryCases.test_us23_alternate_missing_processing_summary_is_reported)
+US23 alternate: missing processing summary is reported. ... ok
+test_us24_main_encrypted_file_is_split (test_user_stories.DetailedUserStoryCases.test_us24_main_encrypted_file_is_split)
+US24 main: encrypted file is split. ... ok
+test_us24_validation_split_rejects_missing_encrypted_details (test_user_stories.DetailedUserStoryCases.test_us24_validation_split_rejects_missing_encrypted_details)
+US24 validation: split rejects missing encrypted details. ... ok
+test_us24_alternate_incorrect_fragment_count_marks_split_failed (test_user_stories.DetailedUserStoryCases.test_us24_alternate_incorrect_fragment_count_marks_split_failed)
+US24 alternate: incorrect fragment count marks split failed. ... ok
+test_us25_main_valid_k_of_n_configuration_is_accepted (test_user_stories.DetailedUserStoryCases.test_us25_main_valid_k_of_n_configuration_is_accepted)
+US25 main: valid k-of-n configuration is accepted. ... ok
+test_us25_validation_invalid_k_of_n_is_redisplayed (test_user_stories.DetailedUserStoryCases.test_us25_validation_invalid_k_of_n_is_redisplayed)
+US25 validation: invalid k-of-n is redisplayed. ... ok
+test_us25_alternate_alternative_valid_2_of_3_configuration_works (test_user_stories.DetailedUserStoryCases.test_us25_alternate_alternative_valid_2_of_3_configuration_works)
+US25 alternate: alternative valid 2-of-3 configuration works. ... ok
+test_us26_main_fragments_are_stored_separately (test_user_stories.DetailedUserStoryCases.test_us26_main_fragments_are_stored_separately)
+US26 main: fragments are stored separately. ... ok
+test_us26_validation_storage_rejects_file_in_wrong_state (test_user_stories.DetailedUserStoryCases.test_us26_validation_storage_rejects_file_in_wrong_state)
+US26 validation: storage rejects file in wrong state. ... ok
+test_us26_alternate_insufficient_storage_nodes_prevents_storage (test_user_stories.DetailedUserStoryCases.test_us26_alternate_insufficient_storage_nodes_prevents_storage)
+US26 alternate: insufficient storage nodes prevents storage. ... ok
+test_us27_main_file_is_reconstructed_and_decrypted_automatically (test_user_stories.UserStoryRouteTests.test_us27_main_file_is_reconstructed_and_decrypted_automatically) ... ok
+test_us27_validation_failed_fragment_recovery_is_rejected (test_user_stories.DetailedUserStoryCases.test_us27_validation_failed_fragment_recovery_is_rejected)
+US27 validation: failed reconstruction or decryption is rejected. ... ok
+test_us27_alternate_unauthenticated_recovery_redirects_to_login (test_user_stories.DetailedUserStoryCases.test_us27_alternate_unauthenticated_recovery_redirects_to_login)
+US27 alternate: unauthenticated recovery redirects to login. ... ok
+test_us28_main_secure_share_link_is_created (test_user_stories.DetailedUserStoryCases.test_us28_main_secure_share_link_is_created)
+US28 main: secure share link is created. ... ok
+test_us28_validation_sharing_requires_file_and_recipient (test_user_stories.DetailedUserStoryCases.test_us28_validation_sharing_requires_file_and_recipient)
+US28 validation: sharing requires file and recipient. ... ok
+test_us28_alternate_one_time_option_is_passed_when_sharing (test_user_stories.DetailedUserStoryCases.test_us28_alternate_one_time_option_is_passed_when_sharing)
+US28 alternate: one-time option is passed when sharing. ... ok
+test_us29_main_owner_revokes_a_share_link (test_user_stories.DetailedUserStoryCases.test_us29_main_owner_revokes_a_share_link)
+US29 main: owner revokes a share link. ... ok
+test_us29_validation_failed_revocation_records_an_error (test_user_stories.DetailedUserStoryCases.test_us29_validation_failed_revocation_records_an_error)
+US29 validation: failed revocation records an error. ... ok
+test_us29_alternate_unauthenticated_revocation_redirects_to_login (test_user_stories.DetailedUserStoryCases.test_us29_alternate_unauthenticated_revocation_redirects_to_login)
+US29 alternate: unauthenticated revocation redirects to login. ... ok
+test_us30_main_owner_views_recipients (test_user_stories.DetailedUserStoryCases.test_us30_main_owner_views_recipients)
+US30 main: owner views recipients. ... ok
+test_us30_validation_unowned_file_returns_sharing_error (test_user_stories.DetailedUserStoryCases.test_us30_validation_unowned_file_returns_sharing_error)
+US30 validation: unowned file returns sharing error. ... ok
+test_us30_alternate_file_with_no_recipients_shows_an_empty_list (test_user_stories.DetailedUserStoryCases.test_us30_alternate_file_with_no_recipients_shows_an_empty_list)
+US30 alternate: file with no recipients shows an empty list. ... ok
+test_us31_main_valid_one_time_link_can_be_viewed (test_user_stories.DetailedUserStoryCases.test_us31_main_valid_one_time_link_can_be_viewed)
+US31 main: valid one-time link can be viewed. ... ok
+test_us31_validation_invalid_one_time_token_is_denied (test_user_stories.DetailedUserStoryCases.test_us31_validation_invalid_one_time_token_is_denied)
+US31 validation: invalid one-time token is denied. ... ok
+test_us31_alternate_used_one_time_link_is_denied (test_user_stories.DetailedUserStoryCases.test_us31_alternate_used_one_time_link_is_denied)
+US31 alternate: used one-time link is denied. ... ok
+test_us32_main_user_can_download_and_reconstruct_a_shared_file (test_user_stories.UserStoryRouteTests.test_us32_main_user_can_download_and_reconstruct_a_shared_file) ... ok
+test_us32_validation_download_without_valid_access_is_denied (test_user_stories.DetailedUserStoryCases.test_us32_validation_download_without_valid_access_is_denied)
+US32 validation: download without valid access is denied. ... ok
+test_us32_alternate_valid_shared_download_returns_original_bytes (test_user_stories.DetailedUserStoryCases.test_us32_alternate_valid_shared_download_returns_original_bytes)
+US32 alternate: valid shared download returns original bytes. ... ok
+test_us33_main_owner_sets_link_expiry (test_user_stories.DetailedUserStoryCases.test_us33_main_owner_sets_link_expiry)
+US33 main: owner sets link expiry. ... ok
+test_us33_validation_invalid_expiry_is_not_saved (test_user_stories.DetailedUserStoryCases.test_us33_validation_invalid_expiry_is_not_saved)
+US33 validation: invalid expiry is not saved. ... ok
+test_us33_alternate_unauthenticated_expiry_update_redirects (test_user_stories.DetailedUserStoryCases.test_us33_alternate_unauthenticated_expiry_update_redirects)
+US33 alternate: unauthenticated expiry update redirects. ... ok
+test_us34_main_expired_link_is_inaccessible (test_user_stories.DetailedUserStoryCases.test_us34_main_expired_link_is_inaccessible)
+US34 main: expired link is inaccessible. ... ok
+test_us34_validation_expired_token_returns_expired_status (test_user_stories.DetailedUserStoryCases.test_us34_validation_expired_token_returns_expired_status)
+US34 validation: expired token returns expired status. ... ok
+test_us34_alternate_revoked_link_is_also_inaccessible (test_user_stories.DetailedUserStoryCases.test_us34_alternate_revoked_link_is_also_inaccessible)
+US34 alternate: revoked link is also inaccessible. ... ok
+test_us35_main_system_admin_can_set_max_expiry_duration (test_user_stories.UserStoryRouteTests.test_us35_main_system_admin_can_set_max_expiry_duration) ... ok
+test_us35_validation_out_of_range_maximum_expiry_is_rejected (test_user_stories.DetailedUserStoryCases.test_us35_validation_out_of_range_maximum_expiry_is_rejected)
+US35 validation: out-of-range maximum expiry is rejected. ... ok
+test_us35_alternate_ordinary_user_cannot_configure_maximum_expiry (test_user_stories.DetailedUserStoryCases.test_us35_alternate_ordinary_user_cannot_configure_maximum_expiry)
+US35 alternate: ordinary user cannot configure maximum expiry. ... ok
+test_us36_main_user_can_preview_an_uploaded_file_before_encryption (test_user_stories.UserStoryRouteTests.test_us36_main_user_can_preview_an_uploaded_file_before_encryption) ... ok
+test_us36_validation_missing_preview_record_returns_not_found (test_user_stories.DetailedUserStoryCases.test_us36_validation_missing_preview_record_returns_not_found)
+US36 validation: missing preview record returns not found. ... ok
+test_us36_alternate_unauthenticated_preview_redirects_to_login (test_user_stories.DetailedUserStoryCases.test_us36_alternate_unauthenticated_preview_redirects_to_login)
+US36 alternate: unauthenticated preview redirects to login. ... ok
+test_us37_main_user_can_replace_a_temp_upload_before_encryption (test_user_stories.UserStoryRouteTests.test_us37_main_user_can_replace_a_temp_upload_before_encryption) ... ok
+test_us37_validation_replacement_reports_deletion_failure (test_user_stories.DetailedUserStoryCases.test_us37_validation_replacement_reports_deletion_failure)
+US37 validation: replacement reports deletion failure. ... ok
+test_us37_alternate_unauthenticated_replacement_is_rejected (test_user_stories.DetailedUserStoryCases.test_us37_alternate_unauthenticated_replacement_is_rejected)
+US37 alternate: unauthenticated replacement is rejected. ... ok
+test_us38_main_temporary_upload_is_deleted (test_user_stories.DetailedUserStoryCases.test_us38_main_temporary_upload_is_deleted)
+US38 main: temporary upload is deleted. ... ok
+test_us38_validation_unknown_temporary_file_cannot_be_deleted (test_user_stories.DetailedUserStoryCases.test_us38_validation_unknown_temporary_file_cannot_be_deleted)
+US38 validation: unknown temporary file cannot be deleted. ... ok
+test_us38_alternate_temporary_file_removal_failure_is_reported (test_user_stories.DetailedUserStoryCases.test_us38_alternate_temporary_file_removal_failure_is_reported)
+US38 alternate: temporary file removal failure is reported. ... ok
+test_us39_main_system_admin_can_enforce_security_policies (test_user_stories.UserStoryRouteTests.test_us39_main_system_admin_can_enforce_security_policies) ... ok
+test_us39_validation_invalid_password_policy_is_rejected (test_user_stories.DetailedUserStoryCases.test_us39_validation_invalid_password_policy_is_rejected)
+US39 validation: invalid password policy is rejected. ... ok
+test_us39_alternate_ordinary_user_cannot_change_password_policy (test_user_stories.DetailedUserStoryCases.test_us39_alternate_ordinary_user_cannot_change_password_policy)
+US39 alternate: ordinary user cannot change password policy. ... ok
+test_us40_main_username_policy_is_updated (test_user_stories.DetailedUserStoryCases.test_us40_main_username_policy_is_updated)
+US40 main: username policy is updated. ... ok
+test_us40_validation_invalid_username_policy_is_rejected (test_user_stories.DetailedUserStoryCases.test_us40_validation_invalid_username_policy_is_rejected)
+US40 validation: invalid username policy is rejected. ... ok
+test_us40_alternate_ordinary_user_cannot_change_username_policy (test_user_stories.DetailedUserStoryCases.test_us40_alternate_ordinary_user_cannot_change_username_policy)
+US40 alternate: ordinary user cannot change username policy. ... ok
+test_us41_main_authentication_policy_is_updated (test_user_stories.DetailedUserStoryCases.test_us41_main_authentication_policy_is_updated)
+US41 main: authentication policy is updated. ... ok
+test_us41_validation_invalid_authentication_policy_is_rejected (test_user_stories.DetailedUserStoryCases.test_us41_validation_invalid_authentication_policy_is_rejected)
+US41 validation: invalid authentication policy is rejected. ... ok
+test_us41_alternate_ordinary_user_cannot_change_authentication_policy (test_user_stories.DetailedUserStoryCases.test_us41_alternate_ordinary_user_cannot_change_authentication_policy)
+US41 alternate: ordinary user cannot change authentication policy. ... ok
+
+----------------------------------------------------------------------
+Ran 123 tests in 0.242s
+
+OK
