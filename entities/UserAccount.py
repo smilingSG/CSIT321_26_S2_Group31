@@ -2,7 +2,6 @@ from typing import Optional
 from typing import Dict
 from typing import Any
 
-import os
 import bcrypt
 import hashlib
 from datetime import datetime
@@ -784,83 +783,10 @@ class UserAccount:
 
         connection = None
         cursor = None
-        stored_paths = []
 
         try:
             connection = get_db_connection()
-            cursor = connection.cursor(dictionary=True)
-
-            cursor.execute("""
-                SELECT temp_upload_path AS stored_path
-                FROM files
-                WHERE owner_id = %s
-                UNION
-                SELECT encrypted_temp_path AS stored_path
-                FROM files
-                WHERE owner_id = %s
-                UNION
-                SELECT fragments.fragment_path AS stored_path
-                FROM fragments
-                INNER JOIN files
-                    ON files.file_id = fragments.file_id
-                WHERE files.owner_id = %s
-                UNION
-                SELECT temp_upload_path AS stored_path
-                FROM upload_sessions
-                WHERE user_id = %s
-            """, (user_id, user_id, user_id, user_id))
-
-            stored_paths = [
-                record["stored_path"]
-                for record in cursor.fetchall()
-                if record["stored_path"] is not None
-            ]
-
-            cursor.execute("""
-                DELETE FROM share_links
-                WHERE created_by = %s
-                OR recipient_id = %s
-                OR file_id IN (
-                    SELECT file_id
-                    FROM files
-                    WHERE owner_id = %s
-                )
-            """, (user_id, user_id, user_id))
-
-            cursor.execute("""
-                DELETE FROM upload_sessions
-                WHERE user_id = %s
-                OR file_id IN (
-                    SELECT file_id
-                    FROM files
-                    WHERE owner_id = %s
-                )
-            """, (user_id, user_id))
-
-            cursor.execute("""
-                DELETE FROM fragments
-                WHERE file_id IN (
-                    SELECT file_id
-                    FROM files
-                    WHERE owner_id = %s
-                )
-            """, (user_id,))
-
-            cursor.execute("""
-                DELETE FROM files
-                WHERE owner_id = %s
-            """, (user_id,))
-
-            cursor.execute("""
-                DELETE FROM password_reset_tokens
-                WHERE user_id = %s
-            """, (user_id,))
-
-            cursor.execute("""
-                UPDATE system_settings
-                SET updated_by = %s
-                WHERE updated_by = %s
-            """, (replacement_user_id, user_id))
+            cursor = connection.cursor()
 
             cursor.execute("""
                 DELETE FROM users
@@ -884,19 +810,28 @@ class UserAccount:
             if connection is not None:
                 connection.close()
 
-        for stored_path in set(stored_paths):
-            try:
-                if os.path.isfile(stored_path):
-                    os.remove(stored_path)
-
-                parent_folder = os.path.dirname(stored_path)
-                if parent_folder and os.path.isdir(parent_folder):
-                    if not os.listdir(parent_folder):
-                        os.rmdir(parent_folder)
-            except OSError:
-                pass
-
         return True
+
+    @staticmethod
+    def deletePasswordResetTokens(user_id: int) -> bool:
+        connection = None
+        cursor = None
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            cursor.execute("""
+                DELETE FROM password_reset_tokens
+                WHERE user_id = %s
+            """, (user_id,))
+            connection.commit()
+            return True
+        except Exception:
+            return False
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if connection is not None:
+                connection.close()
 
     @staticmethod
     def getStatus(user_id: int) -> Optional[str]:

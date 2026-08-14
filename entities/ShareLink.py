@@ -11,6 +11,38 @@ from db import get_db_connection
 class ShareLink:
 
     @staticmethod
+    def deleteShareLinksForUser(user_id: int,
+                                owned_file_ids: List[int]) -> bool:
+        connection = None
+        cursor = None
+
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            query = """
+                DELETE FROM share_links
+                WHERE created_by = %s
+                OR recipient_id = %s
+            """
+            parameters = [user_id, user_id]
+
+            if owned_file_ids:
+                placeholders = ", ".join(["%s"] * len(owned_file_ids))
+                query += f" OR file_id IN ({placeholders})"
+                parameters.extend(owned_file_ids)
+
+            cursor.execute(query, tuple(parameters))
+            connection.commit()
+            return True
+        except Exception:
+            return False
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if connection is not None:
+                connection.close()
+
+    @staticmethod
     def deleteShareLinks(file_id: int) -> bool:
 
         connection = None

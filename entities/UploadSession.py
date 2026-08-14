@@ -24,6 +24,54 @@ os.makedirs(TEMP_UPLOAD_FOLDER, exist_ok=True)
 # Represent upload-session records and handle resumable upload storage.
 class UploadSession:
 
+    @staticmethod
+    def deleteUploadSessionsForUser(user_id: int,
+                                    owned_file_ids: list) -> bool:
+        connection = None
+        cursor = None
+
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor(dictionary=True)
+            condition = "user_id = %s"
+            parameters = [user_id]
+
+            if owned_file_ids:
+                placeholders = ", ".join(["%s"] * len(owned_file_ids))
+                condition += f" OR file_id IN ({placeholders})"
+                parameters.extend(owned_file_ids)
+
+            cursor.execute(f"""
+                SELECT temp_upload_path
+                FROM upload_sessions
+                WHERE {condition}
+            """, tuple(parameters))
+            temporary_paths = [
+                record["temp_upload_path"]
+                for record in cursor.fetchall()
+                if record["temp_upload_path"] is not None
+            ]
+            cursor.execute(f"""
+                DELETE FROM upload_sessions
+                WHERE {condition}
+            """, tuple(parameters))
+            connection.commit()
+
+            for temporary_path in set(temporary_paths):
+                try:
+                    if os.path.isfile(temporary_path):
+                        os.remove(temporary_path)
+                except OSError:
+                    pass
+            return True
+        except Exception:
+            return False
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if connection is not None:
+                connection.close()
+
     # Create a new upload session before the first file chunk is received.
     @staticmethod
     def startUpload(user_id: int,

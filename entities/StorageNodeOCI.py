@@ -19,6 +19,27 @@ except Exception as e:
 class StorageNode:
 
     @staticmethod
+    def getStorageNodePaths(node_ids: List[int]) -> Dict[int, str]:
+        if not node_ids:
+            return {}
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        placeholders = ", ".join(["%s"] * len(node_ids))
+        cursor.execute(f"""
+            SELECT node_id, node_path
+            FROM storage_nodes
+            WHERE node_id IN ({placeholders})
+        """, tuple(node_ids))
+        node_paths = {
+            record["node_id"]: record["node_path"]
+            for record in cursor.fetchall()
+        }
+        cursor.close()
+        connection.close()
+        return node_paths
+
+    @staticmethod
     def getActiveStorageNodeCount() -> int:
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -148,10 +169,15 @@ class StorageNode:
         for fragment_path_record in fragment_paths:
             bucket_name = fragment_path_record.get("node_path")
             object_name = fragment_path_record["fragment_path"]
-            
-            if bucket_name and object_name:
-                if not StorageNode.deleteStoredFragment(bucket_name, object_name):
+
+            if not object_name:
+                continue
+            if not bucket_name:
+                if fragment_path_record.get("node_id") is not None:
                     success = False
+                continue
+            if not StorageNode.deleteStoredFragment(bucket_name, object_name):
+                success = False
         return success
 
     @staticmethod
