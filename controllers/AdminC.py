@@ -38,7 +38,7 @@ class AdminC:
 
         if (not SystemSetting.validateUsernameAgainstPolicy(username)
                 or not SystemSetting.validatePasswordAgainstPolicy(password)):
-            return "Username or password does not meet the current account policy."
+            return "Username or password does not meet the current username / password policy."
 
         user_id = UserAccount.createAccount(
             username=username,
@@ -48,7 +48,7 @@ class AdminC:
         )
 
         if user_id is None:
-            return "Username or password does not meet the current account policy."
+            return "Failed to create user account."
 
         return None
 
